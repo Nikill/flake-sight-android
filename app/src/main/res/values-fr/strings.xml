@@ -81,6 +81,16 @@
     <string name="rain_spoken">pluie</string>
     <string name="freezing_level_at">0 °C à %1$s</string>
 
+    <string name="weather_models">Modèles météo</string>
+    <string name="models_footnote">Chutes de neige de chaque modèle, en centimètres. Les chiffres plus haut sont la meilleure estimation d\'Open-Meteo.</string>
+    <string name="models_unavailable">Les modèles n\'ont pas pu être chargés.</string>
+    <string name="agreement">Accord</string>
+    <string name="agreement_strong">Fort</string>
+    <string name="agreement_weak">Faible</string>
+    <string name="range_spoken">entre %1$s et %2$s, %3$s</string>
+    <string name="high_confidence_spoken">confiance élevée</string>
+    <string name="low_confidence_spoken">confiance faible</string>
+
     <string name="avalanche_bulletin">Bulletin d\'avalanche</string>
     <string name="massif_issued">Massif %1$s, publié le %2$s</string>
     <string name="most_exposed_slopes">Pentes les plus exposées</string>

@@ -54,6 +54,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tanukee.flakesight.core.DetailedForecast
+import com.tanukee.flakesight.core.DailyForecast
+import com.tanukee.flakesight.core.ForecastConfidence
+import com.tanukee.flakesight.core.ModelSnowfall
+import com.tanukee.flakesight.core.SnowfallRange
+import com.tanukee.flakesight.core.withRanges
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.tanukee.flakesight.core.ForecastLevel
 import com.tanukee.flakesight.core.ForecastService
 import com.tanukee.flakesight.core.MountainProfile
@@ -83,10 +94,19 @@ internal val FreezingLevel = Color(0xFFFF9500)
 fun AdvancedForecastScreen(resort: Resort, snowDepth: SnowDepthReading?, onBack: () -> Unit) {
     var forecast by remember(resort.id) { mutableStateOf(forecastService.cachedForecast(resort)) }
     var detailed by remember(resort.id) { mutableStateOf<DetailedForecast?>(null) }
+    var models by remember(resort.id) { mutableStateOf(forecastService.cachedModelSnowfall(resort)) }
     var hasFailed by remember(resort.id) { mutableStateOf(false) }
     var attempt by remember(resort.id) { mutableIntStateOf(0) }
     LaunchedEffect(resort.id, attempt) {
         hasFailed = false
+        launch {
+            try {
+                models = forecastService.modelSnowfall(resort)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+            }
+        }
         launch {
             try {
                 detailed = forecastService.detailedForecast(resort)
@@ -121,10 +141,11 @@ fun AdvancedForecastScreen(resort: Resort, snowDepth: SnowDepthReading?, onBack:
             )
         },
     ) { padding ->
-        val shown = forecast
+        // Each day's range once the models came back.
+        val shown = forecast?.let { daily -> models?.let(daily::withRanges) ?: daily }
         Box(Modifier.padding(padding).fillMaxSize()) {
             when {
-                shown != null -> AdvancedContent(shown, detailed, snowDepth, resort)
+                shown != null -> AdvancedContent(shown, detailed, models, snowDepth, resort)
                 hasFailed -> Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -141,7 +162,13 @@ fun AdvancedForecastScreen(resort: Resort, snowDepth: SnowDepthReading?, onBack:
 }
 
 @Composable
-private fun AdvancedContent(forecast: ResortForecast, detailed: DetailedForecast?, snowDepth: SnowDepthReading?, resort: Resort) {
+private fun AdvancedContent(
+    forecast: ResortForecast,
+    detailed: DetailedForecast?,
+    models: ModelSnowfall?,
+    snowDepth: SnowDepthReading?,
+    resort: Resort,
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(28.dp),
         modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
@@ -161,6 +188,7 @@ private fun AdvancedContent(forecast: ResortForecast, detailed: DetailedForecast
         }
         val bulletin = snowDepth?.bulletin
         if (snowDepth != null && bulletin != null) BulletinSection(snowDepth, bulletin, resort.timeZone)
+        WeatherModelsTable(forecast, models)
         val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
         TextButton(onClick = { uriHandler.openUri(ForecastService.ATTRIBUTION_URL) }, contentPadding = PaddingValues(0.dp)) {
             Text(
@@ -334,6 +362,11 @@ private fun SpotBadge(spot: MountainProfile.Spot, locale: Locale, modifier: Modi
                 maxLines = 1,
             )
         }
+        // The range the models give, under the amount.
+        val range = spot.forecast.snowfallRange
+        if (spot.precipitation != MountainProfile.Precipitation.RAIN && range != null) {
+            Text(rangeLabel(range, locale), fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        }
     }
 }
 
@@ -410,10 +443,89 @@ private fun daySummary(day: MountainProfile.Day, locale: Locale): String {
             )
             MountainProfile.Precipitation.RAIN -> listOf(stringResource(R.string.rain_spoken))
             MountainProfile.Precipitation.NONE -> listOf(conditionLabel(spot.forecast.condition))
-        }
+        } + listOfNotNull(spot.forecast.snowfallRange?.let { spokenRange(it, locale) })
         stringResource(R.string.day_summary, levelName(spot.level, locale), what.joinToString(", "))
     } + listOfNotNull(day.roundedFreezingLevel?.let { stringResource(R.string.freezing_level_at, metres(it, locale)) })
     return stringResource(R.string.day_summary, weekday, sentences.joinToString(". ")) + "."
+}
+
+/**
+ * Each weather model's daily snowfall at one level, and how far they agree:
+ * the figures behind the ranges, for those who want to see who says what.
+ * Port of `WeatherModelsTable`.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WeatherModelsTable(forecast: ResortForecast, models: ModelSnowfall?) {
+    val locale = LocalConfiguration.current.locales[0]
+    var levelIndex by rememberSaveable { mutableIntStateOf(0) }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(R.string.weather_models), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.models_footnote), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (forecast.levels.size > 1) {
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                forecast.levels.forEachIndexed { index, level ->
+                    SegmentedButton(
+                        selected = index == levelIndex,
+                        onClick = { levelIndex = index },
+                        shape = SegmentedButtonDefaults.itemShape(index, forecast.levels.size),
+                    ) { Text(levelName(level.level, locale), maxLines = 1) }
+                }
+            }
+        }
+        val level = forecast.levels.getOrElse(levelIndex) { forecast.levels.first() }
+        val amounts = models?.levels?.firstOrNull { it.level == level.level }
+        if (amounts == null) {
+            Text(stringResource(R.string.models_unavailable), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            return@Column
+        }
+        val style = MaterialTheme.typography.bodySmall
+        val secondary = MaterialTheme.colorScheme.onSurfaceVariant
+        val number = java.text.NumberFormat.getIntegerInstance(locale)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row {
+                Spacer(Modifier.weight(1.6f))
+                level.days.forEach { Text(it.weekdayLabel(locale), style = style, color = secondary, textAlign = TextAlign.End, modifier = Modifier.weight(1f)) }
+            }
+            HorizontalDivider()
+            SnowfallRange.MODEL_NAMES.forEachIndexed { model, name ->
+                Row {
+                    Text(name, style = style, maxLines = 1, modifier = Modifier.weight(1.6f))
+                    level.days.forEach { day ->
+                        val value = amounts.days[day.date]?.getOrNull(model)
+                        Text(
+                            // Whole centimetres; under one rounds to 0.
+                            value?.let { number.format(DailyForecast.centimetres(it) ?: 0) } ?: "-",
+                            style = style,
+                            color = if (value == null) secondary else MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
+            HorizontalDivider()
+            Row {
+                Text(stringResource(R.string.agreement), style = style, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.6f))
+                level.days.forEach { day ->
+                    val confidence = day.snowfallRange?.confidence
+                    Text(
+                        when (confidence) {
+                            ForecastConfidence.HIGH -> stringResource(R.string.agreement_strong)
+                            ForecastConfidence.LOW -> stringResource(R.string.agreement_weak)
+                            null -> "-"
+                        },
+                        style = style,
+                        fontWeight = if (confidence != null) FontWeight.Bold else FontWeight.Normal,
+                        color = if (confidence == ForecastConfidence.HIGH) MaterialTheme.colorScheme.primary else secondary,
+                        textAlign = TextAlign.End,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
 }
 
 /** "Summit, 2,100 m", "Village, 1,600 m" or "Resort". */

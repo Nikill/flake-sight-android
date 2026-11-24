@@ -113,6 +113,19 @@
     <!-- %1$s is an altitude, "1,700 m". -->
     <string name="freezing_level_at">0 °C at %1$s</string>
 
+    <!-- Weather models: the snowfall ranges and the models table -->
+    <string name="weather_models">Weather Models</string>
+    <string name="models_footnote">Each model\'s snowfall in centimetres. The figures above are Open-Meteo\'s best match.</string>
+    <string name="models_unavailable">The models could not be loaded.</string>
+    <!-- The last row of the models table: how far the models agree, Strong or Weak. -->
+    <string name="agreement">Agreement</string>
+    <string name="agreement_strong">Strong</string>
+    <string name="agreement_weak">Weak</string>
+    <!-- Read by TalkBack: %1$s and %2$s are the ends of a range, "5" and "20 centimetres"; %3$s the confidence. -->
+    <string name="range_spoken">between %1$s and %2$s, %3$s</string>
+    <string name="high_confidence_spoken">high confidence</string>
+    <string name="low_confidence_spoken">low confidence</string>
+
     <!-- The avalanche bulletin section of the advanced weather screen -->
     <string name="avalanche_bulletin">Avalanche Bulletin</string>
     <!-- %1$s is the massif, "Mont-Blanc"; %2$s when it came out, "23 Nov, 15:30". -->
