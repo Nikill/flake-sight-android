@@ -177,6 +177,8 @@
     <string name="widget_name">Webcam</string>
     <string name="widget_description">La dernière image d\'une webcam et l\'heure à laquelle elle a été prise.</string>
     <string name="no_webcam_available">Aucune webcam disponible</string>
+    <string name="widget_settings_title">Choisir une webcam</string>
+    <string name="widget_follow_default">Suit la station par défaut choisie dans l\'app</string>
 
     <string name="error_no_snapshot">Aucune image n\'est disponible pour cette webcam.</string>
     <string name="error_unsupported_provider">Les webcams %1$s ne sont pas encore prises en charge.</string>

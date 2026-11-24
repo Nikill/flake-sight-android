@@ -26,6 +26,15 @@
             </intent-filter>
         </activity>
 
+        <!-- The webcam widget's settings, opened by the launcher. -->
+        <activity
+            android:name=".WebcamWidgetConfigureActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <receiver
             android:name=".WebcamWidgetReceiver"
             android:exported="true"

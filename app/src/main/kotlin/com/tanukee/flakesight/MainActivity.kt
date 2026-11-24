@@ -448,7 +448,7 @@ fun ResortListScreen(
 
 /** Searches names, regions and webcam names, ignoring case and accents (`Resort.matches`). */
 @Composable
-private fun SearchField(text: String, onTextChange: (String) -> Unit) {
+internal fun SearchField(text: String, onTextChange: (String) -> Unit) {
     val focusManager = LocalFocusManager.current
     // A filled pill rather than a boxed form field, like the system search fields.
     TextField(
