@@ -38,6 +38,8 @@ import com.tanukee.flakesight.core.ResortForecast
 import com.tanukee.flakesight.core.WeatherCondition
 import com.tanukee.flakesight.core.forecastLevels
 import android.content.Context
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -63,7 +65,7 @@ internal val forecastService = ForecastService()
  * when the forecast cannot be fetched: this is a webcam app.
  */
 @Composable
-fun ForecastStrip(resort: Resort, showModelSnowDepth: Boolean = true) {
+fun ForecastStrip(resort: Resort, showModelSnowDepth: Boolean = true, onOpenAdvanced: (() -> Unit)? = null) {
     var forecast by remember(resort.id) { mutableStateOf(forecastService.cachedForecast(resort)) }
     var hasFailed by remember(resort.id) { mutableStateOf(false) }
     // Snow soon and the good days ahead; left out when the hourly forecast cannot be fetched.
@@ -88,7 +90,7 @@ fun ForecastStrip(resort: Resort, showModelSnowDepth: Boolean = true) {
 
     val shown = forecast
     when {
-        shown != null -> StripContent(shown, briefing, resort, isPlaceholder = false, showModelSnowDepth)
+        shown != null -> StripContent(shown, briefing, resort, isPlaceholder = false, showModelSnowDepth, onOpenAdvanced)
         !hasFailed -> StripContent(placeholder(resort), null, resort, isPlaceholder = true)
     }
 }
@@ -100,14 +102,26 @@ private fun StripContent(
     resort: Resort,
     isPlaceholder: Boolean,
     showModelSnowDepth: Boolean = true,
+    onOpenAdvanced: (() -> Unit)? = null,
 ) {
     val locale = LocalConfiguration.current.locales[0]
+    val openAdvanced = onOpenAdvanced?.takeIf { !isPlaceholder }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.weather), style = MaterialTheme.typography.titleMedium)
+        // "Weather", and the way to the advanced weather on the right.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.weather), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            if (openAdvanced != null) {
+                OutlinedButton(onClick = openAdvanced, contentPadding = PaddingValues(horizontal = 12.dp)) {
+                    Text("⛰️ " + stringResource(R.string.advanced_weather), style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
         val description = forecast.days.indices.map { daySentence(forecast, it, resort, locale) }.joinToString("\n")
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier
+                // The whole grid opens the advanced weather, like the button.
+                .then(if (openAdvanced != null) Modifier.clickable(onClick = openAdvanced) else Modifier)
                 .alpha(if (isPlaceholder) 0.3f else 1f)
                 // TalkBack reads one sentence per day instead of the cells.
                 .clearAndSetSemantics { if (!isPlaceholder) contentDescription = description },
@@ -259,7 +273,7 @@ private fun LevelRow(level: LevelForecast, locale: Locale) {
 }
 
 /** Emoji draw in colour everywhere, as the iOS multicolour symbols do, with no asset to ship. */
-private fun conditionSymbol(condition: WeatherCondition) = when (condition) {
+internal fun conditionSymbol(condition: WeatherCondition) = when (condition) {
     WeatherCondition.CLEAR -> "☀️"
     WeatherCondition.PARTLY_CLOUDY -> "⛅"
     WeatherCondition.CLOUDY -> "☁️"
@@ -276,7 +290,7 @@ private fun levelSymbol(level: ForecastLevel) = when (level) {
 }
 
 @Composable
-private fun conditionLabel(condition: WeatherCondition) = stringResource(
+internal fun conditionLabel(condition: WeatherCondition) = stringResource(
     when (condition) {
         WeatherCondition.CLEAR -> R.string.condition_clear
         WeatherCondition.PARTLY_CLOUDY -> R.string.condition_partly_cloudy
@@ -299,7 +313,7 @@ internal fun placePhrase(level: ForecastLevel) = stringResource(
 
 /** "In the last 7 days: 24 cm at the summit, none in the village." or "No snow in the last 7 days." */
 @Composable
-private fun recentSnowSentence(forecast: ResortForecast): String? {
+internal fun recentSnowSentence(forecast: ResortForecast): String? {
     val amounts = forecast.recentSnow() ?: return null
     val days = ForecastService.SNOW_RANKING_PAST_DAYS
     if (amounts.all { it.second == null }) return stringResource(R.string.no_recent_snow, days)

@@ -4,6 +4,7 @@ import android.icu.text.DateFormat
 import android.icu.text.ListFormatter
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,16 +50,16 @@ import kotlin.math.max
 import kotlin.math.min
 
 /** The snow layer's outline, the iOS `SnowPalette.snow` blue. */
-private val SnowBlue = Color(0xFF5B9BD5)
+internal val SnowBlue = Color(0xFF5B9BD5)
 
 /**
  * The snow on the ground from the massif's avalanche bulletin, drawn as a
  * mountain whose snow layer is as thick as the bulletin says at each
  * altitude: north slopes on the left, south on the right, from the snow line
- * up. Port of `SnowyMountainCard`; it does not open the advanced weather yet.
+ * up. Port of `SnowyMountainCard`. Opens the advanced weather.
  */
 @Composable
-fun SnowyMountainCard(reading: SnowDepthReading) {
+fun SnowyMountainCard(reading: SnowDepthReading, onClick: (() -> Unit)? = null) {
     val locale = LocalConfiguration.current.locales[0]
     val change = changeLabel(reading, locale)
     val description = listOfNotNull(spokenSnowDepth(reading, locale), change).joinToString(" ")
@@ -68,6 +69,7 @@ fun SnowyMountainCard(reading: SnowDepthReading) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .background(SnowBlue.copy(alpha = 0.1f))
             .padding(12.dp)
             .clearAndSetSemantics { contentDescription = "$description $source" },
@@ -195,7 +197,7 @@ private fun SnowyMountain(reading: SnowDepthReading, locale: Locale, modifier: M
  * `AvalancheRiskBadge`.
  */
 @Composable
-fun AvalancheRiskBadge(reading: SnowDepthReading) {
+fun AvalancheRiskBadge(reading: SnowDepthReading, onClick: (() -> Unit)? = null) {
     val level = reading.avalancheLevel ?: return
     val summary = reading.avalancheSummary()?.let { avalancheSummaryLabel(it) } ?: return
     val spoken = stringResource(R.string.avalanche_risk_spoken, summary)
@@ -205,6 +207,7 @@ fun AvalancheRiskBadge(reading: SnowDepthReading) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .background(avalancheColor(level).copy(alpha = 0.14f))
             .padding(10.dp)
             .clearAndSetSemantics { contentDescription = spoken },

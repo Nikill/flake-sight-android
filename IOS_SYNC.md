@@ -37,7 +37,9 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `ForecastBriefingTests` | Ported | wording tests check the values the sentences read; `sentencesReadInFrench` is the app's French strings |
 | `SnowDepthReport`, `SnowDepthReading`, `AvalancheRisk`, `SnowDepthLoader` | Partly | depth read between the bulletin's altitudes, the week's change, the danger level; the report is kept in the app's files instead of the App Group. `FreshSnow`, `MountainWeather`, `SlopeAspect` and `depthOnly` come with the advanced weather screen and Wear OS |
 | `SnowDepthTests`, `AvalancheBulletinTests` | Partly | reading, wording values, file and refresh tests; the CarPlay, Watch, slopes, fresh snow and mountain forecast tests with those features |
-| `SnowBand`, `MountainProfile` | Not yet | |
+| `MountainProfile` | Ported | without the models' ranges, which come with `SnowfallRange` |
+| `MountainProfileTests` | Ported | wording tests check the values the app formats; the range and French tests with the models table |
+| `SnowBand`, `SnowfallRange`, `ModelSnowfall`, `SnowGaugeScale` | Not yet | with the weather models table and the map |
 | `FavoriteResort`, `FavoritesStore` | Ported | JSON file in the app's files instead of SwiftData, written atomically; a failed write throws and changes nothing |
 | `FavoritesStoreTests` | Ported | plus Android-only persistence and failure tests |
 | `ResortSortingTests` | Partly | name, snow and favourites tests; distance tests with that order |
@@ -50,6 +52,8 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `ResortBrowserView` | Partly | stack below 600 dp; list beside the resort from 600 dp (unfolded foldable, tablet), split at the hinge in book posture; folding keeps the resort and webcam on screen. No map in the empty detail pane, no widget deep links |
 | `ResortListView` | Partly | alphabetical, favourites first with their star and "Default"; search on names, regions and webcams; Sort menu with Name, Snow Forecast and Recent Snow and the "Favourites on Top" toggle, both remembered under the iOS keys; each row's recent snow and bulletin snow depth, and the sorted figure on the right. No distance order, swipe to favourite, map or About |
 | `ResortDetailView`, `WebcamCard` | Partly | header, website link, favourite star, Set as Default, snow card, avalanche badge, forecast strip, webcam cards ordered by freshness; save failures shown as on iOS. No directions or season |
-| `SnowyMountainCard`, `AvalancheRiskBadge`, `AvalancheColor` | Partly | the drawn mountain, depths, week's change, bulletin credit, the level's colour and summary; they do not open the advanced weather screen yet |
-| `ForecastStrip` | Partly | five days at each level (condition as emoji, snow, maximum), "Forecast Details" (snow soon, good days, recent snow, model snow depth) folded and remembered as on iOS, Open-Meteo credit, one TalkBack sentence per day. No snow bars, models' ranges or advanced weather screen |
+| `SnowyMountainCard`, `AvalancheRiskBadge`, `AvalancheColor` | Ported | both open the advanced weather screen |
+| `AdvancedForecastView` | Partly | the mountain profile, the recent snow and the Open-Meteo credit; opened from the strip's grid and button, the snow card and the avalanche badge. The bulletin section and the weather models table not yet |
+| `MountainProfileView` | Partly | drawn in Compose: levels over a mountain outline, each day's snow or rain, the freezing level, the bulletin's ground column and snow line, the legend, one TalkBack sentence per day. The bulletin's rain-snow limit and the models' ranges not yet |
+| `ForecastStrip` | Partly | five days at each level (condition as emoji, snow, maximum), "Forecast Details" (snow soon, good days, recent snow, model snow depth) folded and remembered as on iOS, Open-Meteo credit, one TalkBack sentence per day; the grid and the Advanced Weather button open the advanced screen. No snow bars or models' ranges |
 | `WebcamDetailView` | Partly | panorama scrolling sideways from its middle, refresh, capture time, altitude, orientation, source link. No afternoon images (with their area); no live stream player, as no catalogued webcam has a stream |

@@ -1,0 +1,412 @@
+package com.tanukee.flakesight
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.tanukee.flakesight.core.DetailedForecast
+import com.tanukee.flakesight.core.ForecastLevel
+import com.tanukee.flakesight.core.ForecastService
+import com.tanukee.flakesight.core.MountainProfile
+import com.tanukee.flakesight.core.Resort
+import com.tanukee.flakesight.core.ResortForecast
+import com.tanukee.flakesight.core.SnowDepthReading
+import com.tanukee.flakesight.core.SnowDepthReport
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import java.time.format.TextStyle
+import java.util.Locale
+
+/** The forecast's colours, as `SnowPalette` on iOS: the snow blue of the snow card, rain cyan, the freezing level orange. */
+private val Rain = Color(0xFF32ADE6)
+private val FreezingLevel = Color(0xFFFF9500)
+
+/**
+ * The forecast in detail: the coming days across the mountain (what falls at
+ * the summit and in the village, the freezing level between them, with the
+ * avalanche bulletin's snow on the ground and snow line), then the snow of
+ * the last days. Port of `AdvancedForecastView`; the bulletin section and the
+ * weather models table come next. Reuses the resort screen's requests from
+ * the cache.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AdvancedForecastScreen(resort: Resort, snowDepth: SnowDepthReading?, onBack: () -> Unit) {
+    var forecast by remember(resort.id) { mutableStateOf(forecastService.cachedForecast(resort)) }
+    var detailed by remember(resort.id) { mutableStateOf<DetailedForecast?>(null) }
+    var hasFailed by remember(resort.id) { mutableStateOf(false) }
+    var attempt by remember(resort.id) { mutableIntStateOf(0) }
+    LaunchedEffect(resort.id, attempt) {
+        hasFailed = false
+        launch {
+            try {
+                detailed = forecastService.detailedForecast(resort)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+            }
+        }
+        try {
+            forecast = forecastService.forecast(resort)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            hasFailed = forecast == null
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(stringResource(R.string.advanced_weather))
+                        Text(resort.name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
+                    }
+                },
+            )
+        },
+    ) { padding ->
+        val shown = forecast
+        Box(Modifier.padding(padding).fillMaxSize()) {
+            when {
+                shown != null -> AdvancedContent(shown, detailed, snowDepth, resort)
+                hasFailed -> Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                ) {
+                    Text(stringResource(R.string.forecast_unavailable), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.forecast_could_not_load), textAlign = TextAlign.Center)
+                    Button(onClick = { attempt++ }) { Text(stringResource(R.string.try_again)) }
+                }
+                else -> CircularProgressIndicator(Modifier.align(Alignment.TopCenter).padding(top = 40.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdvancedContent(forecast: ResortForecast, detailed: DetailedForecast?, snowDepth: SnowDepthReading?, resort: Resort) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(28.dp),
+        modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
+    ) {
+        // A resort without catalogued altitudes has no mountain to draw.
+        MountainProfile.of(forecast, detailed, resort.timeZone)?.let { MountainProfileChart(it, snowDepth?.bulletin) }
+        recentSnowSentence(forecast)?.let { sentence ->
+            Text(
+                "❄️  $sentence",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(SnowBlue.copy(alpha = 0.12f))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            )
+        }
+        val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+        TextButton(onClick = { uriHandler.openUri(ForecastService.ATTRIBUTION_URL) }, contentPadding = PaddingValues(0.dp)) {
+            Text(
+                stringResource(R.string.weather_data_by_open_meteo),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+private val AXIS_WIDTH = 76.dp
+private val DAY_ROW_HEIGHT = 22.dp
+private val CHART_HEIGHT = 260.dp
+
+/**
+ * The coming days across the mountain: the summit and the village at their
+ * altitude over a mountain outline, what falls at each every day, and the
+ * freezing level between them as a dashed line. With the massif's bulletin, a
+ * first column gives the snow on the ground at each level (north over south)
+ * and the snow line runs across. Port of `MountainProfileView`; the
+ * bulletin's rain-snow limit comes with the bulletin section.
+ */
+@Composable
+private fun MountainProfileChart(profile: MountainProfile, bulletin: SnowDepthReport.Massif?) {
+    val locale = LocalConfiguration.current.locales[0]
+    val snapshot = bulletin?.current
+    val snowLine = snapshot?.snowLine?.takeIf { it.toDouble() in profile.altitudeDomain }
+    val columns = (if (snapshot != null) 1 else 0) + profile.days.size
+    val firstDayColumn = columns - profile.days.size
+    val description = profile.days.map { daySummary(it, locale) }.joinToString("\n")
+    val lineColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val domain = profile.altitudeDomain
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(R.string.snow_and_rain_by_altitude), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        BoxWithConstraints(Modifier.fillMaxWidth().height(CHART_HEIGHT).clearAndSetSemantics { contentDescription = description }) {
+            val plotWidth = maxWidth - AXIS_WIDTH
+            val plotHeight = maxHeight - DAY_ROW_HEIGHT
+            val columnWidth = plotWidth / columns
+            fun x(column: Int): Dp = AXIS_WIDTH + columnWidth * (column + 0.5f)
+            fun y(altitude: Double): Dp = plotHeight * (1 - ((altitude - domain.start) / (domain.endInclusive - domain.start)).toFloat())
+
+            Canvas(Modifier.fillMaxSize()) {
+                val left = AXIS_WIDTH.toPx()
+                val bottom = plotHeight.toPx()
+                fun at(fractionX: Float, fractionY: Float) = Offset(left + (size.width - left) * fractionX, bottom * fractionY)
+
+                // A plain mountain outline whose highest point is the summit.
+                val peak = (y(profile.altitudes.first().toDouble()).toPx() / bottom).coerceAtLeast(0f)
+                val low = peak + (1 - peak) * 0.45f
+                val outline = Path().apply {
+                    moveTo(left, bottom)
+                    listOf(0f to low + 0.15f, 0.22f to low, 0.34f to low + 0.1f, 0.6f to peak, 0.74f to low - 0.05f, 0.86f to low + 0.08f, 1f to low)
+                        .forEach { (fx, fy) -> at(fx, fy).let { lineTo(it.x, it.y) } }
+                    lineTo(size.width, bottom)
+                    close()
+                }
+                drawPath(outline, Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.16f), lineColor.copy(alpha = 0.04f)), startY = 0f, endY = bottom))
+
+                for (altitude in profile.altitudes) {
+                    val ly = y(altitude.toDouble()).toPx()
+                    drawLine(lineColor.copy(alpha = 0.35f), Offset(left, ly), Offset(size.width, ly), strokeWidth = 1.dp.toPx())
+                }
+                if (snowLine != null) {
+                    val ly = y(snowLine.toDouble()).toPx()
+                    drawLine(
+                        SnowBlue, Offset(left, ly), Offset(size.width, ly), strokeWidth = 1.5.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 3.dp.toPx())),
+                    )
+                }
+                // The freezing level from day to day, kept inside the drawing.
+                val freezing = profile.days.mapIndexedNotNull { index, day ->
+                    day.freezingLevel?.let { Offset(x(firstDayColumn + index).toPx(), y(profile.clamped(it)).toPx()) }
+                }
+                if (freezing.size > 1) {
+                    val path = Path().apply {
+                        moveTo(freezing[0].x, freezing[0].y)
+                        freezing.drop(1).forEach { lineTo(it.x, it.y) }
+                    }
+                    drawPath(
+                        path, FreezingLevel,
+                        style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))),
+                    )
+                }
+            }
+
+            // The levels on the left, at their altitude.
+            profile.days.firstOrNull()?.spots?.forEach { spot ->
+                Text(
+                    levelMark(spot.level) + " " + metres(spot.altitude, locale),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(AXIS_WIDTH).centredAt(AXIS_WIDTH / 2, y(spot.altitude.toDouble())),
+                )
+            }
+            // The bulletin's snow on the ground, north over south, before the days.
+            if (snapshot != null) {
+                for (altitude in profile.altitudes) {
+                    GroundBadge(
+                        snapshot.depth(SnowDepthReport.Side.NORTH, altitude),
+                        snapshot.depth(SnowDepthReport.Side.SOUTH, altitude),
+                        Modifier.centredAt(x(0), y(altitude.toDouble())),
+                    )
+                }
+                ColumnLabel(stringResource(R.string.ground), Modifier.centredAt(x(0), plotHeight + DAY_ROW_HEIGHT / 2))
+            }
+            profile.days.forEachIndexed { index, day ->
+                val column = firstDayColumn + index
+                day.spots.forEach { spot -> SpotBadge(spot, locale, Modifier.centredAt(x(column), y(spot.altitude.toDouble()))) }
+                ColumnLabel(day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale), Modifier.centredAt(x(column), plotHeight + DAY_ROW_HEIGHT / 2))
+            }
+        }
+        Legend(snapshot?.snowLine, locale)
+    }
+}
+
+/** Places the element with its centre at ([x], [y]) inside the chart box. */
+private fun Modifier.centredAt(x: Dp, y: Dp) = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+    layout(placeable.width, placeable.height) {
+        placeable.place(x.roundToPx() - placeable.width / 2, y.roundToPx() - placeable.height / 2)
+    }
+}
+
+@Composable
+private fun ColumnLabel(text: String, modifier: Modifier) {
+    Text(text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = modifier)
+}
+
+/** What falls at one level on one day: its pictogram and the amount. */
+@Composable
+private fun SpotBadge(spot: MountainProfile.Spot, locale: Locale, modifier: Modifier) {
+    val symbol = when (spot.precipitation) {
+        MountainProfile.Precipitation.SNOW -> "❄️"
+        MountainProfile.Precipitation.RAIN -> "💧"
+        MountainProfile.Precipitation.MIXED -> "🌨️"
+        MountainProfile.Precipitation.NONE -> conditionSymbol(spot.forecast.condition)
+    }
+    val amount = when (spot.precipitation) {
+        MountainProfile.Precipitation.SNOW, MountainProfile.Precipitation.MIXED -> spot.forecast.snowfallCentimetres?.let { centimetres(it, locale) }
+        MountainProfile.Precipitation.RAIN -> stringResource(R.string.legend_rain)
+        MountainProfile.Precipitation.NONE -> null
+    }
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+            .padding(horizontal = 5.dp, vertical = 3.dp),
+    ) {
+        Text(symbol, fontSize = 14.sp)
+        if (amount != null) {
+            Text(
+                amount,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (spot.precipitation == MountainProfile.Precipitation.RAIN) Rain else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+/** The snow on the ground at one level, from the bulletin: north slopes over south, the bulletin's way of giving it. */
+@Composable
+private fun GroundBadge(north: SnowDepthReading.Depth?, south: SnowDepthReading.Depth?, modifier: Modifier) {
+    @Composable
+    fun side(letter: String, depth: SnowDepthReading.Depth?) = Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(letter, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            depth?.let { "${it.centimetres}${if (it.isLowerBound) "+" else ""}" } ?: "?",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .background(SnowBlue.copy(alpha = 0.15f))
+            .padding(horizontal = 4.dp, vertical = 2.dp),
+    ) {
+        side("N", north)
+        side("S", south)
+    }
+}
+
+@Composable
+private fun Legend(snowLine: Int?, locale: Locale) {
+    @Composable
+    fun dash(color: Color, on: Float, off: Float) = Canvas(Modifier.width(18.dp).height(2.dp)) {
+        drawLine(
+            color, Offset(0f, size.height / 2), Offset(size.width, size.height / 2), strokeWidth = 2.dp.toPx(),
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(on.dp.toPx(), off.dp.toPx())),
+        )
+    }
+    val style = MaterialTheme.typography.labelMedium
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.clearAndSetSemantics {},
+    ) {
+        Text("❄️ " + stringResource(R.string.legend_snow), style = style, color = SnowBlue)
+        Text("💧 " + stringResource(R.string.legend_rain), style = style, color = Rain)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            dash(FreezingLevel, 4f, 3f)
+            Text(stringResource(R.string.legend_freezing_level), style = style)
+        }
+        if (snowLine != null) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                dash(SnowBlue, 2f, 3f)
+                Text(stringResource(R.string.snow_from, metres(snowLine, locale)), style = style)
+            }
+        }
+    }
+}
+
+/** "Friday: Summit, 2,100 m: 38 cm of snow. Village, 1,600 m: rain. 0 °C at 1,700 m.", for TalkBack. */
+@Composable
+private fun daySummary(day: MountainProfile.Day, locale: Locale): String {
+    val weekday = day.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale).replaceFirstChar { it.titlecase(locale) }
+    val sentences = day.spots.map { spot ->
+        val what = when (spot.precipitation) {
+            MountainProfile.Precipitation.SNOW -> listOf(stringResource(R.string.amount_of_snow, centimetres(spot.forecast.snowfallCentimetres ?: 0, locale)))
+            MountainProfile.Precipitation.MIXED -> listOf(
+                stringResource(R.string.amount_of_snow, centimetres(spot.forecast.snowfallCentimetres ?: 0, locale)),
+                stringResource(R.string.rain_spoken),
+            )
+            MountainProfile.Precipitation.RAIN -> listOf(stringResource(R.string.rain_spoken))
+            MountainProfile.Precipitation.NONE -> listOf(conditionLabel(spot.forecast.condition))
+        }
+        stringResource(R.string.day_summary, levelName(spot.level, locale), what.joinToString(", "))
+    } + listOfNotNull(day.roundedFreezingLevel?.let { stringResource(R.string.freezing_level_at, metres(it, locale)) })
+    return stringResource(R.string.day_summary, weekday, sentences.joinToString(". ")) + "."
+}
+
+/** "Summit, 2,100 m", "Village, 1,600 m" or "Resort". */
+@Composable
+private fun levelName(level: ForecastLevel, locale: Locale) = when (level) {
+    is ForecastLevel.Summit -> stringResource(R.string.level_summit, metres(level.altitude, locale))
+    is ForecastLevel.Village -> stringResource(R.string.level_village, metres(level.altitude, locale))
+    ForecastLevel.ResortCentre -> stringResource(R.string.level_resort)
+}
+
+private fun levelMark(level: ForecastLevel) = when (level) {
+    is ForecastLevel.Summit -> "▲"
+    is ForecastLevel.Village -> "▼"
+    ForecastLevel.ResortCentre -> "●"
+}
+
