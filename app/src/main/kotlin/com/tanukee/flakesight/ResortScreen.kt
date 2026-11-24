@@ -1,6 +1,15 @@
 package com.tanukee.flakesight
 
 import android.graphics.Bitmap
+import android.icu.text.DateFormat
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import com.tanukee.flakesight.core.ResortSeason
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.util.Date
 import android.graphics.ImageDecoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -227,6 +236,14 @@ private fun ResortHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        seasonSummary(resort)?.let { summary ->
+            // TalkBack reads the sentence, not the calendar emoji.
+            Text(
+                "📅 $summary",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.clearAndSetSemantics { contentDescription = summary },
+            )
+        }
         val uriHandler = LocalUriHandler.current
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             TextButton(onClick = { uriHandler.openUri(resort.websiteURL) }, contentPadding = PaddingValues(0.dp)) {
@@ -250,6 +267,26 @@ private fun ResortHeader(
             Spacer(Modifier.height(8.dp))
         }
         ForecastStrip(resort, showModelSnowDepth = snowDepth == null, onOpenAdvanced = onOpenForecast)
+    }
+}
+
+/**
+ * "Opening planned on 12 December", "Season planned until 18 April" or "Season ended
+ * on 18 April", never "open": the catalogue does not follow a postponed opening.
+ * `null` while the season runs with no published closing day. Port of `ResortSeason.summary`.
+ */
+@Composable
+private fun seasonSummary(resort: Resort): String? {
+    val phase = resort.season?.phase(Instant.now(), resort.timeZone) ?: return null
+    val locale = LocalConfiguration.current.locales[0]
+    // "12 December", "12 décembre": the catalogued day, at noon UTC so no time zone shifts it.
+    fun day(date: LocalDate) = DateFormat.getInstanceForSkeleton("dMMMM", locale)
+        .apply { timeZone = android.icu.util.TimeZone.GMT_ZONE }
+        .format(Date.from(date.atTime(12, 0).toInstant(ZoneOffset.UTC)))
+    return when (phase) {
+        is ResortSeason.Phase.Upcoming -> stringResource(R.string.season_opening_planned, day(phase.opening))
+        is ResortSeason.Phase.Running -> phase.closing?.let { stringResource(R.string.season_planned_until, day(it)) }
+        is ResortSeason.Phase.Ended -> stringResource(R.string.season_ended, day(phase.closing))
     }
 }
 
