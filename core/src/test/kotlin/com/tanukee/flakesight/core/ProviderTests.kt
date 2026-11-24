@@ -69,22 +69,24 @@ class ProviderTests {
 
     // Roundshot
 
-    /**
-     * Trimmed from `https://tignes.roundshot.com/lac/structure.json`: the list is
-     * not in time order, and a capture still being processed is newer than the
-     * last finished one.
-     */
-    private fun roundshotImage(status: String = "finished", datetime: Long, time: String): String {
-        val base = "https://storage4.roundshot.com/543bc630698b92.10661132/2026-10-30/$time/2026-10-30-$time"
-        return """
-            {"id": 239482207, "status": "$status", "datetime": $datetime, "tile": {"w": 1024, "h": 1024},
-             "structure": {
-               "full": {"w": 15696, "h": 2048, "url_full": "${base}_full.jpg", "url_tile": "${base}_full/%x%_%y%.jpg"},
-               "half": {"w": 7848, "h": 1024, "url_full": "${base}_half.jpg", "url_tile": "${base}_half/%x%_%y%.jpg"},
-               "quarter": {"w": 3924, "h": 512, "url_full": "${base}_quarter.jpg", "url_tile": "${base}_quarter/%x%_%y%.jpg"},
-               "thumbnail": {"w": 450, "h": 59, "url_full": "${base}_thumbnail.jpg"}
-             }}
-        """.trimIndent()
+    companion object {
+        /**
+         * Trimmed from `https://tignes.roundshot.com/lac/structure.json`: the list is
+         * not in time order, and a capture still being processed is newer than the
+         * last finished one. Also used by `ArchiveProviderTests`.
+         */
+        fun roundshotImage(status: String = "finished", datetime: Long, time: String): String {
+            val base = "https://storage4.roundshot.com/543bc630698b92.10661132/2026-10-30/$time/2026-10-30-$time"
+            return """
+                {"id": 239482207, "status": "$status", "datetime": $datetime, "tile": {"w": 1024, "h": 1024},
+                 "structure": {
+                   "full": {"w": 15696, "h": 2048, "url_full": "${base}_full.jpg", "url_tile": "${base}_full/%x%_%y%.jpg"},
+                   "half": {"w": 7848, "h": 1024, "url_full": "${base}_half.jpg", "url_tile": "${base}_half/%x%_%y%.jpg"},
+                   "quarter": {"w": 3924, "h": 512, "url_full": "${base}_quarter.jpg", "url_tile": "${base}_quarter/%x%_%y%.jpg"},
+                   "thumbnail": {"w": 450, "h": 59, "url_full": "${base}_thumbnail.jpg"}
+                 }}
+            """.trimIndent()
+        }
     }
 
     @Test

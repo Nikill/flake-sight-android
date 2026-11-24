@@ -1,5 +1,6 @@
 package com.tanukee.flakesight.core
 
+import java.time.Instant
 import java.time.ZoneId
 
 /**
@@ -18,6 +19,15 @@ interface WebcamProvider {
 
     /** Credit to display alongside the webcam's content. */
     fun attribution(webcam: Webcam): WebcamAttribution = webcam.attribution
+
+    /** Whether past captures stay on the provider's storage, so [archivedSnapshotReference] can find them days later. */
+    val keepsArchive: Boolean get() = false
+
+    /**
+     * Where the provider stored the capture closest to [target], within
+     * [AfternoonWindow.TOLERANCE], or `null` when it has none near it.
+     */
+    suspend fun archivedSnapshotReference(webcam: Webcam, target: Instant, size: SnapshotSize, zone: ZoneId): SnapshotReference? = null
 }
 
 /**

@@ -13,6 +13,12 @@ import java.util.TreeMap
 fun interface HttpClient {
     /** Blocking. [useCaches] `false` bypasses the local HTTP cache (explicit refresh). */
     fun get(url: String, useCaches: Boolean): HttpResponse
+
+    /**
+     * Blocking. Whether [url] exists without downloading it, for the archive
+     * lookups that try several file names. Clients without HEAD fall back to a GET.
+     */
+    fun head(url: String): HttpResponse = get(url, useCaches = true)
 }
 
 class HttpResponse(
@@ -29,20 +35,28 @@ class HttpResponse(
  * [HttpURLConnection], available on the JVM and on Android. On Android it
  * honours providers' cache headers once the app installs an `HttpResponseCache`.
  */
-val UrlConnectionHttpClient = HttpClient { url, useCaches ->
-    val connection = URI(url).toURL().openConnection() as HttpURLConnection
-    try {
-        connection.connectTimeout = 30_000
-        connection.readTimeout = 30_000
-        if (!useCaches) connection.setRequestProperty("Cache-Control", "no-cache")
-        val status = connection.responseCode
-        val stream = if (status >= 400) connection.errorStream else connection.inputStream
-        val headers = connection.headerFields.entries
-            .filter { it.key != null }
-            .associate { it.key to it.value.joinToString(", ") }
-        HttpResponse(status, headers, stream?.use { it.readBytes() } ?: ByteArray(0))
-    } finally {
-        connection.disconnect()
+object UrlConnectionHttpClient : HttpClient {
+    override fun get(url: String, useCaches: Boolean): HttpResponse = request(url, "GET", useCaches)
+
+    override fun head(url: String): HttpResponse = request(url, "HEAD", useCaches = true)
+
+    private fun request(url: String, method: String, useCaches: Boolean): HttpResponse {
+        val connection = URI(url).toURL().openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = method
+            connection.connectTimeout = 30_000
+            connection.readTimeout = 30_000
+            if (!useCaches) connection.setRequestProperty("Cache-Control", "no-cache")
+            val status = connection.responseCode
+            val headers = connection.headerFields.entries
+                .filter { it.key != null }
+                .associate { it.key to it.value.joinToString(", ") }
+            if (method == "HEAD") return HttpResponse(status, headers, ByteArray(0))
+            val stream = if (status >= 400) connection.errorStream else connection.inputStream
+            return HttpResponse(status, headers, stream?.use { it.readBytes() } ?: ByteArray(0))
+        } finally {
+            connection.disconnect()
+        }
     }
 }
 
