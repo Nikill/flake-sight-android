@@ -69,6 +69,24 @@
     <string name="today_weekday">Aujourd\'hui, %1$s</string>
     <string name="day_summary">%1$s : %2$s</string>
 
+    <string name="snow_on_the_ground">Neige au sol</string>
+    <string name="snow_line">Limite d\'enneigement %1$s</string>
+    <string name="snow_change_up">+%1$s en %2$d jours</string>
+    <string name="snow_change_down">-%1$s en %2$d jours</string>
+    <string name="snow_change_none">Pas de changement en %1$d jours</string>
+    <string name="bulletin_source">Hors-piste, bulletin d\'avalanche Météo-France du %1$s</string>
+    <string name="snow_depth_spoken">Hauteur de neige : %1$s.</string>
+    <string name="at_least">au moins %1$s</string>
+    <string name="avalanche_risk">Risque d\'avalanche</string>
+    <string name="avalanche_risk_spoken">Risque d\'avalanche : %1$s</string>
+    <string name="avalanche_level">%1$d/5 %2$s</string>
+    <string name="avalanche_low">Faible</string>
+    <string name="avalanche_moderate">Limité</string>
+    <string name="avalanche_considerable">Marqué</string>
+    <string name="avalanche_high">Fort</string>
+    <string name="avalanche_very_high">Très fort</string>
+    <string name="avalanche_split">%1$s au-dessus de %2$s, %3$s en dessous</string>
+
     <string name="refresh">Actualiser</string>
     <string name="latest_image_from">Dernière image de %1$s</string>
     <string name="image_unavailable">Image indisponible</string>

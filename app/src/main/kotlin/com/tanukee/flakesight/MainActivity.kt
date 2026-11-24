@@ -70,6 +70,8 @@ import com.tanukee.flakesight.core.FavoritesStore
 import com.tanukee.flakesight.core.Resort
 import com.tanukee.flakesight.core.ResortRepository
 import com.tanukee.flakesight.core.ResortSortOrder
+import com.tanukee.flakesight.core.SnowDepthReport
+import com.tanukee.flakesight.core.SnowDepthStore
 import com.tanukee.flakesight.core.SnowTotals
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.RadioButton
@@ -87,6 +89,9 @@ class MainActivity : ComponentActivity() {
     /** On the device only, never sent anywhere (same privacy promise as iOS). */
     private val favoritesStore by lazy { FavoritesStore(File(filesDir, "favorites.json")) }
 
+    /** The last avalanche bulletins' snow depths, kept for offline use. */
+    private val snowDepthStore by lazy { SnowDepthStore(File(filesDir, "snow-depth.json")) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -100,7 +105,7 @@ class MainActivity : ComponentActivity() {
             FlakeSightTheme {
                 val repository = remember { ResortRepository.bundled() }
                 val layoutInfo by windowLayoutInfo.collectAsState(initial = null)
-                ResortBrowser(repository, favoritesStore, layoutInfo)
+                ResortBrowser(repository, favoritesStore, snowDepthStore, layoutInfo)
             }
         }
     }
@@ -118,7 +123,15 @@ private val TWO_PANE_MIN_WIDTH = 600.dp
  * resort and webcam on screen.
  */
 @Composable
-fun ResortBrowser(repository: ResortRepository, favoritesStore: FavoritesStore, layoutInfo: WindowLayoutInfo?) {
+fun ResortBrowser(
+    repository: ResortRepository,
+    favoritesStore: FavoritesStore,
+    snowDepthStore: SnowDepthStore,
+    layoutInfo: WindowLayoutInfo?,
+) {
+    // Refreshed each time the app opens; a failure keeps the stored report.
+    val snowDepthReport by snowDepthStore.report.collectAsState()
+    LaunchedEffect(snowDepthStore) { snowDepthStore.refresh() }
     // Saved IDs rather than a navigation library: two levels, resort then webcam.
     var selectedResortID by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedWebcamID by rememberSaveable { mutableStateOf<String?>(null) }
@@ -170,6 +183,7 @@ fun ResortBrowser(repository: ResortRepository, favoritesStore: FavoritesStore, 
             settings.edit().putBoolean("favoritesOnTop", it).apply()
         },
         snowTotals = snowTotals,
+        snowDepthReport = snowDepthReport,
         selectedResortID = selectedResortID,
     )
     // A change that could not be saved is said, not silently dropped (`FavoritesSaveFailure` on iOS).
@@ -189,6 +203,7 @@ fun ResortBrowser(repository: ResortRepository, favoritesStore: FavoritesStore, 
         onSetDefault = { changeFavorites { setDefault(resort.id) } },
         onBack = onBack,
         onSelectWebcam = selectWebcam,
+        snowDepth = snowDepthReport?.reading(resort),
     )
 
     saveFailure?.let { reason ->
@@ -287,6 +302,7 @@ fun ResortListScreen(
     favoritesOnTop: Boolean = true,
     onFavoritesOnTopChange: (Boolean) -> Unit = {},
     snowTotals: SnowTotals? = null,
+    snowDepthReport: SnowDepthReport? = null,
     selectedResortID: String? = null,
 ) {
     Scaffold(
@@ -307,7 +323,7 @@ fun ResortListScreen(
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                 )
             }
-            ResortRows(resorts, favorites, onSelect, sortOrder, snowTotals, selectedResortID)
+            ResortRows(resorts, favorites, onSelect, sortOrder, snowTotals, snowDepthReport, selectedResortID)
         }
     }
 }
@@ -389,6 +405,7 @@ private fun ResortRows(
     onSelect: (Resort) -> Unit,
     sortOrder: ResortSortOrder,
     snowTotals: SnowTotals?,
+    snowDepthReport: SnowDepthReport?,
     selectedResortID: String?,
 ) {
     val locale = LocalConfiguration.current.locales[0]
@@ -409,14 +426,21 @@ private fun ResortRows(
                     },
                 ),
                 supportingContent = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(resort.region)
-                        // The snow fallen lately, unless the list is sorted by it and the figure on the right says it.
-                        val recent = snowTotals?.centimetres(SnowTotals.Kind.RECENT, resort.id)
-                        if (recent != null && sortOrder != ResortSortOrder.RECENT_SNOW) {
-                            val amount = centimetres(recent, locale)
-                            val sentence = snowSentence(SnowTotals.Kind.RECENT, amount)
-                            Text("· ❄ $amount", modifier = Modifier.semantics { contentDescription = sentence })
+                    Column {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(resort.region)
+                            // The snow fallen lately, unless the list is sorted by it and the figure on the right says it.
+                            val recent = snowTotals?.centimetres(SnowTotals.Kind.RECENT, resort.id)
+                            if (recent != null && sortOrder != ResortSortOrder.RECENT_SNOW) {
+                                val amount = centimetres(recent, locale)
+                                val sentence = snowSentence(SnowTotals.Kind.RECENT, amount)
+                                Text("· ❄ $amount", modifier = Modifier.semantics { contentDescription = sentence })
+                            }
+                        }
+                        // The bulletin's depth on its own line, so a narrow list keeps its width for the name.
+                        snowDepthReport?.reading(resort)?.let { reading ->
+                            val spoken = spokenSnowDepth(reading, locale)
+                            Text(compactSnowDepth(reading, locale), modifier = Modifier.semantics { contentDescription = spoken })
                         }
                     }
                 },

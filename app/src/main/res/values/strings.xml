@@ -93,6 +93,35 @@
     <!-- Read by TalkBack: %1$s is the day, %2$s what each level expects. -->
     <string name="day_summary">%1$s: %2$s</string>
 
+    <!-- Snow on the ground and avalanche risk, from Météo-France's avalanche bulletin -->
+    <string name="snow_on_the_ground">Snow on the Ground</string>
+    <!-- %1$s is an altitude, "1,300 m". -->
+    <string name="snow_line">Snow line %1$s</string>
+    <!-- A depth figure, "105" or "125+" above the bulletin's altitudes. -->
+    <string name="depth_figure_cm" translatable="false">%1$s cm</string>
+    <!-- %1$s is an amount, "55 cm"; %2$d the days the change covers. -->
+    <string name="snow_change_up">+%1$s in %2$d days</string>
+    <string name="snow_change_down">-%1$s in %2$d days</string>
+    <string name="snow_change_none">No change in %1$d days</string>
+    <!-- What the figures are and the day they describe, as the licence asks: %1$s is "21 Nov". -->
+    <string name="bulletin_source">Off-piste, Météo-France avalanche bulletin of %1$s</string>
+    <!-- Read by TalkBack: %1$s is a list, "at least 125 cm at the summit and 105 cm in the village". -->
+    <string name="snow_depth_spoken">Snow depth: %1$s.</string>
+    <string name="at_least">at least %1$s</string>
+    <string name="avalanche_risk">Avalanche Risk</string>
+    <!-- Read by TalkBack: %1$s is "4/5 High above 2,200 m, 3/5 Considerable below". -->
+    <string name="avalanche_risk_spoken">Avalanche risk: %1$s</string>
+    <!-- %1$d is the level, %2$s its name: "4/5 High". -->
+    <string name="avalanche_level">%1$d/5 %2$s</string>
+    <!-- The European avalanche danger scale; Météo-France says faible, limité, marqué, fort, très fort. -->
+    <string name="avalanche_low">Low</string>
+    <string name="avalanche_moderate">Moderate</string>
+    <string name="avalanche_considerable">Considerable</string>
+    <string name="avalanche_high">High</string>
+    <string name="avalanche_very_high">Very high</string>
+    <!-- %1$s and %3$s are levels, "4/5 High"; %2$s the altitude where the bulletin splits them. -->
+    <string name="avalanche_split">%1$s above %2$s, %3$s below</string>
+
     <!-- Webcam screen -->
     <string name="refresh">Refresh</string>
     <!-- %1$s is the webcam's name. -->

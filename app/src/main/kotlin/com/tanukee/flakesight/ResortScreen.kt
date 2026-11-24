@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Spacer
 import com.tanukee.flakesight.core.FavoriteResort
 import com.tanukee.flakesight.core.Resort
+import com.tanukee.flakesight.core.SnowDepthReading
 import com.tanukee.flakesight.core.SnapshotFreshness
 import com.tanukee.flakesight.core.SnapshotSize
 import com.tanukee.flakesight.core.Webcam
@@ -90,6 +91,8 @@ fun ResortScreen(
     onSetDefault: () -> Unit,
     onBack: (() -> Unit)?,
     onSelectWebcam: (Webcam) -> Unit,
+    /** The massif's avalanche bulletin read at this resort, when recent. */
+    snowDepth: SnowDepthReading? = null,
 ) {
     val cards = remember(resort.id) { mutableStateMapOf<String, ImageState>() }
     // Reordered only once every card has settled, so cards do not shuffle while the screen fills up.
@@ -143,7 +146,7 @@ fun ResortScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp),
             modifier = Modifier.padding(padding),
         ) {
-            item(span = { GridItemSpan(maxLineSpan) }) { ResortHeader(resort, favorite, onSetDefault) }
+            item(span = { GridItemSpan(maxLineSpan) }) { ResortHeader(resort, favorite, onSetDefault, snowDepth) }
             if (resort.webcams.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) { NoWebcams() }
             }
@@ -199,7 +202,7 @@ private suspend fun decode(snapshot: WebcamSnapshot, maxPixelSize: Int): Bitmap?
 }
 
 @Composable
-private fun ResortHeader(resort: Resort, favorite: FavoriteResort?, onSetDefault: () -> Unit) {
+private fun ResortHeader(resort: Resort, favorite: FavoriteResort?, onSetDefault: () -> Unit, snowDepth: SnowDepthReading?) {
     val country = Locale.Builder().setRegion(resort.country).build().displayCountry
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("${resort.region} · $country", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -223,7 +226,14 @@ private fun ResortHeader(resort: Resort, favorite: FavoriteResort?, onSetDefault
             }
         }
         Spacer(Modifier.height(8.dp))
-        ForecastStrip(resort)
+        if (snowDepth != null) {
+            Spacer(Modifier.height(4.dp))
+            SnowyMountainCard(snowDepth)
+            Spacer(Modifier.height(4.dp))
+            AvalancheRiskBadge(snowDepth)
+            Spacer(Modifier.height(8.dp))
+        }
+        ForecastStrip(resort, showModelSnowDepth = snowDepth == null)
     }
 }
 
