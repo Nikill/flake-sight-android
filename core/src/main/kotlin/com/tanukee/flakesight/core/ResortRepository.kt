@@ -2,6 +2,8 @@ package com.tanukee.flakesight.core
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.text.Collator
+import java.util.Locale
 
 /**
  * Read-only access to the resort and webcam catalogue. Port of `ResortRepository`
@@ -19,6 +21,21 @@ class ResortRepository(val resorts: List<Resort>) {
             resort.webcam(withId)?.let { return resort to it }
         }
         return null
+    }
+
+    /**
+     * The catalogue for the resort list: alphabetical, favourites first when
+     * [favoritesFirst] (both groups alphabetical), mixed in otherwise. Unknown
+     * favourite IDs are ignored. Port of `sortedResorts` for the name order;
+     * distance and snow orders come with location and forecasts.
+     */
+    fun sortedResorts(favoriteIDs: Collection<String>, favoritesFirst: Boolean = true): List<Resort> {
+        // Accent-aware, like localizedStandardCompare: Brévent before Col, Dôme after.
+        val collator = Collator.getInstance(Locale.FRENCH)
+        val sorted = resorts.sortedWith { a, b -> collator.compare(a.name, b.name) }
+        if (!favoritesFirst) return sorted
+        val (favorites, others) = sorted.partition { it.id in favoriteIDs }
+        return favorites + others
     }
 
     companion object {

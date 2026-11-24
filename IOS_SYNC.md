@@ -23,20 +23,23 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | SkiPatrolKit area | Android | Notes |
 |---|---|---|
 | Catalogue models (`Resort`, `Webcam`, `Parking`, `ResortSeason`, provider and capability types) | Ported | `core/.../Resort.kt`, `Webcam.kt` |
-| `ResortRepository` (bundled, lookup, search) | Partly | `available()` and withdrawn content not yet; credits not yet |
+| `ResortRepository` (bundled, lookup, search, `sortedResorts`) | Partly | `sortedResorts` for the name order with "Favourites on Top"; distance and snow orders, `available()`, withdrawn content and credits not yet |
 | `CatalogTests` | Ported | except `creditsListPlatformsByWeightAndResortWebsites` |
 | `ResortSeason` phase and wording | Not yet | |
 | Providers (`DirectImage`, Skaping, Roundshot, Viewsurf), registry, `WebcamService`, freshness | Ported | `core/.../WebcamService.kt`, `*Provider.kt`, `SnapshotFreshness.kt`. EXIF read by `Exif.kt` instead of ImageIO. Archive lookup (`ArchiveProbe`, `archivedSnapshotReference`) comes with the afternoon images. `label`/`systemImage` wording goes in the app with the first screen showing an image |
 | `ProviderTests`, `WebcamServiceCacheTests`, `WebcamServiceCaptureTimeTests`, `FreshnessOrderingTests` | Ported | except `downsamplerLimitsLongestSide` (decoding lives in the app); `ArchiveProviderTests` and `LiveSourceTests` not yet |
 | `SnapshotLoader`, `ImageDownsampler`, `LastSnapshotStore` | Not yet | app side and widgets |
 | Forecast, snow depth, avalanche bulletin | Not yet | |
-| Favourites, widgets, afternoon images | Not yet | |
+| `FavoriteResort`, `FavoritesStore` | Ported | JSON file in the app's files instead of SwiftData, written atomically; a failed write throws and changes nothing |
+| `FavoritesStoreTests` | Ported | plus Android-only persistence and failure tests |
+| `ResortSortingTests` | Partly | name order and favourites tests; distance and snow tests with those orders |
+| Widgets, afternoon images | Not yet | |
 | Watch → Wear OS, CarPlay → Android Auto | Not yet | after the phone app |
 
 | iOS app screen | Android | Notes |
 |---|---|---|
 | App icon | Ported | adaptive icon from `AppIcon.png` on its corner colour |
 | `ResortBrowserView` | Partly | stack below 600 dp; list beside the resort from 600 dp (unfolded foldable, tablet), split at the hinge in book posture; folding keeps the resort and webcam on screen. No map in the empty detail pane, no widget deep links |
-| `ResortListView` | Partly | list only: no search, sorting, favourites or map |
-| `ResortDetailView`, `WebcamCard` | Partly | header, website link, webcam cards ordered by freshness. No favourites, directions, season, snow or forecast |
+| `ResortListView` | Partly | alphabetical, favourites first with their star and "Default". No search, sort menu, "Favourites on Top" toggle, swipe to favourite or map |
+| `ResortDetailView`, `WebcamCard` | Partly | header, website link, favourite star, Set as Default, webcam cards ordered by freshness; save failures shown as on iOS. No directions, season, snow or forecast |
 | `WebcamDetailView` | Partly | panorama scrolling sideways from its middle, refresh, capture time, altitude, orientation, source link. No afternoon images (with their area); no live stream player, as no catalogued webcam has a stream |

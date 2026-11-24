@@ -14,6 +14,16 @@
     <string name="no_webcams">Aucune webcam</string>
     <string name="no_webcams_description">Cette station ne publie pas encore de webcam que Flake Sight peut afficher.</string>
 
+    <string name="add_to_favourites">Ajouter aux favoris</string>
+    <string name="remove_from_favourites">Retirer des favoris</string>
+    <string name="favourite">Favori</string>
+    <string name="default_label">Par défaut</string>
+    <string name="default_resort">Station par défaut</string>
+    <string name="set_as_default">Définir par défaut</string>
+    <string name="favourites_not_saved">Favoris non enregistrés</string>
+    <string name="change_not_saved">Cette modification n\'a pas pu être enregistrée : %1$s</string>
+    <string name="ok">OK</string>
+
     <string name="refresh">Actualiser</string>
     <string name="latest_image_from">Dernière image de %1$s</string>
     <string name="image_unavailable">Image indisponible</string>
