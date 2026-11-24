@@ -6,4 +6,20 @@
         <item quantity="other">%d webcams</item>
     </plurals>
     <string name="forecast_only">Prévisions uniquement</string>
+
+    <string name="back">Retour</string>
+    <string name="website">Site web</string>
+    <string name="no_webcams">Aucune webcam</string>
+    <string name="no_webcams_description">Cette station ne publie pas encore de webcam que Flake Sight peut afficher.</string>
+
+    <string name="freshness_updated">Mise à jour à %1$s</string>
+    <string name="freshness_last_image">Dernière image le %1$s</string>
+    <string name="freshness_unknown">Heure inconnue</string>
+
+    <string name="error_no_snapshot">Aucune image n\'est disponible pour cette webcam.</string>
+    <string name="error_unsupported_provider">Les webcams %1$s ne sont pas encore prises en charge.</string>
+    <string name="error_latest_image_not_found">La dernière image est introuvable sur la page du fournisseur.</string>
+    <string name="error_bad_status_code">Le serveur de la webcam a renvoyé une erreur (%1$d).</string>
+    <string name="error_not_an_image">Le serveur de la webcam n\'a pas renvoyé d\'image.</string>
+    <string name="error_unreachable">Le serveur de la webcam est injoignable.</string>
 </resources>

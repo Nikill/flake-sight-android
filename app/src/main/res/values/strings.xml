@@ -7,4 +7,24 @@
         <item quantity="other">%d webcams</item>
     </plurals>
     <string name="forecast_only">Forecast only</string>
+
+    <!-- Resort screen -->
+    <string name="back">Back</string>
+    <string name="website">Website</string>
+    <string name="no_webcams">No webcams</string>
+    <string name="no_webcams_description">This resort does not publish a webcam Flake Sight can show yet.</string>
+
+    <!-- Snapshot freshness: %1$s is a time ("14:30") or a date ("11 Apr 2026") in the resort's time zone. -->
+    <string name="freshness_updated">Updated %1$s</string>
+    <string name="freshness_last_image">Last image %1$s</string>
+    <string name="freshness_unknown">Time unknown</string>
+
+    <!-- Webcam errors -->
+    <string name="error_no_snapshot">This webcam has no image available.</string>
+    <!-- %1$s is the provider's name, e.g. "Panomax". -->
+    <string name="error_unsupported_provider">%1$s webcams are not supported yet.</string>
+    <string name="error_latest_image_not_found">The latest image could not be found on the provider\'s page.</string>
+    <string name="error_bad_status_code">The webcam server responded with an error (%1$d).</string>
+    <string name="error_not_an_image">The webcam server did not return an image.</string>
+    <string name="error_unreachable">The webcam server could not be reached.</string>
 </resources>
