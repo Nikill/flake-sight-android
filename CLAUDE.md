@@ -16,6 +16,9 @@ Android port of Flake Sight, the ski resort webcam app. The iOS app in `Nikill/s
 
 # Everything CI runs
 ./gradlew test :app:assembleDebug
+
+# Real webcam providers, off by default (not in CI)
+SKIPATROL_LIVE_TESTS=1 ./gradlew :core:test --tests '*LiveSourceTests' --rerun
 ```
 
 ## Project rules
