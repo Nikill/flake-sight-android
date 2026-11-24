@@ -5,6 +5,15 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.glance.appwidget.state.getAppWidgetState
+import androidx.glance.currentState
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,7 +59,8 @@ import java.io.File
  * Latest image of a webcam with the time it was taken. Port of `WebcamWidget`
  * and `WebcamTimelineProvider`.
  *
- * Follows the default resort's first webcam, else the first catalogue resort's
+ * Shows the webcam chosen in its settings (`WebcamWidgetConfigureActivity`), else
+ * the default resort's first webcam, else the first catalogue resort's
  * (`WidgetWebcamResolver`). The widget runs in the app's own process, so it reads
  * the favourites file directly where iOS needs an App Group. Android refreshes it
  * every 30 minutes, as iOS's timeline; the app refreshes it too when the default
@@ -60,8 +70,21 @@ class WebcamWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val entry = entry(context)
-        provideContent { WebcamWidgetContent(entry) }
+        val configured = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)[WEBCAM_KEY]
+        val first = entry(context, configured)
+        provideContent {
+            // A new choice in the settings while the widget's session is still alive.
+            val webcamID = currentState(WEBCAM_KEY)
+            var entry by remember { mutableStateOf(first) }
+            var loadedFor by remember { mutableStateOf(configured) }
+            LaunchedEffect(webcamID) {
+                if (webcamID != loadedFor) {
+                    entry = entry(context, webcamID)
+                    loadedFor = webcamID
+                }
+            }
+            WebcamWidgetContent(entry)
+        }
     }
 
     /** One rendering of the widget. */
@@ -75,9 +98,9 @@ class WebcamWidget : GlanceAppWidget() {
         data object NoWebcam : Entry
     }
 
-    private suspend fun entry(context: Context): Entry {
+    private suspend fun entry(context: Context, configuredWebcamID: String?): Entry {
         val defaultResortID = FavoritesStore(File(context.filesDir, "favorites.json")).defaultResortID()
-        val (resort, webcam) = WidgetWebcamResolver.resolve(null, defaultResortID, repository) ?: return Entry.NoWebcam
+        val (resort, webcam) = WidgetWebcamResolver.resolve(configuredWebcamID, defaultResortID, repository) ?: return Entry.NoWebcam
         val store = LastSnapshotStore(File(context.cacheDir, "LastSnapshots"))
         val snapshot = try {
             webcamService.latestSnapshot(webcam, resort, SnapshotSize.THUMBNAIL).also { store.save(it, SnapshotSize.THUMBNAIL) }
@@ -168,13 +191,16 @@ class WebcamWidget : GlanceAppWidget() {
         }
     }
 
-    private companion object {
-        val repository by lazy { ResortRepository.bundled() }
-        const val WIDGET_PIXEL_SIZE = 800
-        val White = ColorProvider(Color.White)
-        val Dimmed = ColorProvider(Color.White.copy(alpha = 0.8f))
+    companion object {
+        /** The webcam chosen in the widget's settings; absent to follow the default resort. */
+        val WEBCAM_KEY = stringPreferencesKey("webcamID")
+
+        private val repository by lazy { ResortRepository.bundled() }
+        private const val WIDGET_PIXEL_SIZE = 800
+        private val White = ColorProvider(Color.White)
+        private val Dimmed = ColorProvider(Color.White.copy(alpha = 0.8f))
         /** iOS system orange, the stale badge. */
-        val Orange = ColorProvider(Color(0xFFFF9500))
+        private val Orange = ColorProvider(Color(0xFFFF9500))
     }
 }
 

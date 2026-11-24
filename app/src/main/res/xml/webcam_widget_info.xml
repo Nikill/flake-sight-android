@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Every 30 minutes, as the iOS timeline: cameras publish about every 10 minutes. -->
+<!-- Every 30 minutes, as the iOS timeline: cameras publish about every 10 minutes.
+     The settings are optional (the default resort otherwise) and can be reopened, from Android 12. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="com.tanukee.flakesight.WebcamWidgetConfigureActivity"
     android:description="@string/widget_description"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:minWidth="110dp"
@@ -12,4 +14,5 @@
     android:targetCellWidth="2"
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

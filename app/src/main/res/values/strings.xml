@@ -245,6 +245,9 @@
     <string name="widget_name">Webcam</string>
     <string name="widget_description">The latest image of a webcam and when it was taken.</string>
     <string name="no_webcam_available">No webcam available</string>
+    <!-- The widget's settings: which webcam it shows. -->
+    <string name="widget_settings_title">Choose a Webcam</string>
+    <string name="widget_follow_default">Follows the default resort chosen in the app</string>
 
     <!-- Webcam errors -->
     <string name="error_no_snapshot">This webcam has no image available.</string>
