@@ -36,6 +36,7 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | iOS app screen | Android | Notes |
 |---|---|---|
 | App icon | Ported | adaptive icon from `AppIcon.png` on its corner colour |
+| `ResortBrowserView` | Partly | stack below 600 dp; list beside the resort from 600 dp (unfolded foldable, tablet), split at the hinge in book posture; folding keeps the resort and webcam on screen. No map in the empty detail pane, no widget deep links |
 | `ResortListView` | Partly | list only: no search, sorting, favourites or map |
 | `ResortDetailView`, `WebcamCard` | Partly | header, website link, webcam cards ordered by freshness. No favourites, directions, season, snow or forecast |
 | `WebcamDetailView` | Partly | panorama scrolling sideways from its middle, refresh, capture time, altitude, orientation, source link. No afternoon images (with their area); no live stream player, as no catalogued webcam has a stream |

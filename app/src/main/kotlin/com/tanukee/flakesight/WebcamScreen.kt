@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -42,6 +43,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tanukee.flakesight.core.Resort
 import com.tanukee.flakesight.core.SnapshotFreshness
@@ -49,7 +51,6 @@ import com.tanukee.flakesight.core.SnapshotSize
 import com.tanukee.flakesight.core.Webcam
 import kotlinx.coroutines.launch
 
-private val PANORAMA_HEIGHT = 300.dp
 
 /**
  * One webcam: large panorama scrolling sideways, refresh, capture time and
@@ -83,20 +84,24 @@ fun WebcamScreen(webcam: Webcam, resort: Resort, onBack: () -> Unit) {
             )
         },
     ) { padding ->
-        Column(
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            modifier = Modifier.padding(padding).verticalScroll(rememberScrollState()).padding(vertical = 16.dp),
-        ) {
-            Panorama(webcam, state, onRetry = { load(true) })
-            Details(webcam, resort, state)
-            Attribution(webcam)
+        BoxWithConstraints(Modifier.padding(padding)) {
+            // Taller on a wide window (unfolded foldable, tablet), where there is room.
+            val panoramaHeight = if (maxWidth >= 600.dp) 480.dp else 300.dp
+            Column(
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(vertical = 16.dp),
+            ) {
+                Panorama(webcam, state, panoramaHeight, onRetry = { load(true) })
+                Details(webcam, resort, state)
+                Attribution(webcam)
+            }
         }
     }
 }
 
 /** Panoramas are ~6:1, so they keep a usable height and scroll sideways, starting from the middle. */
 @Composable
-private fun Panorama(webcam: Webcam, state: ImageState, onRetry: () -> Unit) {
+private fun Panorama(webcam: Webcam, state: ImageState, height: Dp, onRetry: () -> Unit) {
     val image = state.image
     when {
         image != null -> Box {
@@ -107,7 +112,7 @@ private fun Panorama(webcam: Webcam, state: ImageState, onRetry: () -> Unit) {
                     image.asImageBitmap(),
                     contentDescription = stringResource(R.string.latest_image_from, webcam.name),
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.height(PANORAMA_HEIGHT).aspectRatio(image.width.toFloat() / image.height),
+                    modifier = Modifier.height(height).aspectRatio(image.width.toFloat() / image.height),
                 )
             }
             if (state.isLoading) {
@@ -117,7 +122,7 @@ private fun Panorama(webcam: Webcam, state: ImageState, onRetry: () -> Unit) {
         state.error != null -> Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-            modifier = Modifier.fillMaxWidth().height(PANORAMA_HEIGHT).padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxWidth().height(height).padding(horizontal = 16.dp),
         ) {
             Text(stringResource(R.string.image_unavailable), style = MaterialTheme.typography.titleMedium)
             Text(
@@ -127,7 +132,7 @@ private fun Panorama(webcam: Webcam, state: ImageState, onRetry: () -> Unit) {
             )
             Button(onClick = onRetry) { Text(stringResource(R.string.try_again)) }
         }
-        else -> Box(Modifier.fillMaxWidth().height(PANORAMA_HEIGHT), contentAlignment = Alignment.Center) {
+        else -> Box(Modifier.fillMaxWidth().height(height), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
     }
