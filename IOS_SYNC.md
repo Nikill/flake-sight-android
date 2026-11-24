@@ -56,7 +56,7 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `ResortSortingTests` | Ported | |
 | Webcam widget (`WebcamWidget`, `WebcamTimelineProvider`) | Partly | Jetpack Glance, any size from 2 x 2: the default resort's first webcam, else the first catalogue resort's, name, resort and capture time over a gradient, the orange badge when stale, the last good image after a failed refresh; tapping opens the webcam. Refreshed every 30 minutes and when the default resort changes. No per-widget webcam choice (`WebcamWidgetIntent`), no 15-minute retry or entry at the moment an image turns stale (Android has no timelines) |
 | Afternoon images | Not yet | |
-| Watch → Wear OS, CarPlay → Android Auto | Not yet | after the phone app |
+| Watch → Wear OS, CarPlay → Android Auto | Parked | until further notice; what each needs is in `docs/specs/WEAR_OS.md` and `docs/specs/ANDROID_AUTO.md`. iOS changes to the Watch and CarPlay are not synced meanwhile |
 
 | iOS app screen | Android | Notes |
 |---|---|---|
