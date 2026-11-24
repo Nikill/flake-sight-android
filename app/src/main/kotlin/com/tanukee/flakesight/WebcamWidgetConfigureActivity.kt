@@ -40,7 +40,7 @@ import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import com.tanukee.flakesight.core.Resort
-import com.tanukee.flakesight.core.ResortRepository
+import androidx.compose.ui.platform.LocalContext
 import com.tanukee.flakesight.core.Webcam
 import com.tanukee.flakesight.core.widgetWebcams
 import kotlinx.coroutines.launch
@@ -95,7 +95,8 @@ class WebcamWidgetConfigureActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun WebcamChoiceScreen(current: String?, onChoose: (String?) -> Unit, onClose: () -> Unit) {
-    val repository = remember { ResortRepository.bundled() }
+    val context = LocalContext.current
+    val repository = remember { availableRepository(context) }
     var searchText by rememberSaveable { mutableStateOf("") }
     val sections = remember(searchText) { repository.widgetWebcams(searchText) }
     Scaffold(

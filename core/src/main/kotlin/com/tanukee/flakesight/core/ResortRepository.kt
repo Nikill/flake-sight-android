@@ -65,9 +65,8 @@ class ResortRepository(val resorts: List<Resort>) {
             ResortRepository(json.decodeFromString<ResortCatalog>(text).resorts)
 
         /**
-         * The catalogue bundled with the app. Anything shown to the user will start
-         * from `available()` once withdrawn content is ported; this is for tests and
-         * previews until then.
+         * The catalogue bundled with the app. Anything shown to the user starts from
+         * it without the withdrawn content ([removing], the app's `availableRepository`).
          */
         fun bundled(): ResortRepository {
             val stream = ResortRepository::class.java.getResourceAsStream("/ResortCatalog.json")
