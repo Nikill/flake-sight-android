@@ -42,6 +42,9 @@
     <string name="back">Retour</string>
     <string name="website">Site web</string>
     <string name="no_webcams">Aucune webcam</string>
+    <string name="season_opening_planned">Ouverture prévue le %1$s</string>
+    <string name="season_planned_until">Saison prévue jusqu\'au %1$s</string>
+    <string name="season_ended">Saison terminée le %1$s</string>
     <string name="no_webcams_description">Cette station ne publie pas encore de webcam que Flake Sight peut afficher.</string>
 
     <string name="add_to_favourites">Ajouter aux favoris</string>

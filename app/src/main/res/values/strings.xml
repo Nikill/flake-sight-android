@@ -52,6 +52,10 @@
     <string name="back">Back</string>
     <string name="website">Website</string>
     <string name="no_webcams">No webcams</string>
+    <!-- The season dates the resort announced; %1$s is a day, "12 December". Planned, never open: the app cannot follow a postponed opening. -->
+    <string name="season_opening_planned">Opening planned on %1$s</string>
+    <string name="season_planned_until">Season planned until %1$s</string>
+    <string name="season_ended">Season ended on %1$s</string>
     <string name="no_webcams_description">This resort does not publish a webcam Flake Sight can show yet.</string>
 
     <!-- Favourites -->

@@ -6,6 +6,7 @@ import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -101,7 +102,34 @@ data class ResortSeason(
     @Serializable(with = LocalDateSerializer::class) val opening: LocalDate,
     @Serializable(with = LocalDateSerializer::class) val closing: LocalDate? = null,
     val sourceURL: String,
-)
+) {
+    /**
+     * Where the season stands on a given day. The catalogue ships with the app, so a
+     * postponed opening is not followed until the next release: the app words this as
+     * "planned", never "open". Port of `ResortSeason.Phase`; the sentences are the app's.
+     */
+    sealed interface Phase {
+        /** Before the opening day. */
+        data class Upcoming(val opening: LocalDate) : Phase
+
+        /** From the opening day to the closing day included. */
+        data class Running(val closing: LocalDate?) : Phase
+
+        /** After the closing day. */
+        data class Ended(val closing: LocalDate) : Phase
+    }
+
+    /** The phase on the day [now] falls on in the resort's time [zone]. */
+    fun phase(now: Instant, zone: ZoneId): Phase {
+        // Not `LocalDate.ofInstant`, which Android only has from API 34.
+        val today = now.atZone(zone).toLocalDate()
+        return when {
+            today < opening -> Phase.Upcoming(opening)
+            closing != null && closing < today -> Phase.Ended(closing)
+            else -> Phase.Running(closing)
+        }
+    }
+}
 
 internal object LocalDateSerializer : KSerializer<LocalDate> {
     override val descriptor = PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
