@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Corner colour of the iOS app icon. -->
+    <color name="ic_launcher_background">#030B1A</color>
+</resources>
