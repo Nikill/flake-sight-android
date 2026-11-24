@@ -90,8 +90,15 @@ import com.tanukee.flakesight.core.SnowTotals
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.CancellationException
@@ -255,6 +262,15 @@ fun ResortBrowser(
         repository.sortedResorts(sortOrder, favorites.map { it.resortID }, favoritesOnTop, sortLocation, snowTotals)
             .filter { it.matches(searchText) }
     }
+    // A change that could not be saved is said, not silently dropped (`FavoritesSaveFailure` on iOS).
+    var saveFailure by remember { mutableStateOf<String?>(null) }
+    val changeFavorites: (FavoritesStore.() -> Unit) -> Unit = { change ->
+        try {
+            favoritesStore.change()
+        } catch (e: IOException) {
+            saveFailure = e.localizedMessage ?: e.toString()
+        }
+    }
     // On a wide window, closes the resort beside the list to show the map there.
     val showMap = {
         selectedResortID = null
@@ -265,6 +281,7 @@ fun ResortBrowser(
         visibleResorts,
         favorites,
         onSelect = selectResort,
+        onToggleFavorite = { resort -> changeFavorites { toggleFavorite(resort.id) } },
         searchText = searchText,
         onSearchTextChange = { searchText = it },
         sortOrder = sortOrder,
@@ -293,15 +310,6 @@ fun ResortBrowser(
         userLocation = locationProvider.location,
         onRequestLocation = requestMapLocation,
     )
-    // A change that could not be saved is said, not silently dropped (`FavoritesSaveFailure` on iOS).
-    var saveFailure by remember { mutableStateOf<String?>(null) }
-    val changeFavorites: (FavoritesStore.() -> Unit) -> Unit = { change ->
-        try {
-            favoritesStore.change()
-        } catch (e: IOException) {
-            saveFailure = e.localizedMessage ?: e.toString()
-        }
-    }
     @Composable
     fun ResortPane(resort: Resort, onBack: (() -> Unit)?) = ResortScreen(
         resort,
@@ -429,6 +437,7 @@ fun ResortListScreen(
     resorts: List<Resort>,
     favorites: List<FavoriteResort>,
     onSelect: (Resort) -> Unit,
+    onToggleFavorite: (Resort) -> Unit = {},
     searchText: String = "",
     onSearchTextChange: (String) -> Unit = {},
     sortOrder: ResortSortOrder = ResortSortOrder.NAME,
@@ -475,7 +484,7 @@ fun ResortListScreen(
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                 )
             }
-            ResortRows(resorts, favorites, favoritesOnTop, onSelect, sortOrder, sortLocation, snowTotals, snowDepthReport, selectedResortID)
+            ResortRows(resorts, favorites, favoritesOnTop, onSelect, onToggleFavorite, sortOrder, sortLocation, snowTotals, snowDepthReport, selectedResortID)
         }
     }
 }
@@ -565,6 +574,7 @@ private fun ResortRows(
     favorites: List<FavoriteResort>,
     favoritesOnTop: Boolean,
     onSelect: (Resort) -> Unit,
+    onToggleFavorite: (Resort) -> Unit,
     sortOrder: ResortSortOrder,
     sortLocation: Coordinate?,
     snowTotals: SnowTotals?,
@@ -574,6 +584,7 @@ private fun ResortRows(
     val locale = LocalConfiguration.current.locales[0]
     // A new order, or the position arriving, starts from the top; the list would otherwise stay on the row that was visible.
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     LaunchedEffect(sortOrder, sortLocation) { listState.scrollToItem(0) }
     // Favourites on top sit in a rounded group of their own, set apart from the other resorts.
     val favoriteIDs = favorites.map { it.resortID }.toSet()
@@ -589,74 +600,100 @@ private fun ResortRows(
                 index == groupedCount - 1 -> RoundedCornerShape(bottomStart = ROW_GROUP_RADIUS, bottomEnd = ROW_GROUP_RADIUS)
                 else -> RectangleShape
             }
-            ListItem(
-                // Rows without separators, each a rounded card when pressed or selected, as the iOS sidebar.
+            // Swiping a row to the right adds it to the favourites or removes it, as the iOS leading swipe action.
+            val swipe = rememberSwipeToDismissBoxState()
+            val toggleLabel = stringResource(if (favorite == null) R.string.add_to_favourites else R.string.remove_from_favourites)
+            SwipeToDismissBox(
+                state = swipe,
                 modifier = Modifier
                     .padding(start = 8.dp, end = 8.dp, bottom = if (index == groupedCount - 1) 16.dp else 0.dp)
                     .then(if (isGrouped) Modifier.background(groupColor, groupShape) else Modifier)
                     .padding(4.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable { onSelect(resort) },
-                // Marks the resort shown in the other pane.
-                colors = ListItemDefaults.colors(
-                    containerColor = if (resort.id == selectedResortID) {
-                        MaterialTheme.colorScheme.secondaryContainer
-                    } else {
-                        Color.Transparent
-                    },
-                ),
-                supportingContent = {
-                    Column {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(resort.region)
-                            // The snow fallen lately, unless the list is sorted by it and the figure on the right says it.
-                            val recent = snowTotals?.centimetres(SnowTotals.Kind.RECENT, resort.id)
-                            if (recent != null && sortOrder != ResortSortOrder.RECENT_SNOW) {
-                                val amount = centimetres(recent, locale)
-                                val sentence = snowSentence(SnowTotals.Kind.RECENT, amount)
-                                Text("· ❄ $amount", modifier = Modifier.semantics { contentDescription = sentence })
-                            }
-                        }
-                        // The bulletin's depth on its own line, so a narrow list keeps its width for the name.
-                        snowDepthReport?.reading(resort)?.let { reading ->
-                            val spoken = spokenSnowDepth(reading, locale)
-                            Text(compactSnowDepth(reading, locale), modifier = Modifier.semantics { contentDescription = spoken })
-                        }
-                    }
+                    .clip(RoundedCornerShape(16.dp)),
+                enableDismissFromEndToStart = false,
+                // On release past the threshold, then the row slides back.
+                onDismiss = {
+                    onToggleFavorite(resort)
+                    scope.launch { swipe.reset() }
                 },
-                trailingContent = {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        val kind = sortOrder.snowKind
-                        // The figure the list is sorted by.
-                        if (kind != null) {
-                            snowTotals?.centimetres(kind, resort.id)?.let { cm ->
-                                val amount = centimetres(cm, locale)
-                                val sentence = snowSentence(kind, amount)
-                                Text(amount, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { contentDescription = sentence })
-                            }
-                        } else if (sortLocation != null) {
-                            Text(roadDistance(resort.distanceFrom(sortLocation), locale), fontWeight = FontWeight.SemiBold)
-                        } else {
-                            Text(
-                                if (resort.webcams.isEmpty()) {
-                                    stringResource(R.string.forecast_only)
-                                } else {
-                                    pluralStringResource(R.plurals.webcam_count, resort.webcams.size, resort.webcams.size)
-                                },
-                            )
-                        }
-                        if (favorite != null) {
-                            if (favorite.isDefault) Text(stringResource(R.string.default_label))
-                            Icon(
-                                painterResource(R.drawable.ic_star),
-                                contentDescription = stringResource(R.string.favourite),
-                                tint = FavoriteYellow,
-                            )
-                        }
+                backgroundContent = {
+                    // Drawn only while swiping: at rest its edge would show around the row's rounded corners.
+                    if (swipe.dismissDirection == SwipeToDismissBoxValue.StartToEnd) Box(Modifier.fillMaxSize().background(FavoriteYellow).padding(horizontal = 24.dp), contentAlignment = Alignment.CenterStart) {
+                        Icon(
+                            painterResource(if (favorite == null) R.drawable.ic_star else R.drawable.ic_star_border),
+                            contentDescription = null,
+                            tint = Color.Black,
+                        )
                     }
                 },
             ) {
-                Text(resort.name)
+                ListItem(
+                    // Rows without separators, each a rounded card when pressed or selected, as the iOS sidebar.
+                    modifier = Modifier
+                        .clickable { onSelect(resort) }
+                        // The swipe has no TalkBack gesture: the same change as an action on the row.
+                        .semantics { customActions = listOf(CustomAccessibilityAction(toggleLabel) { onToggleFavorite(resort); true }) },
+                    // Marks the resort shown in the other pane. Opaque so the swipe's yellow shows only beside the row.
+                    colors = ListItemDefaults.colors(
+                        containerColor = when {
+                            resort.id == selectedResortID -> MaterialTheme.colorScheme.secondaryContainer
+                            isGrouped -> groupColor
+                            else -> MaterialTheme.colorScheme.background
+                        },
+                    ),
+                    supportingContent = {
+                        Column {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(resort.region)
+                                // The snow fallen lately, unless the list is sorted by it and the figure on the right says it.
+                                val recent = snowTotals?.centimetres(SnowTotals.Kind.RECENT, resort.id)
+                                if (recent != null && sortOrder != ResortSortOrder.RECENT_SNOW) {
+                                    val amount = centimetres(recent, locale)
+                                    val sentence = snowSentence(SnowTotals.Kind.RECENT, amount)
+                                    Text("· ❄ $amount", modifier = Modifier.semantics { contentDescription = sentence })
+                                }
+                            }
+                            // The bulletin's depth on its own line, so a narrow list keeps its width for the name.
+                            snowDepthReport?.reading(resort)?.let { reading ->
+                                val spoken = spokenSnowDepth(reading, locale)
+                                Text(compactSnowDepth(reading, locale), modifier = Modifier.semantics { contentDescription = spoken })
+                            }
+                        }
+                    },
+                    trailingContent = {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            val kind = sortOrder.snowKind
+                            // The figure the list is sorted by.
+                            if (kind != null) {
+                                snowTotals?.centimetres(kind, resort.id)?.let { cm ->
+                                    val amount = centimetres(cm, locale)
+                                    val sentence = snowSentence(kind, amount)
+                                    Text(amount, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { contentDescription = sentence })
+                                }
+                            } else if (sortLocation != null) {
+                                Text(roadDistance(resort.distanceFrom(sortLocation), locale), fontWeight = FontWeight.SemiBold)
+                            } else {
+                                Text(
+                                    if (resort.webcams.isEmpty()) {
+                                        stringResource(R.string.forecast_only)
+                                    } else {
+                                        pluralStringResource(R.plurals.webcam_count, resort.webcams.size, resort.webcams.size)
+                                    },
+                                )
+                            }
+                            if (favorite != null) {
+                                if (favorite.isDefault) Text(stringResource(R.string.default_label))
+                                Icon(
+                                    painterResource(R.drawable.ic_star),
+                                    contentDescription = stringResource(R.string.favourite),
+                                    tint = FavoriteYellow,
+                                )
+                            }
+                        }
+                    },
+                ) {
+                    Text(resort.name)
+                }
             }
         }
     }
