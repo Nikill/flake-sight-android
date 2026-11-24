@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.window)
     implementation(libs.maps.compose)
     implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)

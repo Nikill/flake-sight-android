@@ -122,6 +122,10 @@ class MainActivity : ComponentActivity() {
         }
         // Not again after a rotation, which would reopen a webcam the user has closed.
         if (savedInstanceState == null) deepLinkWebcamID = intent.dataString?.let(DeepLink::webcamID)
+        // Ready before the first download, so one near 16:00 is kept; each visit books
+        // the next afternoon capture, in case Android dropped it.
+        afternoonService(this)
+        AfternoonCaptureWorker.schedule(this)
         val windowLayoutInfo = WindowInfoTracker.getOrCreate(this).windowLayoutInfo(this)
         setContent {
             FlakeSightTheme {
@@ -195,6 +199,8 @@ fun ResortBrowser(
             WebcamWidget().updateAll(appContext)
         }
     }
+    // The favourites' webcams without archive get their afternoon images kept.
+    LaunchedEffect(favorites) { afternoonService(appContext).setFavoriteResortIDs(favorites.map { it.resortID }) }
     // Remembered between launches under the iOS key, `favoritesOnTop`.
     val settings = LocalContext.current.let { remember { it.getSharedPreferences("settings", Context.MODE_PRIVATE) } }
     var favoritesOnTop by remember { mutableStateOf(settings.getBoolean("favoritesOnTop", true)) }

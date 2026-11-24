@@ -170,6 +170,13 @@
     <string name="owner_via_provider">© %1$s · via %2$s</string>
     <string name="view_on_provider">Voir sur %1$s</string>
 
+    <string name="around_1600">Vers 16:00</string>
+    <string name="now">Maintenant</string>
+    <string name="today">Aujourd\'hui</string>
+    <string name="yesterday">Hier</string>
+    <string name="image_from">Image de %1$s, %2$s</string>
+    <string name="no_image_near_1600">Pas d\'image vers 16:00 ce jour-là.</string>
+
     <string name="freshness_updated">Mise à jour à %1$s</string>
     <string name="freshness_last_image">Dernière image le %1$s</string>
     <string name="freshness_unknown">Heure inconnue</string>

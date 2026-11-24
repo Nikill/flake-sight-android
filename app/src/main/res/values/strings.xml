@@ -236,6 +236,18 @@
     <string name="owner_via_provider">© %1$s · via %2$s</string>
     <string name="view_on_provider">View on %1$s</string>
 
+    <!-- Afternoon images: what the webcam showed around 16:00 on the last days. -->
+    <string name="around_1600">Around 16:00</string>
+    <!-- The chip back to the webcam's latest image. -->
+    <string name="now">Now</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <!-- %1$s is a day, "Yesterday" or "Tue 27"; %2$s the capture time, "15:30". -->
+    <string name="afternoon_label" translatable="false">%1$s, %2$s</string>
+    <!-- Read by TalkBack: %1$s is the webcam's name, %2$s a day and time, "Yesterday, 15:30". -->
+    <string name="image_from">Image from %1$s, %2$s</string>
+    <string name="no_image_near_1600">No image near 16:00 that day.</string>
+
     <!-- Snapshot freshness: %1$s is a time ("14:30") or a date ("11 Apr 2026") in the resort's time zone. -->
     <string name="freshness_updated">Updated %1$s</string>
     <string name="freshness_last_image">Last image %1$s</string>

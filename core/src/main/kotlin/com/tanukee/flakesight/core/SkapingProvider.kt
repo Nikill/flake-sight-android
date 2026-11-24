@@ -13,18 +13,33 @@ import java.time.ZoneId
  * the public embed page and picks the newest image it references, of any size.
  * The storage path is `Webcam.providerIdentifier` when the page path differs.
  *
- * The archive lookup of the iOS provider comes with the afternoon images.
+ * Every capture stays on storage, so past afternoon images are found by their
+ * time-stamped name ([archivedSnapshotReference]).
  */
 class SkapingProvider(private val http: HttpClient = UrlConnectionHttpClient) : WebcamProvider {
 
     override suspend fun latestSnapshotReference(webcam: Webcam, size: SnapshotSize, zone: ZoneId): SnapshotReference {
-        val html = http.fetchBody(webcam.sourcePageURL).decodeToString()
-        val latest = latestImage(html, cameraPath(webcam), zone) ?: throw WebcamError.LatestImageNotFound()
+        val latest = latest(webcam, zone)
         val url = when (size) {
             SnapshotSize.THUMBNAIL -> latest.largeURL
             SnapshotSize.FULL -> latest.fullURL
         }
         return SnapshotReference(webcam.id, url, latest.capturedAt)
+    }
+
+    override val keepsArchive: Boolean get() = true
+
+    /** The storage host comes from the page, like the latest image; the capture's name is then built from its local time. */
+    override suspend fun archivedSnapshotReference(webcam: Webcam, target: Instant, size: SnapshotSize, zone: ZoneId): SnapshotReference? {
+        val base = storageBase(latest(webcam, zone))
+        val candidates = ArchiveProbe.times(target).map { archivedImageURL(base, it, size, zone) to it }
+        val (url, capturedAt) = ArchiveProbe.firstExisting(candidates, http) ?: return null
+        return SnapshotReference(webcam.id, url, capturedAt)
+    }
+
+    private suspend fun latest(webcam: Webcam, zone: ZoneId): LatestImage {
+        val html = http.fetchBody(webcam.sourcePageURL).decodeToString()
+        return latestImage(html, cameraPath(webcam), zone) ?: throw WebcamError.LatestImageNotFound()
     }
 
     internal data class LatestImage(
@@ -59,6 +74,17 @@ class SkapingProvider(private val http: HttpClient = UrlConnectionHttpClient) : 
             val base = path.substringBeforeLast('/')
             val file = path.substringAfterLast('/')
             return LatestImage(largeURL = "$base/large/$file", fullURL = "$base/$file", capturedAt = capturedAt)
+        }
+
+        /** The camera's folder on storage: the full image's URL without `YYYY/MM/DD/HH-MM.jpg`. */
+        fun storageBase(latest: LatestImage): String =
+            (1..4).fold(latest.fullURL) { url, _ -> url.substringBeforeLast('/') } + "/"
+
+        /** `<base>/YYYY/MM/DD/[large/]HH-MM.jpg` for a capture at [capturedAt], resort time. */
+        fun archivedImageURL(base: String, capturedAt: Instant, size: SnapshotSize, zone: ZoneId): String {
+            val day = ArchiveProbe.stamp(capturedAt, zone, "yyyy/MM/dd")
+            val folder = if (size == SnapshotSize.THUMBNAIL) "$day/large" else day
+            return "$base$folder/${ArchiveProbe.stamp(capturedAt, zone, "HH-mm")}.jpg"
         }
     }
 }

@@ -15,18 +15,31 @@ import java.time.ZoneOffset
  * captures with their time and the panorama in several sizes. Capture times
  * are the resort's wall-clock time written as if it were UTC.
  *
- * The archive lookup of the iOS provider comes with the afternoon images.
+ * Every capture stays on storage, so past afternoon images are found by their
+ * time-stamped name ([archivedSnapshotReference]).
  */
 class RoundshotProvider(private val http: HttpClient = UrlConnectionHttpClient) : WebcamProvider {
 
     override suspend fun latestSnapshotReference(webcam: Webcam, size: SnapshotSize, zone: ZoneId): SnapshotReference {
-        val latest = latestImage(http.fetchBody(structureURL(webcam)), zone) ?: throw WebcamError.LatestImageNotFound()
+        val latest = latest(webcam, zone)
         val url = when (size) {
             SnapshotSize.THUMBNAIL -> latest.quarterURL
             SnapshotSize.FULL -> latest.halfURL
         }
         return SnapshotReference(webcam.id, url, latest.capturedAt)
     }
+
+    override val keepsArchive: Boolean get() = true
+
+    override suspend fun archivedSnapshotReference(webcam: Webcam, target: Instant, size: SnapshotSize, zone: ZoneId): SnapshotReference? {
+        val base = storageBase(latest(webcam, zone))
+        val candidates = ArchiveProbe.times(target).map { archivedImageURL(base, it, size, zone) to it }
+        val (url, capturedAt) = ArchiveProbe.firstExisting(candidates, http) ?: return null
+        return SnapshotReference(webcam.id, url, capturedAt)
+    }
+
+    private suspend fun latest(webcam: Webcam, zone: ZoneId): LatestImage =
+        latestImage(http.fetchBody(structureURL(webcam)), zone) ?: throw WebcamError.LatestImageNotFound()
 
     internal data class LatestImage(
         /** ~3900 px wide (~200 KB): cards, widgets and the watch. */
@@ -51,6 +64,18 @@ class RoundshotProvider(private val http: HttpClient = UrlConnectionHttpClient) 
             // Read the wall-clock time back in UTC, then place it in the resort.
             val wallClock = LocalDateTime.ofEpochSecond(newest.datetime.toLong(), 0, ZoneOffset.UTC)
             return LatestImage(quarter, half, wallClock.atZone(zone).toInstant())
+        }
+
+        /** The camera's folder on storage: the quarter image's URL without `YYYY-MM-DD/HH-MM-SS/<file>`. */
+        fun storageBase(latest: LatestImage): String =
+            (1..3).fold(latest.quarterURL) { url, _ -> url.substringBeforeLast('/') } + "/"
+
+        /** `<base>/YYYY-MM-DD/HH-MM-00/YYYY-MM-DD-HH-MM-00_quarter.jpg` (or `_half`) for a capture at [capturedAt], resort time. */
+        fun archivedImageURL(base: String, capturedAt: Instant, size: SnapshotSize, zone: ZoneId): String {
+            val day = ArchiveProbe.stamp(capturedAt, zone, "yyyy-MM-dd")
+            val time = ArchiveProbe.stamp(capturedAt, zone, "HH-mm") + "-00"
+            val suffix = if (size == SnapshotSize.THUMBNAIL) "quarter" else "half"
+            return "$base$day/$time/$day-${time}_$suffix.jpg"
         }
     }
 
