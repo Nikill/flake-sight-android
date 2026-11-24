@@ -6,9 +6,9 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 /**
- * Port of `AvalancheBulletinTests.swift` for the danger level and the week's
- * history; the slopes, fresh snow, mountain forecast and Watch tests come with
- * the advanced weather screen and Wear OS. Keep the two files in step.
+ * Port of `AvalancheBulletinTests.swift`: danger level, slopes, fresh snow,
+ * mountain forecast and the week's history. The Watch's trimming comes with
+ * Wear OS. Keep the two files in step.
  */
 class AvalancheBulletinTests {
     /** Mont-Blanc on 21 November 2026, with the week before. */
@@ -23,6 +23,18 @@ class AvalancheBulletinTests {
                 listOf(SnowDepthReport.Level(1500, 0, 0), SnowDepthReport.Level(2000, 3, 3), SnowDepthReport.Level(2500, 50, 40)),
             ),
             SnowDepthReport.Snapshot("2026-11-21", 1300, 1300, SnowDepthTests.montBlanc.levels),
+        ),
+        exposedSlopes = listOf("N", "NE", "XX", "NW"),
+        freshSnow = FreshSnow(
+            1800,
+            listOf(FreshSnow.Day("2026-11-20", 30, 40, isForecast = false), FreshSnow.Day("2026-11-22", 5, 5, isForecast = true)),
+        ),
+        weather = MountainWeather(
+            listOf(2000, 4000),
+            listOf(
+                MountainWeather.Period("2026-11-22T06:00+01:00", listOf(MountainWeather.Wind(30, "S"), null), freezingLevel = 2300, rainSnowLimit = 1300),
+                MountainWeather.Period("2026-11-22T12:00+01:00", emptyList(), freezingLevel = 2500, rainSnowLimit = 2100),
+            ),
         ),
     )
 
@@ -53,6 +65,51 @@ class AvalancheBulletinTests {
         assertEquals(3, reading().avalancheLevel)
         assertEquals(4, reading(summit = 3456, village = 2100).avalancheLevel)
         assertEquals(AvalancheRisk.Summary.Split(4, 2200, 3), reading(summit = 3456, village = 2100).avalancheSummary())
+    }
+
+    // Slopes, fresh snow, forecast
+
+    @Test
+    fun unknownAspectsAreSkipped() {
+        assertEquals(listOf(SlopeAspect.NORTH, SlopeAspect.NORTH_EAST, SlopeAspect.NORTH_WEST), massif.exposedAspects)
+        assertEquals(315.0, SlopeAspect.NORTH_WEST.degrees)
+    }
+
+    /** "30-40 cm" and "5 cm" in the app. */
+    @Test
+    fun freshSnowLabelsARangeOrOneFigure() {
+        val days = massif.freshSnow!!.days
+        assertEquals(30 to 40, days[0].minimum to days[0].maximum)
+        assertEquals(5 to 5, days[1].minimum to days[1].maximum)
+        assertNotNull(days[0].day)
+    }
+
+    @Test
+    fun currentPeriodIsTheFirstThatHasNotEnded() {
+        val weather = massif.weather!!
+        fun at(time: String) = assertNotNull(MountainWeather.Period(time).date)
+        assertEquals(2300, weather.currentPeriod(at("2026-11-22T08:00+01:00"))?.freezingLevel)
+        assertEquals(2500, weather.currentPeriod(at("2026-11-22T13:00+01:00"))?.freezingLevel)
+        assertEquals(2500, weather.currentPeriod(at("2026-11-23T08:00+01:00"))?.freezingLevel, "The last one when all have ended")
+    }
+
+    @Test
+    fun anUnknownWindDirectionDoesNotFailTheFile() {
+        val wind = SnowDepthReport.json.decodeFromString<MountainWeather.Wind>("""{"speed": 40, "direction": "Calme"}""")
+        assertEquals(40, wind.speed)
+        assertNull(wind.aspect)
+    }
+
+    /** Android only: the mountain profile's rain-snow limit is the period nearest midday. */
+    @Test
+    fun theRainSnowLimitOfADayIsTheMiddayOne() {
+        val limits = massif.weather!!.rainSnowLimits(SnowDepthReport.ZONE)
+        assertEquals(mapOf(java.time.LocalDate.of(2026, 11, 22) to 2100), limits)
+    }
+
+    @Test
+    fun theIssueTimeIsRead() {
+        assertEquals(java.time.Instant.parse("2026-11-21T15:21:00Z"), massif.issueDate)
     }
 
     // History
