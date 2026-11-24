@@ -40,6 +40,6 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 |---|---|---|
 | App icon | Ported | adaptive icon from `AppIcon.png` on its corner colour |
 | `ResortBrowserView` | Partly | stack below 600 dp; list beside the resort from 600 dp (unfolded foldable, tablet), split at the hinge in book posture; folding keeps the resort and webcam on screen. No map in the empty detail pane, no widget deep links |
-| `ResortListView` | Partly | alphabetical, favourites first with their star and "Default". No search, sort menu, "Favourites on Top" toggle, swipe to favourite or map |
+| `ResortListView` | Partly | alphabetical, favourites first with their star and "Default"; search on names, regions and webcams; Sort menu with the remembered "Favourites on Top" toggle. No distance or snow orders, swipe to favourite, map, About or snow figures |
 | `ResortDetailView`, `WebcamCard` | Partly | header, website link, favourite star, Set as Default, webcam cards ordered by freshness; save failures shown as on iOS. No directions, season, snow or forecast |
 | `WebcamDetailView` | Partly | panorama scrolling sideways from its middle, refresh, capture time, altitude, orientation, source link. No afternoon images (with their area); no live stream player, as no catalogued webcam has a stream |

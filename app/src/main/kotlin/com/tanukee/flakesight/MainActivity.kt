@@ -47,7 +47,20 @@ import androidx.compose.ui.unit.dp
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import androidx.window.layout.WindowLayoutInfo
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
@@ -109,7 +122,27 @@ fun ResortBrowser(repository: ResortRepository, favoritesStore: FavoritesStore, 
     val closeWebcam = { selectedWebcamID = null }
 
     val favorites by favoritesStore.favorites.collectAsState()
-    val sortedResorts = remember(favorites) { repository.sortedResorts(favorites.map { it.resortID }) }
+    // Remembered between launches under the iOS key, `favoritesOnTop`.
+    val settings = LocalContext.current.let { remember { it.getSharedPreferences("settings", Context.MODE_PRIVATE) } }
+    var favoritesOnTop by remember { mutableStateOf(settings.getBoolean("favoritesOnTop", true)) }
+    var searchText by rememberSaveable { mutableStateOf("") }
+    val visibleResorts = remember(favorites, favoritesOnTop, searchText) {
+        repository.sortedResorts(favorites.map { it.resortID }, favoritesOnTop).filter { it.matches(searchText) }
+    }
+    @Composable
+    fun ResortList(selectedResortID: String?) = ResortListScreen(
+        visibleResorts,
+        favorites,
+        onSelect = selectResort,
+        searchText = searchText,
+        onSearchTextChange = { searchText = it },
+        favoritesOnTop = favoritesOnTop,
+        onFavoritesOnTopChange = {
+            favoritesOnTop = it
+            settings.edit().putBoolean("favoritesOnTop", it).apply()
+        },
+        selectedResortID = selectedResortID,
+    )
     // A change that could not be saved is said, not silently dropped (`FavoritesSaveFailure` on iOS).
     var saveFailure by remember { mutableStateOf<String?>(null) }
     val changeFavorites: (FavoritesStore.() -> Unit) -> Unit = { change ->
@@ -142,7 +175,7 @@ fun ResortBrowser(repository: ResortRepository, favoritesStore: FavoritesStore, 
         val windowWidth = maxWidth
         if (windowWidth < TWO_PANE_MIN_WIDTH) {
             when {
-                resort == null -> ResortListScreen(sortedResorts, favorites, onSelect = selectResort)
+                resort == null -> ResortList(selectedResortID = null)
                 webcam == null -> {
                     BackHandler { selectedResortID = null }
                     ResortPane(resort, onBack = { selectedResortID = null })
@@ -155,7 +188,7 @@ fun ResortBrowser(repository: ResortRepository, favoritesStore: FavoritesStore, 
         } else {
             Row {
                 Box(Modifier.width(listPaneWidth(windowWidth, layoutInfo))) {
-                    ResortListScreen(sortedResorts, favorites, onSelect = selectResort, selectedResortID = selectedResortID)
+                    ResortList(selectedResortID)
                 }
                 VerticalDivider()
                 Box(Modifier.weight(1f)) {
@@ -218,49 +251,120 @@ fun ResortListScreen(
     resorts: List<Resort>,
     favorites: List<FavoriteResort>,
     onSelect: (Resort) -> Unit,
+    searchText: String = "",
+    onSearchTextChange: (String) -> Unit = {},
+    favoritesOnTop: Boolean = true,
+    onFavoritesOnTopChange: (Boolean) -> Unit = {},
     selectedResortID: String? = null,
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.resorts_title)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.resorts_title)) },
+                actions = { SortMenu(favoritesOnTop, onFavoritesOnTopChange) },
+            )
+        },
     ) { padding ->
-        LazyColumn(modifier = Modifier.padding(padding)) {
-            items(resorts, key = { it.id }) { resort ->
-                val favorite = favorites.firstOrNull { it.resortID == resort.id }
-                ListItem(
-                    modifier = Modifier.clickable { onSelect(resort) },
-                    // Marks the resort shown in the other pane.
-                    colors = ListItemDefaults.colors(
-                        containerColor = if (resort.id == selectedResortID) {
-                            MaterialTheme.colorScheme.secondaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        },
-                    ),
-                    supportingContent = { Text(resort.region) },
-                    trailingContent = {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                if (resort.webcams.isEmpty()) {
-                                    stringResource(R.string.forecast_only)
-                                } else {
-                                    pluralStringResource(R.plurals.webcam_count, resort.webcams.size, resort.webcams.size)
-                                },
-                            )
-                            if (favorite != null) {
-                                if (favorite.isDefault) Text(stringResource(R.string.default_label))
-                                Icon(
-                                    painterResource(R.drawable.ic_star),
-                                    contentDescription = stringResource(R.string.favourite),
-                                    tint = FavoriteYellow,
-                                )
-                            }
-                        }
-                    },
-                ) {
-                    Text(resort.name)
-                }
-                HorizontalDivider()
+        Column(Modifier.padding(padding)) {
+            SearchField(searchText, onSearchTextChange)
+            if (resorts.isEmpty() && searchText.isNotBlank()) {
+                Text(
+                    stringResource(R.string.no_search_results, searchText.trim()),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                )
             }
+            ResortRows(resorts, favorites, onSelect, selectedResortID)
+        }
+    }
+}
+
+/** Searches names, regions and webcam names, ignoring case and accents (`Resort.matches`). */
+@Composable
+private fun SearchField(text: String, onTextChange: (String) -> Unit) {
+    val focusManager = LocalFocusManager.current
+    OutlinedTextField(
+        value = text,
+        onValueChange = onTextChange,
+        placeholder = { Text(stringResource(R.string.search_prompt)) },
+        leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
+        trailingIcon = {
+            if (text.isNotEmpty()) {
+                IconButton(onClick = { onTextChange("") }) {
+                    Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.clear_search))
+                }
+            }
+        },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+    )
+}
+
+/** Port of the list's Sort menu; only the name order exists so far, so it holds "Favourites on Top". */
+@Composable
+private fun SortMenu(favoritesOnTop: Boolean, onFavoritesOnTopChange: (Boolean) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(painterResource(R.drawable.ic_sort), contentDescription = stringResource(R.string.sort))
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.favourites_on_top)) },
+                trailingIcon = { Checkbox(checked = favoritesOnTop, onCheckedChange = null) },
+                onClick = { onFavoritesOnTopChange(!favoritesOnTop) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ResortRows(
+    resorts: List<Resort>,
+    favorites: List<FavoriteResort>,
+    onSelect: (Resort) -> Unit,
+    selectedResortID: String?,
+) {
+    LazyColumn {
+        items(resorts, key = { it.id }) { resort ->
+            val favorite = favorites.firstOrNull { it.resortID == resort.id }
+            ListItem(
+                modifier = Modifier.clickable { onSelect(resort) },
+                // Marks the resort shown in the other pane.
+                colors = ListItemDefaults.colors(
+                    containerColor = if (resort.id == selectedResortID) {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
+                ),
+                supportingContent = { Text(resort.region) },
+                trailingContent = {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            if (resort.webcams.isEmpty()) {
+                                stringResource(R.string.forecast_only)
+                            } else {
+                                pluralStringResource(R.plurals.webcam_count, resort.webcams.size, resort.webcams.size)
+                            },
+                        )
+                        if (favorite != null) {
+                            if (favorite.isDefault) Text(stringResource(R.string.default_label))
+                            Icon(
+                                painterResource(R.drawable.ic_star),
+                                contentDescription = stringResource(R.string.favourite),
+                                tint = FavoriteYellow,
+                            )
+                        }
+                    }
+                },
+            ) {
+                Text(resort.name)
+            }
+            HorizontalDivider()
         }
     }
 }
