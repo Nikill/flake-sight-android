@@ -1,8 +1,5 @@
 package com.tanukee.flakesight
 
-import android.icu.text.MeasureFormat
-import android.icu.util.Measure
-import android.icu.util.MeasureUnit
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -148,9 +145,7 @@ private fun Details(webcam: Webcam, resort: Resort, state: ImageState) {
             Text(errorMessage(state.error, webcam), color = MaterialTheme.colorScheme.error)
         }
         webcam.altitude?.let { altitude ->
-            val text = MeasureFormat.getInstance(LocalConfiguration.current.locales[0], MeasureFormat.FormatWidth.SHORT)
-                .format(Measure(altitude.toInt(), MeasureUnit.METER))
-            Text(text)
+            Text(metres(altitude.toInt(), LocalConfiguration.current.locales[0]))
         }
         webcam.orientation?.let { Text(stringResource(R.string.facing, it)) }
     }

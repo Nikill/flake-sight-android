@@ -222,6 +222,8 @@ private fun ResortHeader(resort: Resort, favorite: FavoriteResort?, onSetDefault
                 TextButton(onClick = onSetDefault) { Text(stringResource(R.string.set_as_default)) }
             }
         }
+        Spacer(Modifier.height(8.dp))
+        ForecastStrip(resort)
     }
 }
 

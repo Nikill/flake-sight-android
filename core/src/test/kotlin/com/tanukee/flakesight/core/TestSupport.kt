@@ -7,8 +7,15 @@ import kotlin.test.fail
 
 /** Port of `StubURLProtocol.swift`: answers from canned responses, without a network. */
 class StubHttpClient(private val responses: Map<String, HttpResponse>) : HttpClient {
-    override fun get(url: String, useCaches: Boolean): HttpResponse =
-        responses[url] ?: error("No stub for $url")
+    private val counts = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    /** How many times [url] was requested, for cache and coalescing tests. */
+    fun requestCount(url: String): Int = counts[url] ?: 0
+
+    override fun get(url: String, useCaches: Boolean): HttpResponse {
+        counts.merge(url, 1, Int::plus)
+        return responses[url] ?: error("No stub for $url")
+    }
 }
 
 /** A clock tests can move, for cache expiry. */

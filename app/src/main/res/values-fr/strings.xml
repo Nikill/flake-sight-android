@@ -30,6 +30,28 @@
     <string name="change_not_saved">Cette modification n\'a pas pu être enregistrée : %1$s</string>
     <string name="ok">OK</string>
 
+    <string name="weather">Météo</string>
+    <string name="weather_data_by_open_meteo">Données météo par Open-Meteo</string>
+    <string name="condition_clear">Dégagé</string>
+    <string name="condition_partly_cloudy">Partiellement nuageux</string>
+    <string name="condition_cloudy">Nuageux</string>
+    <string name="condition_fog">Brouillard</string>
+    <string name="condition_rain">Pluie</string>
+    <string name="condition_snow">Neige</string>
+    <string name="condition_thunderstorm">Orage</string>
+    <string name="level_summit">Sommet, %1$s</string>
+    <string name="level_village">Village, %1$s</string>
+    <string name="level_resort">Station</string>
+    <string name="place_summit">au sommet</string>
+    <string name="place_village">au village</string>
+    <string name="place_resort">à la station</string>
+    <string name="recent_snow">Sur les %1$d derniers jours : %2$s.</string>
+    <string name="recent_snow_none_at">rien %1$s</string>
+    <string name="no_recent_snow">Pas de neige sur les %1$d derniers jours.</string>
+    <string name="max_temperature">max %1$s</string>
+    <string name="today_weekday">Aujourd\'hui, %1$s</string>
+    <string name="day_summary">%1$s : %2$s</string>
+
     <string name="refresh">Actualiser</string>
     <string name="latest_image_from">Dernière image de %1$s</string>
     <string name="image_unavailable">Image indisponible</string>
