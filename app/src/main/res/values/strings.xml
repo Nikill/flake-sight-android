@@ -22,8 +22,25 @@
     <string name="snow_expected_next_days">%1$s expected in the next %2$d days</string>
     <string name="favourites_on_top">Favourites on Top</string>
 
-    <!-- Shown beside the list on a wide window before a resort is chosen. -->
-    <string name="select_resort">Choose a resort to see its webcams.</string>
+    <!-- Resort map -->
+    <string name="map">Map</string>
+    <!-- The switch that turns each pin into a snow total. -->
+    <string name="snow_layer">Snow</string>
+    <string name="loading_snow_totals">Loading snow totals…</string>
+    <string name="snow_totals_unavailable">Snow totals unavailable</string>
+    <string name="legend">Legend</string>
+    <!-- %1$d is a number of days. -->
+    <string name="period_last_days">Last %1$d days</string>
+    <string name="period_next_days">Next %1$d days</string>
+    <string name="no_snow_last_days">No snow in the last %1$d days</string>
+    <string name="no_snow_next_days">No snow expected in the next %1$d days</string>
+    <!-- The steps of the map's snow scale, read by TalkBack. -->
+    <string name="snow_band_under">Under %1$d cm</string>
+    <string name="snow_band_range">%1$d to %2$d cm</string>
+    <string name="snow_band_over">%1$d cm or more</string>
+    <string name="view_resort">View Resort</string>
+    <string name="directions">Directions</string>
+    <string name="close">Close</string>
 
     <!-- Resort screen -->
     <string name="back">Back</string>
