@@ -63,7 +63,7 @@ internal val forecastService = ForecastService()
  * when the forecast cannot be fetched: this is a webcam app.
  */
 @Composable
-fun ForecastStrip(resort: Resort) {
+fun ForecastStrip(resort: Resort, showModelSnowDepth: Boolean = true) {
     var forecast by remember(resort.id) { mutableStateOf(forecastService.cachedForecast(resort)) }
     var hasFailed by remember(resort.id) { mutableStateOf(false) }
     // Snow soon and the good days ahead; left out when the hourly forecast cannot be fetched.
@@ -88,13 +88,19 @@ fun ForecastStrip(resort: Resort) {
 
     val shown = forecast
     when {
-        shown != null -> StripContent(shown, briefing, resort, isPlaceholder = false)
+        shown != null -> StripContent(shown, briefing, resort, isPlaceholder = false, showModelSnowDepth)
         !hasFailed -> StripContent(placeholder(resort), null, resort, isPlaceholder = true)
     }
 }
 
 @Composable
-private fun StripContent(forecast: ResortForecast, briefing: ForecastBriefing?, resort: Resort, isPlaceholder: Boolean) {
+private fun StripContent(
+    forecast: ResortForecast,
+    briefing: ForecastBriefing?,
+    resort: Resort,
+    isPlaceholder: Boolean,
+    showModelSnowDepth: Boolean = true,
+) {
     val locale = LocalConfiguration.current.locales[0]
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.weather), style = MaterialTheme.typography.titleMedium)
@@ -125,7 +131,8 @@ private fun StripContent(forecast: ResortForecast, briefing: ForecastBriefing?, 
                 briefing?.let { upcomingSnowSentence(it, locale) },
                 briefing?.let { goodDaysSentence(it, locale) },
                 recentSnowSentence(forecast),
-                briefing?.let { snowDepthSentence(it, locale) },
+                // One depth on the screen: the bulletin's, when it covers the resort.
+                briefing?.takeIf { showModelSnowDepth }?.let { snowDepthSentence(it, locale) },
             )
             if (sentences.isNotEmpty()) ForecastDetails(sentences)
         }
@@ -282,7 +289,7 @@ private fun conditionLabel(condition: WeatherCondition) = stringResource(
 )
 
 @Composable
-private fun placePhrase(level: ForecastLevel) = stringResource(
+internal fun placePhrase(level: ForecastLevel) = stringResource(
     when (level) {
         is ForecastLevel.Summit -> R.string.place_summit
         is ForecastLevel.Village -> R.string.place_village

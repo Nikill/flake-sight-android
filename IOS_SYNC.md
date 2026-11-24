@@ -35,7 +35,9 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `ForecastServiceTests`, `ForecastDisplayTests` | Partly | daily, hourly, HTTP and cache tests; display tests as values. Models, snow summary and VoiceOver tests with those features |
 | `ForecastBriefing` (`ForecastPeriod`, `UpcomingSnow`, `GoodSkiingDay`, `SnowDepth`) | Ported | sentences built in the app from the briefing's values |
 | `ForecastBriefingTests` | Ported | wording tests check the values the sentences read; `sentencesReadInFrench` is the app's French strings |
-| `SnowBand`, `MountainProfile`, Météo-France snow depth, avalanche bulletin | Not yet | |
+| `SnowDepthReport`, `SnowDepthReading`, `AvalancheRisk`, `SnowDepthLoader` | Partly | depth read between the bulletin's altitudes, the week's change, the danger level; the report is kept in the app's files instead of the App Group. `FreshSnow`, `MountainWeather`, `SlopeAspect` and `depthOnly` come with the advanced weather screen and Wear OS |
+| `SnowDepthTests`, `AvalancheBulletinTests` | Partly | reading, wording values, file and refresh tests; the CarPlay, Watch, slopes, fresh snow and mountain forecast tests with those features |
+| `SnowBand`, `MountainProfile` | Not yet | |
 | `FavoriteResort`, `FavoritesStore` | Ported | JSON file in the app's files instead of SwiftData, written atomically; a failed write throws and changes nothing |
 | `FavoritesStoreTests` | Ported | plus Android-only persistence and failure tests |
 | `ResortSortingTests` | Partly | name, snow and favourites tests; distance tests with that order |
@@ -46,7 +48,8 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 |---|---|---|
 | App icon | Ported | adaptive icon from `AppIcon.png` on its corner colour |
 | `ResortBrowserView` | Partly | stack below 600 dp; list beside the resort from 600 dp (unfolded foldable, tablet), split at the hinge in book posture; folding keeps the resort and webcam on screen. No map in the empty detail pane, no widget deep links |
-| `ResortListView` | Partly | alphabetical, favourites first with their star and "Default"; search on names, regions and webcams; Sort menu with Name, Snow Forecast and Recent Snow and the "Favourites on Top" toggle, both remembered under the iOS keys; each row's recent snow, and the sorted figure on the right. No distance order, snow depth line, swipe to favourite, map or About |
-| `ResortDetailView`, `WebcamCard` | Partly | header, website link, favourite star, Set as Default, forecast strip, webcam cards ordered by freshness; save failures shown as on iOS. No directions, season, snow depth card or avalanche badge |
+| `ResortListView` | Partly | alphabetical, favourites first with their star and "Default"; search on names, regions and webcams; Sort menu with Name, Snow Forecast and Recent Snow and the "Favourites on Top" toggle, both remembered under the iOS keys; each row's recent snow and bulletin snow depth, and the sorted figure on the right. No distance order, swipe to favourite, map or About |
+| `ResortDetailView`, `WebcamCard` | Partly | header, website link, favourite star, Set as Default, snow card, avalanche badge, forecast strip, webcam cards ordered by freshness; save failures shown as on iOS. No directions or season |
+| `SnowyMountainCard`, `AvalancheRiskBadge`, `AvalancheColor` | Partly | the drawn mountain, depths, week's change, bulletin credit, the level's colour and summary; they do not open the advanced weather screen yet |
 | `ForecastStrip` | Partly | five days at each level (condition as emoji, snow, maximum), "Forecast Details" (snow soon, good days, recent snow, model snow depth) folded and remembered as on iOS, Open-Meteo credit, one TalkBack sentence per day. No snow bars, models' ranges or advanced weather screen |
 | `WebcamDetailView` | Partly | panorama scrolling sideways from its middle, refresh, capture time, altitude, orientation, source link. No afternoon images (with their area); no live stream player, as no catalogued webcam has a stream |
