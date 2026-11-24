@@ -63,12 +63,25 @@ data class Resort(
     fun distanceFrom(latitude: Double, longitude: Double): Double =
         Geo.distanceMetres(this.latitude, this.longitude, latitude, longitude)
 
+    /** Straight-line distance in metres from [location] to the resort centre. */
+    fun distanceFrom(location: Coordinate): Double = distanceFrom(location.latitude, location.longitude)
+
     /** Where driving directions lead: the car park when catalogued, else the resort centre. */
     val drivingDestination: Pair<Double, Double>
         get() = parking?.let { it.latitude to it.longitude } ?: (latitude to longitude)
 
     fun webcam(withId: String): Webcam? = webcams.firstOrNull { it.id == withId }
 }
+
+/** A position, such as the user's: what `CLLocation` gives the iOS sorts. */
+data class Coordinate(val latitude: Double, val longitude: Double)
+
+/**
+ * The [count] resorts whose centres are closest to [location], nearest first
+ * (fewer when there are not enough). The map opens framed on them and the user.
+ */
+fun Iterable<Resort>.nearest(count: Int, location: Coordinate): List<Resort> =
+    sortedBy { it.distanceFrom(location) }.take(maxOf(count, 0))
 
 /** A car park drivers can be sent to. */
 @Serializable

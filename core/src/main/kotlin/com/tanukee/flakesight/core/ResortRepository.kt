@@ -26,29 +26,31 @@ class ResortRepository(val resorts: List<Resort>) {
     /**
      * The whole catalogue in the resort list's [order], favourites first when
      * [favoritesFirst] (both groups in that order), mixed in otherwise. Unknown
-     * favourite IDs are ignored. Port of `sortedResorts`; distance comes with location.
+     * favourite IDs are ignored. Port of `sortedResorts`.
      *
-     * Resorts are alphabetical, then most snow first (to the whole centimetre,
-     * as shown) with [snow]. Without it, or for a resort missing from it, the
-     * order stays alphabetical, the missing ones last.
+     * Resorts are alphabetical, then ordered by the key the sort reads: nearest
+     * first with a [location], most snow first (to the whole centimetre, as
+     * shown) with [snow]. Without that data, or for a resort missing from
+     * [snow], the order stays alphabetical, the missing ones last.
      */
     fun sortedResorts(
         order: ResortSortOrder,
         favoriteIDs: Collection<String>,
         favoritesFirst: Boolean = true,
+        location: Coordinate? = null,
         snow: SnowTotals? = null,
     ): List<Resort> {
         // Accent-aware, like localizedStandardCompare: Brévent before Col, Dôme after.
         val collator = Collator.getInstance(Locale.FRENCH)
         val alphabetical = resorts.sortedWith { a, b -> collator.compare(a.name, b.name) }
         val kind = order.snowKind
-        // `sortedBy` is stable, so equal amounts stay alphabetical; missing totals rank below zero.
-        val sorted = if (kind != null && snow != null) {
-            alphabetical.sortedBy { resort ->
+        // `sortedBy` is stable, so equal keys stay alphabetical; missing totals rank below zero.
+        val sorted = when {
+            order == ResortSortOrder.DISTANCE && location != null -> alphabetical.sortedBy { it.distanceFrom(location) }
+            kind != null && snow != null -> alphabetical.sortedBy { resort ->
                 snow.amount(kind, resort.id)?.let { -DailyForecast.wholeNumber(it).toDouble() } ?: Double.POSITIVE_INFINITY
             }
-        } else {
-            alphabetical
+            else -> alphabetical
         }
         if (!favoritesFirst) return sorted
         val (favorites, others) = sorted.partition { it.id in favoriteIDs }
