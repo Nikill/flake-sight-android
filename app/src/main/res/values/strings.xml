@@ -38,6 +38,37 @@
     <string name="change_not_saved">This change couldn\'t be saved: %1$s</string>
     <string name="ok">OK</string>
 
+    <!-- Forecast strip -->
+    <string name="weather">Weather</string>
+    <!-- Required credit for Open-Meteo's CC BY 4.0 data. -->
+    <string name="weather_data_by_open_meteo">Weather data by Open-Meteo</string>
+    <string name="condition_clear">Clear</string>
+    <string name="condition_partly_cloudy">Partly cloudy</string>
+    <string name="condition_cloudy">Cloudy</string>
+    <string name="condition_fog">Fog</string>
+    <string name="condition_rain">Rain</string>
+    <string name="condition_snow">Snow</string>
+    <string name="condition_thunderstorm">Thunderstorm</string>
+    <!-- Read by TalkBack: %1$s is an altitude, "2,700 m". -->
+    <string name="level_summit">Summit, %1$s</string>
+    <string name="level_village">Village, %1$s</string>
+    <string name="level_resort">Resort</string>
+    <!-- Inside a sentence, after an amount: "24 cm at the summit". -->
+    <string name="place_summit">at the summit</string>
+    <string name="place_village">in the village</string>
+    <string name="place_resort">at the resort</string>
+    <!-- %1$d is a number of days, %2$s a list such as "24 cm at the summit, none in the village". -->
+    <string name="recent_snow">In the last %1$d days: %2$s.</string>
+    <!-- %1$s is a place phrase, "in the village". -->
+    <string name="recent_snow_none_at">none %1$s</string>
+    <string name="no_recent_snow">No snow in the last %1$d days.</string>
+    <!-- Read by TalkBack: %1$s is a temperature, "-4°". -->
+    <string name="max_temperature">max %1$s</string>
+    <!-- Read by TalkBack: %1$s is a weekday, "Friday". -->
+    <string name="today_weekday">Today, %1$s</string>
+    <!-- Read by TalkBack: %1$s is the day, %2$s what each level expects. -->
+    <string name="day_summary">%1$s: %2$s</string>
+
     <!-- Webcam screen -->
     <string name="refresh">Refresh</string>
     <!-- %1$s is the webcam's name. -->
