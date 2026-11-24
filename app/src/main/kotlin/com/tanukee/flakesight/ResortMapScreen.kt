@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -64,17 +65,22 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.tanukee.flakesight.core.Coordinate
 import com.tanukee.flakesight.core.ForecastService
+import com.tanukee.flakesight.core.nearest
 import com.tanukee.flakesight.core.Resort
 import com.tanukee.flakesight.core.SnowBand
 import com.tanukee.flakesight.core.SnowTotals
 import java.util.Locale
+import kotlin.math.cos
 
 /**
  * Every resort as a pin. Selecting one shows a card to open the resort or get
@@ -85,7 +91,8 @@ import java.util.Locale
  * coloured on one scale (`SnowBand`) explained by the legend at the top. Until
  * the totals are in, or when they cannot be loaded, the pins stay plain.
  *
- * Framing on the user's position comes with location, as the distance sort.
+ * Once the user is located, the map opens framed on them and the nearest
+ * resorts rather than on the whole catalogue.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,7 +104,12 @@ fun ResortMapScreen(
     /** What "View Resort" does: show the resort over the map, or beside the list. */
     onOpenResort: (Resort) -> Unit,
     onBack: (() -> Unit)?,
+    userLocation: Coordinate? = null,
+    /** Asks for location access if needed, then locates. */
+    onRequestLocation: () -> Unit = {},
 ) {
+    // Asks for location access so the map can show the user's position.
+    LaunchedEffect(Unit) { onRequestLocation() }
     // Remembered between launches under the iOS keys.
     val settings = LocalContext.current.let { remember { it.getSharedPreferences("settings", Context.MODE_PRIVATE) } }
     var showsSnow by remember { mutableStateOf(settings.getBoolean("mapShowsSnow", false)) }
@@ -148,6 +160,7 @@ fun ResortMapScreen(
                 snowKind,
                 selectedResortID,
                 onSelect = { selectedResortID = it },
+                userLocation = userLocation,
                 contentPadding = PaddingValues(
                     top = if (showsSnow) legendHeight else 0.dp,
                     bottom = if (selectedResort != null) cardHeight else 0.dp,
@@ -190,29 +203,47 @@ private fun SnowMap(
     kind: SnowTotals.Kind,
     selectedResortID: String?,
     onSelect: (String?) -> Unit,
+    userLocation: Coordinate?,
     contentPadding: PaddingValues,
 ) {
     val bounds = remember(resorts) {
         LatLngBounds.builder().apply { resorts.forEach { include(LatLng(it.latitude, it.longitude)) } }.build()
     }
-    // Centred on the catalogue straight away, then fitted to it once the map knows its size;
-    // afterwards the camera stays where the user left it.
+    // Centred on the catalogue straight away, then fitted to it, or to the user and the
+    // nearest resorts, once the map knows its size; the camera then stays where the user leaves it.
     val cameraPositionState = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(bounds.center, 5f) }
     var isFramed by rememberSaveable { mutableStateOf(false) }
+    var isMapLoaded by remember { mutableStateOf(false) }
+    var isPositionedByUser by rememberSaveable { mutableStateOf(false) }
     val framingPadding = with(LocalDensity.current) { 48.dp.roundToPx() }
+    LaunchedEffect(cameraPositionState.isMoving) {
+        if (cameraPositionState.isMoving && cameraPositionState.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE) {
+            isPositionedByUser = true
+        }
+    }
+    // Located after opening: move there unless the user already moved the map.
+    LaunchedEffect(userLocation, isMapLoaded) {
+        if (userLocation != null && isMapLoaded && !isPositionedByUser) {
+            framing(resorts, userLocation)?.let { cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(it, framingPadding)) }
+        }
+    }
     val isDark = isSystemInDarkTheme()
     val locale = LocalConfiguration.current.locales[0]
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
+        // The blue dot and its button, once located (which means access was granted).
+        properties = MapProperties(isMyLocationEnabled = userLocation != null),
         uiSettings = MapUiSettings(zoomControlsEnabled = false, mapToolbarEnabled = false),
         contentPadding = contentPadding,
         onMapClick = { onSelect(null) },
         onMapLoaded = {
             if (!isFramed) {
-                cameraPositionState.move(CameraUpdateFactory.newLatLngBounds(bounds, framingPadding))
+                val start = userLocation?.let { framing(resorts, it) } ?: bounds
+                cameraPositionState.move(CameraUpdateFactory.newLatLngBounds(start, framingPadding))
                 isFramed = true
             }
+            isMapLoaded = true
         },
     ) {
         resorts.forEach { resort ->
@@ -242,6 +273,21 @@ private fun SnowMap(
         }
     }
 }
+
+/** The user and the 15 nearest resorts, at least [MINIMUM_SPAN_METRES] across. */
+private fun framing(resorts: List<Resort>, user: Coordinate): LatLngBounds? {
+    val nearest = resorts.nearest(15, user)
+    if (nearest.isEmpty()) return null
+    val halfSpan = MINIMUM_SPAN_METRES / 2 / METRES_PER_DEGREE_OF_LATITUDE
+    return LatLngBounds.builder().apply {
+        nearest.forEach { include(LatLng(it.latitude, it.longitude)) }
+        include(LatLng(user.latitude - halfSpan, user.longitude - halfSpan / cos(Math.toRadians(user.latitude))))
+        include(LatLng(user.latitude + halfSpan, user.longitude + halfSpan / cos(Math.toRadians(user.latitude))))
+    }.build()
+}
+
+private const val MINIMUM_SPAN_METRES = 5_000.0
+private const val METRES_PER_DEGREE_OF_LATITUDE = 111_320.0
 
 /**
  * A resort's snow total on the map: the figure on its step's colour, or a grey
