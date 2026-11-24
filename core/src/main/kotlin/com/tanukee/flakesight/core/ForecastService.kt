@@ -20,12 +20,13 @@ import java.time.ZoneId
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 /**
  * Five-day forecasts per resort from Open-Meteo, one request per resort
  * covering its summit and village, cached in memory for half an hour. Port of
- * `ForecastService` in SkiPatrolKit for the daily forecast; the hourly
- * forecast, the models' snowfall and the snow totals come later.
+ * `ForecastService` in SkiPatrolKit for the daily and hourly forecasts and
+ * the snow totals; the models' snowfall comes later.
  *
  * Open-Meteo's free tier is for non-commercial use and its data is CC BY 4.0,
  * which is why every screen that draws a forecast credits it.
@@ -38,6 +39,7 @@ class ForecastService(
 ) {
     private val lock = Any()
     private val cache = mutableMapOf<String, ResortForecast>()
+    private val detailedCache = mutableMapOf<String, DetailedForecast>()
 
     /** Requests under way, so concurrent callers for one resort share a request. */
     private val inFlight = mutableMapOf<String, Deferred<ResortForecast>>()
@@ -50,6 +52,17 @@ class ForecastService(
     /** The last forecast still valid, so a screen can draw before awaiting. */
     fun cachedForecast(resort: Resort): ResortForecast? =
         synchronized(lock) { cache[resort.id] }?.takeIf { isFresh(it.fetchedAt, resort.timeZone) }
+
+    /**
+     * The resort's hour-by-hour forecast, from memory when fresh. Only the
+     * resort screen asks for it, once, so callers are not coalesced.
+     */
+    suspend fun detailedForecast(resort: Resort): DetailedForecast {
+        synchronized(lock) { detailedCache[resort.id] }?.takeIf { isFresh(it.fetchedAt, resort.timeZone) }?.let { return it }
+        val forecast = detailedForecast(load(detailedRequestURL(resort, baseURL)), resort, now())
+        synchronized(lock) { detailedCache[resort.id] = forecast }
+        return forecast
+    }
 
     /**
      * The last snow totals still valid and covering every resort asked for,
@@ -158,7 +171,17 @@ class ForecastService(
          * and the altitudes as `elevation` so Open-Meteo downscales to each.
          * The days before today come too, for the snow fallen lately.
          */
-        fun requestURL(resort: Resort, baseURL: String): String {
+        fun requestURL(resort: Resort, baseURL: String): String =
+            levelsURL(resort, baseURL, "daily" to "weather_code,temperature_2m_max,snowfall_sum", SNOW_RANKING_PAST_DAYS)
+
+        /** The same request hour by hour, with what the sentences read. */
+        fun detailedRequestURL(resort: Resort, baseURL: String): String =
+            levelsURL(resort, baseURL, "hourly" to HOURLY_VARIABLES)
+
+        /** The `hourly` series asked for, in the order of [Hourly]. */
+        private const val HOURLY_VARIABLES = "snowfall,rain,freezing_level_height,wind_gusts_10m,cloud_cover,visibility,snow_depth"
+
+        private fun levelsURL(resort: Resort, baseURL: String, series: Pair<String, String>, pastDays: Int = 0): String {
             val levels = resort.forecastLevels
             fun repeated(value: Double) = List(levels.size) { value.toString() }.joinToString(",")
             val altitudes = levels.mapNotNull { it.altitude }
@@ -166,12 +189,41 @@ class ForecastService(
                 "latitude" to repeated(resort.latitude),
                 "longitude" to repeated(resort.longitude),
                 altitudes.takeIf { it.size == levels.size }?.let { "elevation" to it.joinToString(",") },
-                "daily" to "weather_code,temperature_2m_max,snowfall_sum",
-                "past_days" to SNOW_RANKING_PAST_DAYS.toString(),
+                series,
+                pastDays.takeIf { it > 0 }?.let { "past_days" to it.toString() },
                 "forecast_days" to DAY_COUNT.toString(),
                 "timezone" to resort.timeZoneIdentifier,
             )
             return url(baseURL, items)
+        }
+
+        /** Parses the hourly answer the same way: one location per level, every series as long as the hours. */
+        fun detailedForecast(data: ByteArray, resort: Resort, fetchedAt: Instant): DetailedForecast {
+            val locations = decodeLocations(data, HourlyLocation.serializer())
+            val levels = resort.forecastLevels
+            if (locations.size != levels.size) throw ForecastError.MalformedResponse()
+            val forecasts = levels.zip(locations) { level, location ->
+                val hourly = location.hourly
+                val count = hourly.time.size
+                val series = listOf(hourly.snowfall, hourly.rain, hourly.freezingLevel, hourly.windGusts, hourly.cloudCover, hourly.visibility, hourly.snowDepth)
+                if (count == 0 || series.any { it.size != count }) throw ForecastError.MalformedResponse()
+                val hours = List(count) { index ->
+                    HourlyForecast(
+                        start = runCatching { LocalDateTime.parse(hourly.time[index]).atZone(resort.timeZone).toInstant() }
+                            .getOrElse { throw ForecastError.MalformedResponse() },
+                        snowfall = hourly.snowfall[index] ?: 0.0,
+                        rain = hourly.rain[index] ?: 0.0,
+                        freezingLevel = hourly.freezingLevel[index],
+                        windGusts = hourly.windGusts[index],
+                        cloudCover = hourly.cloudCover[index],
+                        visibility = hourly.visibility[index],
+                        // Metres from Open-Meteo, whole centimetres here.
+                        snowDepth = hourly.snowDepth[index]?.let { DailyForecast.wholeNumber(it * 100).toDouble() },
+                    )
+                }
+                LevelHourlyForecast(level, hours)
+            }
+            return DetailedForecast(resort.id, forecasts, fetchedAt)
         }
 
         /**
@@ -272,6 +324,22 @@ class ForecastService(
         @SerialName("weather_code") val weatherCode: List<Int?>,
         @SerialName("temperature_2m_max") val temperatureMax: List<Double?>,
         @SerialName("snowfall_sum") val snowfallSum: List<Double?>,
+    )
+
+    @Serializable
+    private class HourlyLocation(val hourly: Hourly)
+
+    @Serializable
+    private class Hourly(
+        val time: List<String>,
+        val snowfall: List<Double?>,
+        val rain: List<Double?>,
+        @SerialName("freezing_level_height") val freezingLevel: List<Double?>,
+        @SerialName("wind_gusts_10m") val windGusts: List<Double?>,
+        @SerialName("cloud_cover") val cloudCover: List<Int?>,
+        val visibility: List<Double?>,
+        /** Metres. */
+        @SerialName("snow_depth") val snowDepth: List<Double?>,
     )
 
     @Serializable
