@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Flake Sight</string>
+    <string name="resorts_title">Resorts</string>
+    <plurals name="webcam_count">
+        <item quantity="one">%d webcam</item>
+        <item quantity="other">%d webcams</item>
+    </plurals>
+    <string name="forecast_only">Forecast only</string>
+</resources>

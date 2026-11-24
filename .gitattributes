@@ -1,0 +1,9 @@
+# Unix line endings everywhere, so Windows and macOS checkouts produce identical files
+# and the catalogue copied from the iOS repository compares byte for byte.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.jar binary
+*.png binary
+*.jpg binary
+*.webp binary
