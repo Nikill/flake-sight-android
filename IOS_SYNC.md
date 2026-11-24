@@ -33,7 +33,11 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `ResortSeason` phase and wording | Not yet | |
 | Providers (`DirectImage`, Skaping, Roundshot, Viewsurf), registry, `WebcamService`, freshness | Ported | `core/.../WebcamService.kt`, `*Provider.kt`, `SnapshotFreshness.kt`. EXIF read by `Exif.kt` instead of ImageIO. Archive lookup (`ArchiveProbe`, `archivedSnapshotReference`) comes with the afternoon images. `label`/`systemImage` wording goes in the app with the first screen showing an image |
 | `ProviderTests`, `WebcamServiceCacheTests`, `WebcamServiceCaptureTimeTests`, `FreshnessOrderingTests` | Ported | except `downsamplerLimitsLongestSide` (decoding lives in the app); `ArchiveProviderTests` and `LiveSourceTests` not yet |
-| `SnapshotLoader`, `ImageDownsampler`, `LastSnapshotStore` | Not yet | app side and widgets |
+| `SnapshotLoader`, `ImageDownsampler` | Partly | in the app: `loadImage` and `decode` (Android's decoder straight to display size); the widget crops with `ContentScale.Crop` instead of `croppedThumbnail` |
+| `LastSnapshotStore` | Ported | under the app's cache directory |
+| `LastSnapshotStoreTests` | Ported | |
+| `WidgetWebcamResolver`, `DeepLink` | Ported | `core/.../WidgetSupport.kt` |
+| `WidgetSupportTests` | Partly | freshness boundary, resolver and deep link; the crop tests stay with the app's decoder; `SharedWidgetState` and the Watch payload have no Android counterpart (the widget runs in the app process and reads the favourites file) |
 | `ForecastService` (daily, hourly, models, snow totals), `ResortForecast`, `DetailedForecast`, `ForecastLevel`, `DailyForecast`, `WeatherCondition` | Partly | every request with its cache; wording moves to the app's strings, `core` gives whole centimetres, degrees and weekdays. `snowSummary` comes with CarPlay's Android Auto line |
 | `ForecastServiceTests` | Ported | |
 | `ForecastDisplayTests` | Partly | display tests as values; the snow summary and VoiceOver tests with Android Auto |
@@ -50,7 +54,8 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `FavoriteResort`, `FavoritesStore` | Ported | JSON file in the app's files instead of SwiftData, written atomically; a failed write throws and changes nothing |
 | `FavoritesStoreTests` | Ported | plus Android-only persistence and failure tests |
 | `ResortSortingTests` | Ported | |
-| Widgets, afternoon images | Not yet | |
+| Webcam widget (`WebcamWidget`, `WebcamTimelineProvider`) | Partly | Jetpack Glance, any size from 2 x 2: the default resort's first webcam, else the first catalogue resort's, name, resort and capture time over a gradient, the orange badge when stale, the last good image after a failed refresh; tapping opens the webcam. Refreshed every 30 minutes and when the default resort changes. No per-widget webcam choice (`WebcamWidgetIntent`), no 15-minute retry or entry at the moment an image turns stale (Android has no timelines) |
+| Afternoon images | Not yet | |
 | Watch → Wear OS, CarPlay → Android Auto | Not yet | after the phone app |
 
 | iOS app screen | Android | Notes |

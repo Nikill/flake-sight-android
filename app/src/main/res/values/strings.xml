@@ -237,6 +237,11 @@
     <string name="freshness_last_image">Last image %1$s</string>
     <string name="freshness_unknown">Time unknown</string>
 
+    <!-- Home screen widget -->
+    <string name="widget_name">Webcam</string>
+    <string name="widget_description">The latest image of a webcam and when it was taken.</string>
+    <string name="no_webcam_available">No webcam available</string>
+
     <!-- Webcam errors -->
     <string name="error_no_snapshot">This webcam has no image available.</string>
     <!-- %1$s is the provider's name, e.g. "Panomax". -->
