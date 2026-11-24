@@ -47,13 +47,25 @@ class MainActivity : ComponentActivity() {
         setContent {
             FlakeSightTheme {
                 val repository = remember { ResortRepository.bundled() }
+                // Saved IDs rather than a navigation library: two levels, resort then webcam.
                 var selectedResortID by rememberSaveable { mutableStateOf<String?>(null) }
-                val selected = selectedResortID?.let(repository::resort)
-                if (selected == null) {
-                    ResortListScreen(repository.resorts, onSelect = { selectedResortID = it.id })
-                } else {
-                    BackHandler { selectedResortID = null }
-                    ResortScreen(selected, onBack = { selectedResortID = null })
+                var selectedWebcamID by rememberSaveable { mutableStateOf<String?>(null) }
+                val resort = selectedResortID?.let(repository::resort)
+                val webcam = selectedWebcamID?.let { resort?.webcam(it) }
+                when {
+                    resort == null -> ResortListScreen(repository.resorts, onSelect = { selectedResortID = it.id })
+                    webcam == null -> {
+                        BackHandler { selectedResortID = null }
+                        ResortScreen(
+                            resort,
+                            onBack = { selectedResortID = null },
+                            onSelectWebcam = { selectedWebcamID = it.id },
+                        )
+                    }
+                    else -> {
+                        BackHandler { selectedWebcamID = null }
+                        WebcamScreen(webcam, resort, onBack = { selectedWebcamID = null })
+                    }
                 }
             }
         }
