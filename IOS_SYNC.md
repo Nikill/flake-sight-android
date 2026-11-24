@@ -36,7 +36,7 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `ResortSeason` phase and wording | Ported | `phase` in `core`; the summary sentences are the app's strings (`seasonSummary` in `ResortScreen.kt`) |
 | `ResortSeasonTests` | Ported | the summary tests check the phase and day each sentence reads |
 | Providers (`DirectImage`, Skaping, Roundshot, Viewsurf), registry, `WebcamService`, freshness | Ported | `core/.../WebcamService.kt`, `*Provider.kt`, `SnapshotFreshness.kt`. EXIF read by `Exif.kt` instead of ImageIO. Archive lookup (`ArchiveProbe`, `keepsArchive`, `archivedSnapshotReference`) on Skaping and Roundshot, with HEAD requests through `HttpClient.head`. `label`/`systemImage` wording goes in the app with the first screen showing an image |
-| `ProviderTests`, `WebcamServiceCacheTests`, `WebcamServiceCaptureTimeTests`, `FreshnessOrderingTests` | Ported | except `downsamplerLimitsLongestSide` (decoding lives in the app); `ArchiveProviderTests` ported; `LiveSourceTests` not yet |
+| `ProviderTests`, `WebcamServiceCacheTests`, `WebcamServiceCaptureTimeTests`, `FreshnessOrderingTests` | Ported | except `downsamplerLimitsLongestSide` (decoding lives in the app); `ArchiveProviderTests` ported; `LiveSourceTests` ported, off unless `SKIPATROL_LIVE_TESTS=1` as on iOS |
 | `SnapshotLoader`, `ImageDownsampler` | Partly | in the app: `loadImage` and `decode` (Android's decoder straight to display size); the widget crops with `ContentScale.Crop` instead of `croppedThumbnail` |
 | `LastSnapshotStore` | Ported | under the app's cache directory |
 | `LastSnapshotStoreTests` | Ported | |
