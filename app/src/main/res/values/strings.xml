@@ -8,6 +8,14 @@
     </plurals>
     <string name="forecast_only">Forecast only</string>
 
+    <!-- Resort list -->
+    <string name="search_prompt">Resort, region or webcam</string>
+    <string name="clear_search">Clear search</string>
+    <!-- %1$s is what the user typed. -->
+    <string name="no_search_results">No resort matches “%1$s”.</string>
+    <string name="sort">Sort</string>
+    <string name="favourites_on_top">Favourites on Top</string>
+
     <!-- Shown beside the list on a wide window before a resort is chosen. -->
     <string name="select_resort">Choose a resort to see its webcams.</string>
 

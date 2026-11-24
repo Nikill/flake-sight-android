@@ -7,6 +7,12 @@
     </plurals>
     <string name="forecast_only">Prévisions uniquement</string>
 
+    <string name="search_prompt">Station, région ou webcam</string>
+    <string name="clear_search">Effacer la recherche</string>
+    <string name="no_search_results">Aucune station ne correspond à « %1$s ».</string>
+    <string name="sort">Trier</string>
+    <string name="favourites_on_top">Favoris en premier</string>
+
     <string name="select_resort">Choisissez une station pour voir ses webcams.</string>
 
     <string name="back">Retour</string>
