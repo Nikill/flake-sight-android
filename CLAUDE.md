@@ -20,7 +20,7 @@ Android port of Flake Sight, the ski resort webcam app. The iOS app in `Nikill/s
 
 ## Project rules
 
-- Modules: `core` is the Kotlin port of SkiPatrolKit, plain Kotlin/JVM; `app` is the phone app in Jetpack Compose. Wear OS and Android Auto modules come later.
+- Modules: `core` is the Kotlin port of SkiPatrolKit, plain Kotlin/JVM; `app` is the phone app in Jetpack Compose. Wear OS and Android Auto are parked until further notice: do not start them, and keep their specs in `docs/specs/` up to date only when asked.
 - `core` never depends on Android. Logic that decides what to show (wording, order, freshness, caching, parsing) goes in `core` with tests; drawing goes in `app`.
 - Port behaviour from the Swift sources and their tests rather than reinventing it. A Kotlin test keeps the name of the Swift test it ports.
 - Kotlin warnings are errors in `core`.
