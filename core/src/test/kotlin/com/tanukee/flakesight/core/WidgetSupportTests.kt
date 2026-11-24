@@ -43,6 +43,27 @@ class WidgetSupportTests {
         assertEquals(first.webcams.first().id, instead?.second?.id)
     }
 
+    /** Port of `WebcamEntityQuery.entities(matching:)` and `suggestedEntities()`, which iOS leaves untested. */
+    @Test
+    fun widgetWebcamsMatchResortsAndWebcamNames() {
+        val all = repository.widgetWebcams("")
+        assertEquals(repository.resorts.filter { it.webcams.isNotEmpty() }.map { it.id }, all.map { it.first.id })
+        assertEquals(repository.resorts.sumOf { it.webcams.size }, all.sumOf { it.second.size })
+
+        // An alternate name lists every webcam of the resort.
+        val septLaux = repository.widgetWebcams("Sept Laux")
+        assertEquals(listOf("les-7-laux"), septLaux.map { it.first.id })
+        assertEquals(repository.resort("les-7-laux")!!.webcams, septLaux.single().second)
+
+        // A webcam name lists that webcam only.
+        val saisies = repository.resort("les-saisies")!!
+        val webcam = saisies.webcams.last()
+        val byWebcam = repository.widgetWebcams(webcam.name).first { it.first.id == saisies.id }
+        assertEquals(saisies.webcams.filter { it.name.searchContains(webcam.name) }, byWebcam.second)
+
+        assertEquals(emptyList(), repository.widgetWebcams("zzz no such webcam"))
+    }
+
     @Test
     fun deepLinkRoundTrips() {
         val url = DeepLink.webcamURL("les-saisies.bisanne-1500")

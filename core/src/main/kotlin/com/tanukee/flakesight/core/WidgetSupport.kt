@@ -20,6 +20,23 @@ object WidgetWebcamResolver {
     }
 }
 
+/**
+ * The webcams a widget's settings offer, grouped by resort in catalogue order;
+ * resorts without a match are left out. Port of `WebcamEntityQuery`.
+ *
+ * Matches webcam names, and every webcam of a resort whose name, alternate
+ * names or region match, so "Sept Laux" lists all Les 7 Laux webcams. A blank
+ * search lists every webcam.
+ */
+fun ResortRepository.widgetWebcams(searchText: String): List<Pair<Resort, List<Webcam>>> {
+    val query = searchText.trim()
+    return resorts.mapNotNull { resort ->
+        val resortMatches = resort.matches(query, includingWebcams = false)
+        val webcams = resort.webcams.filter { resortMatches || it.name.searchContains(query) }
+        webcams.takeIf { it.isNotEmpty() }?.let { resort to it }
+    }
+}
+
 /** `skipatrol://webcam/<id>`, what a widget opens. Port of `DeepLink`. */
 object DeepLink {
     private const val SCHEME = "skipatrol"
