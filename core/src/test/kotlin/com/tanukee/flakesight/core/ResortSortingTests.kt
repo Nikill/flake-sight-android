@@ -5,20 +5,25 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Port of `ResortSortingTests.swift` for the name and snow orders and
- * "Favourites on Top". The distance tests come with distance sorting. Keep
- * the two files in step (see IOS_SYNC.md).
+ * Port of `ResortSortingTests.swift`: the resort list's sort orders and its
+ * "Favourites on Top" toggle. Keep the two files in step (see IOS_SYNC.md).
  */
 class ResortSortingTests {
-    private fun resort(id: String, name: String) = Resort(
-        id = id, name = name, country = "FR", region = "R", latitude = 45.0, longitude = 6.0,
+    private fun resort(id: String, name: String, latitude: Double = 45.0) = Resort(
+        id = id, name = name, country = "FR", region = "R", latitude = latitude, longitude = 6.0,
         timeZoneIdentifier = "Europe/Paris", websiteURL = "https://example.com", summitAltitude = 2500, webcams = emptyList(),
     )
 
-    /** Alphabetically: Alpe, Brévent, Col, Dôme. */
+    /** Alphabetically: Alpe, Brévent, Col, Dôme. Nearest to [here]: Dôme, Brévent, Col, Alpe. */
     private val repository = ResortRepository(
-        listOf(resort("col", "Col"), resort("dome", "Dôme"), resort("alpe", "Alpe"), resort("brevent", "Brévent")),
+        listOf(
+            resort("col", "Col", latitude = 45.3),
+            resort("dome", "Dôme", latitude = 45.0),
+            resort("alpe", "Alpe", latitude = 45.4),
+            resort("brevent", "Brévent", latitude = 45.1),
+        ),
     )
+    private val here = Coordinate(45.0, 6.0)
 
     private fun totals(vararg entries: Pair<String, Pair<Double, Double>>) =
         SnowTotals(entries.associate { (id, amounts) -> id to SnowTotals.Entry(recent = amounts.first, forecast = amounts.second) }, Instant.now())
@@ -27,8 +32,9 @@ class ResortSortingTests {
         order: ResortSortOrder = ResortSortOrder.NAME,
         favorites: List<String> = emptyList(),
         first: Boolean = true,
+        location: Coordinate? = null,
         snow: SnowTotals? = null,
-    ) = repository.sortedResorts(order, favorites, first, snow).map { it.id }
+    ) = repository.sortedResorts(order, favorites, first, location, snow).map { it.id }
 
     @Test
     fun nameIsAlphabetical() {
@@ -40,10 +46,27 @@ class ResortSortingTests {
         assertEquals(listOf("col", "dome", "alpe", "brevent"), ids(favorites = listOf("dome", "col")))
     }
 
-    /** The distance half of the Swift test waits for distance sorting. */
     @Test
     fun favouritesMixInWhenTheToggleIsOff() {
         assertEquals(listOf("alpe", "brevent", "col", "dome"), ids(favorites = listOf("dome", "col"), first = false))
+        assertEquals(
+            listOf("dome", "brevent", "col", "alpe"),
+            ids(ResortSortOrder.DISTANCE, favorites = listOf("alpe"), first = false, location = here),
+        )
+    }
+
+    @Test
+    fun distanceIsNearestFirstInsideEachGroup() {
+        assertEquals(listOf("dome", "brevent", "col", "alpe"), ids(ResortSortOrder.DISTANCE, location = here))
+        assertEquals(
+            listOf("col", "alpe", "dome", "brevent"),
+            ids(ResortSortOrder.DISTANCE, favorites = listOf("alpe", "col"), location = here),
+        )
+    }
+
+    @Test
+    fun distanceWithoutALocationIsAlphabetical() {
+        assertEquals(listOf("alpe", "brevent", "col", "dome"), ids(ResortSortOrder.DISTANCE))
     }
 
     @Test
@@ -85,19 +108,20 @@ class ResortSortingTests {
     fun unknownFavouritesAreIgnoredAndEveryResortAppearsOnce() {
         val catalogue = ResortRepository.bundled()
         for (order in ResortSortOrder.entries) {
-            val sorted = catalogue.sortedResorts(order, listOf("chamonix", "nowhere"))
+            val sorted = catalogue.sortedResorts(order, listOf("chamonix", "nowhere"), location = here)
             assertEquals(catalogue.resorts.size, sorted.size)
             assertEquals(catalogue.resorts.size, sorted.map { it.id }.toSet().size)
             assertEquals("chamonix", sorted.first().id)
         }
     }
 
-    /** iOS's `distance` is not an order here yet, so it reads as the name order rather than failing. */
+    /** Plus the snow orders, and an unknown value reading as the name order rather than failing. */
     @Test
     fun storedRawValuesAreUnchanged() {
         assertEquals(ResortSortOrder.NAME, ResortSortOrder.fromRawValue("name"))
+        assertEquals(ResortSortOrder.DISTANCE, ResortSortOrder.fromRawValue("distance"))
         assertEquals(ResortSortOrder.FORECAST_SNOW, ResortSortOrder.fromRawValue("forecastSnow"))
         assertEquals(ResortSortOrder.RECENT_SNOW, ResortSortOrder.fromRawValue("recentSnow"))
-        assertEquals(ResortSortOrder.NAME, ResortSortOrder.fromRawValue("distance"))
+        assertEquals(ResortSortOrder.NAME, ResortSortOrder.fromRawValue("altitude"))
     }
 }

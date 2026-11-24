@@ -64,6 +64,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.res.painterResource
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import com.tanukee.flakesight.core.Coordinate
 import com.tanukee.flakesight.core.FavoriteResort
 import com.tanukee.flakesight.core.FavoritesStore
 import com.tanukee.flakesight.core.Resort
@@ -156,6 +160,24 @@ fun ResortBrowser(
     val settings = LocalContext.current.let { remember { it.getSharedPreferences("settings", Context.MODE_PRIVATE) } }
     var favoritesOnTop by remember { mutableStateOf(settings.getBoolean("favoritesOnTop", true)) }
     var sortOrder by remember { mutableStateOf(ResortSortOrder.fromRawValue(settings.getString("resortSortOrder", null))) }
+    val changeSortOrder: (ResortSortOrder) -> Unit = {
+        sortOrder = it
+        settings.edit().putString("resortSortOrder", it.rawValue).apply()
+    }
+    // Distance sorting needs a fresh position each time the list opens; refused, the list goes back to names.
+    val context = LocalContext.current
+    val locationProvider = remember { LocationProvider(context.applicationContext) }
+    var isShowingLocationDenied by remember { mutableStateOf(false) }
+    val requestSortLocation = rememberLocationRequest(locationProvider, onDenied = {
+        if (sortOrder == ResortSortOrder.DISTANCE) {
+            changeSortOrder(ResortSortOrder.NAME)
+            isShowingLocationDenied = true
+        }
+    })
+    LaunchedEffect(sortOrder) {
+        if (sortOrder == ResortSortOrder.DISTANCE) requestSortLocation()
+    }
+    val sortLocation = if (sortOrder == ResortSortOrder.DISTANCE) locationProvider.location else null
     var searchText by rememberSaveable { mutableStateOf("") }
     // The totals feed every row's recent snow as well as the snow sorts, so they load whatever the sort.
     // On failure the list simply stays alphabetical without figures, as the forecast strip hides itself.
@@ -170,8 +192,8 @@ fun ResortBrowser(
             snowTotalsFailed = true
         }
     }
-    val visibleResorts = remember(favorites, favoritesOnTop, sortOrder, snowTotals, searchText) {
-        repository.sortedResorts(sortOrder, favorites.map { it.resortID }, favoritesOnTop, snowTotals)
+    val visibleResorts = remember(favorites, favoritesOnTop, sortOrder, sortLocation, snowTotals, searchText) {
+        repository.sortedResorts(sortOrder, favorites.map { it.resortID }, favoritesOnTop, sortLocation, snowTotals)
             .filter { it.matches(searchText) }
     }
     // On a wide window, closes the resort beside the list to show the map there.
@@ -187,10 +209,7 @@ fun ResortBrowser(
         searchText = searchText,
         onSearchTextChange = { searchText = it },
         sortOrder = sortOrder,
-        onSortOrderChange = {
-            sortOrder = it
-            settings.edit().putString("resortSortOrder", it.rawValue).apply()
-        },
+        onSortOrderChange = changeSortOrder,
         favoritesOnTop = favoritesOnTop,
         onFavoritesOnTopChange = {
             favoritesOnTop = it
@@ -200,7 +219,9 @@ fun ResortBrowser(
         snowDepthReport = snowDepthReport,
         selectedResortID = selectedResortID,
         onShowMap = showMap,
+        sortLocation = sortLocation,
     )
+    val requestMapLocation = rememberLocationRequest(locationProvider)
     @Composable
     fun Map(onBack: (() -> Unit)?) = ResortMapScreen(
         repository.resorts,
@@ -208,6 +229,8 @@ fun ResortBrowser(
         snowTotalsFailed,
         onOpenResort = selectResort,
         onBack = onBack,
+        userLocation = locationProvider.location,
+        onRequestLocation = requestMapLocation,
     )
     // A change that could not be saved is said, not silently dropped (`FavoritesSaveFailure` on iOS).
     var saveFailure by remember { mutableStateOf<String?>(null) }
@@ -239,6 +262,25 @@ fun ResortBrowser(
         } else {
             AdvancedForecastScreen(resort, snowDepthReport?.reading(resort), onBack = closeOverResort)
         }
+    }
+
+    if (isShowingLocationDenied) {
+        AlertDialog(
+            onDismissRequest = { isShowingLocationDenied = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    isShowingLocationDenied = false
+                    context.startActivity(
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)),
+                    )
+                }) { Text(stringResource(R.string.open_settings)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { isShowingLocationDenied = false }) { Text(stringResource(R.string.cancel)) }
+            },
+            title = { Text(stringResource(R.string.location_access_off)) },
+            text = { Text(stringResource(R.string.location_access_off_message)) },
+        )
     }
 
     saveFailure?.let { reason ->
@@ -327,6 +369,7 @@ fun ResortListScreen(
     snowDepthReport: SnowDepthReport? = null,
     selectedResortID: String? = null,
     onShowMap: (() -> Unit)? = null,
+    sortLocation: Coordinate? = null,
 ) {
     Scaffold(
         topBar = {
@@ -353,7 +396,7 @@ fun ResortListScreen(
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                 )
             }
-            ResortRows(resorts, favorites, onSelect, sortOrder, snowTotals, snowDepthReport, selectedResortID)
+            ResortRows(resorts, favorites, onSelect, sortOrder, sortLocation, snowTotals, snowDepthReport, selectedResortID)
         }
     }
 }
@@ -417,6 +460,7 @@ private fun SortMenu(
 
 private fun sortOrderLabel(order: ResortSortOrder) = when (order) {
     ResortSortOrder.NAME -> R.string.sort_name
+    ResortSortOrder.DISTANCE -> R.string.sort_distance
     ResortSortOrder.FORECAST_SNOW -> R.string.sort_snow_forecast
     ResortSortOrder.RECENT_SNOW -> R.string.sort_recent_snow
 }
@@ -434,14 +478,15 @@ private fun ResortRows(
     favorites: List<FavoriteResort>,
     onSelect: (Resort) -> Unit,
     sortOrder: ResortSortOrder,
+    sortLocation: Coordinate?,
     snowTotals: SnowTotals?,
     snowDepthReport: SnowDepthReport?,
     selectedResortID: String?,
 ) {
     val locale = LocalConfiguration.current.locales[0]
-    // A new order starts from its top; the list would otherwise stay on the row that was visible.
+    // A new order, or the position arriving, starts from the top; the list would otherwise stay on the row that was visible.
     val listState = rememberLazyListState()
-    LaunchedEffect(sortOrder) { listState.scrollToItem(0) }
+    LaunchedEffect(sortOrder, sortLocation) { listState.scrollToItem(0) }
     LazyColumn(state = listState) {
         items(resorts, key = { it.id }) { resort ->
             val favorite = favorites.firstOrNull { it.resortID == resort.id }
@@ -477,13 +522,15 @@ private fun ResortRows(
                 trailingContent = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         val kind = sortOrder.snowKind
+                        // The figure the list is sorted by.
                         if (kind != null) {
-                            // The figure the list is sorted by.
                             snowTotals?.centimetres(kind, resort.id)?.let { cm ->
                                 val amount = centimetres(cm, locale)
                                 val sentence = snowSentence(kind, amount)
                                 Text(amount, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { contentDescription = sentence })
                             }
+                        } else if (sortLocation != null) {
+                            Text(roadDistance(resort.distanceFrom(sortLocation), locale), fontWeight = FontWeight.SemiBold)
                         } else {
                             Text(
                                 if (resort.webcams.isEmpty()) {

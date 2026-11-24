@@ -23,8 +23,11 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | SkiPatrolKit area | Android | Notes |
 |---|---|---|
 | Catalogue models (`Resort`, `Webcam`, `Parking`, `ResortSeason`, provider and capability types) | Ported | `core/.../Resort.kt`, `Webcam.kt` |
-| `ResortRepository` (bundled, lookup, search, `sortedResorts`) | Partly | `sortedResorts` for the name and snow orders with "Favourites on Top"; distance order, `available()`, withdrawn content and credits not yet |
-| `SnowTotals`, `ResortSortOrder`, `Resort.snowRankingLevel`, `ForecastService.snowTotals` | Partly | totals, batching, cache and the snow orders; `ResortSortOrder` has no `distance` yet (a stored `distance` reads as name). The map's sentences are built in the app |
+| `ResortRepository` (bundled, lookup, search, `sortedResorts`) | Partly | `sortedResorts` for every order with "Favourites on Top", the position as a `Coordinate` instead of `CLLocation`; `resortsByFavorites` (CarPlay, Watch), `available()`, withdrawn content and credits not yet |
+| `Resort.distance`, `nearest` | Ported | `distanceFrom`, `Iterable<Resort>.nearest` |
+| `DistanceSortingTests` | Ported | read `sortedResorts` instead of `resortsByFavorites` until CarPlay and the Watch are ported |
+| `LocationProvider` | Ported | in the app (`LocationProvider.kt`): one fix on demand, approximate position only |
+| `SnowTotals`, `ResortSortOrder`, `Resort.snowRankingLevel`, `ForecastService.snowTotals` | Partly | totals, batching, cache and every `ResortSortOrder`. The map's sentences are built in the app |
 | `SnowTotalsTests` | Ported | `labelsSkipLessThanACentimetre` checks the centimetres the app formats |
 | `CatalogTests` | Ported | except `creditsListPlatformsByWeightAndResortWebsites` |
 | `ResortSeason` phase and wording | Not yet | |
@@ -46,7 +49,7 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `SnowBandTests` | Ported | title and sentence tests check the bounds and totals the app formats |
 | `FavoriteResort`, `FavoritesStore` | Ported | JSON file in the app's files instead of SwiftData, written atomically; a failed write throws and changes nothing |
 | `FavoritesStoreTests` | Ported | plus Android-only persistence and failure tests |
-| `ResortSortingTests` | Partly | name, snow and favourites tests; distance tests with that order |
+| `ResortSortingTests` | Ported | |
 | Widgets, afternoon images | Not yet | |
 | Watch → Wear OS, CarPlay → Android Auto | Not yet | after the phone app |
 
@@ -54,8 +57,8 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 |---|---|---|
 | App icon | Ported | adaptive icon from `AppIcon.png` on its corner colour |
 | `ResortBrowserView` | Partly | stack below 600 dp; list beside the resort from 600 dp (unfolded foldable, tablet), split at the hinge in book posture; folding keeps the resort and webcam on screen; the map in the detail pane until a resort is chosen, and pushed from the list on a phone. No widget deep links |
-| `ResortListView` | Partly | alphabetical, favourites first with their star and "Default"; search on names, regions and webcams; Sort menu with Name, Snow Forecast and Recent Snow and the "Favourites on Top" toggle, both remembered under the iOS keys; each row's recent snow and bulletin snow depth, and the sorted figure on the right. Map button in the top bar. No distance order, swipe to favourite or About |
-| `ResortMapView` | Partly | Google Maps (Maps Compose) instead of MapKit, its key from `local.properties`; a pin per resort, the snow layer with its legend and kind remembered under the iOS keys, snow pins on the `SnowBand` colours, the card with View Resort and Google Maps directions. No user location or framing on the nearest resorts (with location) |
+| `ResortListView` | Partly | alphabetical, favourites first with their star and "Default"; search on names, regions and webcams; Sort menu with Name, Distance, Snow Forecast and Recent Snow and the "Favourites on Top" toggle, both remembered under the iOS keys; distance refused goes back to names with the "Location Access Off" alert; each row's recent snow and bulletin snow depth, and the sorted figure on the right (road distance in km, or miles where the locale uses them). Map button in the top bar. No swipe to favourite or About |
+| `ResortMapView` | Partly | Google Maps (Maps Compose) instead of MapKit, its key from `local.properties`; a pin per resort, the snow layer with its legend and kind remembered under the iOS keys, snow pins on the `SnowBand` colours, the card with View Resort and Google Maps directions; the user's position and button once located, the map opening framed on them and the 15 nearest resorts |
 | `ResortDetailView`, `WebcamCard` | Partly | header, website link, favourite star, Set as Default, snow card, avalanche badge, forecast strip, webcam cards ordered by freshness; save failures shown as on iOS. No directions or season |
 | `SnowyMountainCard`, `AvalancheRiskBadge`, `AvalancheColor` | Ported | both open the advanced weather screen |
 | `AdvancedForecastView` | Ported | the mountain profile, the recent snow, the bulletin section, the weather models table and the Open-Meteo credit; Try Again instead of pull to refresh |

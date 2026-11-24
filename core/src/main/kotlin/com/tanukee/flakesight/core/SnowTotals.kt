@@ -73,11 +73,14 @@ val Resort.snowRankingLevel: ForecastLevel get() = forecastLevels[0]
 
 /**
  * How the resort list is ordered, remembered between launches under
- * [rawValue], the iOS value. Port of `ResortSortOrder`; distance comes with location.
+ * [rawValue], the iOS value. Port of `ResortSortOrder`.
  */
 enum class ResortSortOrder(val rawValue: String) {
     /** Alphabetically. */
     NAME("name"),
+
+    /** Nearest first, once the user is located. */
+    DISTANCE("distance"),
 
     /** Most snow expected over the forecast days first. */
     FORECAST_SNOW("forecastSnow"),
@@ -88,13 +91,13 @@ enum class ResortSortOrder(val rawValue: String) {
     /** The snow total this order ranks by, or `null` for the others. */
     val snowKind: SnowTotals.Kind?
         get() = when (this) {
-            NAME -> null
+            NAME, DISTANCE -> null
             FORECAST_SNOW -> SnowTotals.Kind.FORECAST
             RECENT_SNOW -> SnowTotals.Kind.RECENT
         }
 
     companion object {
-        /** The stored order, or [NAME] for one this version does not know (iOS's `distance`). */
+        /** The stored order, or [NAME] for one this version does not know. */
         fun fromRawValue(raw: String?): ResortSortOrder = entries.firstOrNull { it.rawValue == raw } ?: NAME
     }
 }

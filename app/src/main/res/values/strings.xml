@@ -15,12 +15,18 @@
     <string name="no_search_results">No resort matches “%1$s”.</string>
     <string name="sort">Sort</string>
     <string name="sort_name">Name</string>
+    <string name="sort_distance">Distance</string>
     <string name="sort_snow_forecast">Snow Forecast</string>
     <string name="sort_recent_snow">Recent Snow</string>
     <!-- Read by TalkBack for a row's snow figure: %1$s is "24 cm", %2$d a number of days. -->
     <string name="snow_in_last_days">%1$s in the last %2$d days</string>
     <string name="snow_expected_next_days">%1$s expected in the next %2$d days</string>
     <string name="favourites_on_top">Favourites on Top</string>
+    <!-- After the user refused location access while sorting by distance. -->
+    <string name="location_access_off">Location Access Off</string>
+    <string name="location_access_off_message">Allow Flake Sight to use your location in Settings to sort resorts by distance.</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="cancel">Cancel</string>
 
     <!-- Resort map -->
     <string name="map">Map</string>
