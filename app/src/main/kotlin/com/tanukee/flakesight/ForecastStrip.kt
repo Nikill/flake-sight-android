@@ -41,8 +41,8 @@ import kotlinx.coroutines.CancellationException
 import java.time.Instant
 import java.util.Locale
 
-/** One per process, so its half-hour cache outlives the screens. */
-private val forecastService = ForecastService()
+/** One per process, so its half-hour cache outlives the screens; the resort list shares it for the snow totals. */
+internal val forecastService = ForecastService()
 
 /**
  * Five days of weather at the summit and the village: a pictogram, the snow
@@ -226,7 +226,7 @@ internal fun metres(value: Int, locale: Locale): String =
     MeasureFormat.getInstance(locale, MeasureFormat.FormatWidth.SHORT).format(Measure(value, MeasureUnit.METER))
 
 /** "12 cm", with the narrow no-break space French uses. */
-private fun centimetres(value: Int, locale: Locale): String =
+internal fun centimetres(value: Int, locale: Locale): String =
     MeasureFormat.getInstance(locale, MeasureFormat.FormatWidth.SHORT).format(Measure(value, MeasureUnit.CENTIMETER))
 
 /** "-4°", whole degrees. */

@@ -69,6 +69,16 @@ import com.tanukee.flakesight.core.FavoriteResort
 import com.tanukee.flakesight.core.FavoritesStore
 import com.tanukee.flakesight.core.Resort
 import com.tanukee.flakesight.core.ResortRepository
+import com.tanukee.flakesight.core.ResortSortOrder
+import com.tanukee.flakesight.core.SnowTotals
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.RadioButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.CancellationException
 import java.io.IOException
 import com.tanukee.flakesight.core.Webcam
 import java.io.File
@@ -125,9 +135,22 @@ fun ResortBrowser(repository: ResortRepository, favoritesStore: FavoritesStore, 
     // Remembered between launches under the iOS key, `favoritesOnTop`.
     val settings = LocalContext.current.let { remember { it.getSharedPreferences("settings", Context.MODE_PRIVATE) } }
     var favoritesOnTop by remember { mutableStateOf(settings.getBoolean("favoritesOnTop", true)) }
+    var sortOrder by remember { mutableStateOf(ResortSortOrder.fromRawValue(settings.getString("resortSortOrder", null))) }
     var searchText by rememberSaveable { mutableStateOf("") }
-    val visibleResorts = remember(favorites, favoritesOnTop, searchText) {
-        repository.sortedResorts(favorites.map { it.resortID }, favoritesOnTop).filter { it.matches(searchText) }
+    // The totals feed every row's recent snow as well as the snow sorts, so they load whatever the sort.
+    // On failure the list simply stays alphabetical without figures, as the forecast strip hides itself.
+    var snowTotals by remember { mutableStateOf(forecastService.cachedSnowTotals(repository.resorts)) }
+    LaunchedEffect(Unit) {
+        try {
+            snowTotals = forecastService.snowTotals(repository.resorts)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+        }
+    }
+    val visibleResorts = remember(favorites, favoritesOnTop, sortOrder, snowTotals, searchText) {
+        repository.sortedResorts(sortOrder, favorites.map { it.resortID }, favoritesOnTop, snowTotals)
+            .filter { it.matches(searchText) }
     }
     @Composable
     fun ResortList(selectedResortID: String?) = ResortListScreen(
@@ -136,11 +159,17 @@ fun ResortBrowser(repository: ResortRepository, favoritesStore: FavoritesStore, 
         onSelect = selectResort,
         searchText = searchText,
         onSearchTextChange = { searchText = it },
+        sortOrder = sortOrder,
+        onSortOrderChange = {
+            sortOrder = it
+            settings.edit().putString("resortSortOrder", it.rawValue).apply()
+        },
         favoritesOnTop = favoritesOnTop,
         onFavoritesOnTopChange = {
             favoritesOnTop = it
             settings.edit().putBoolean("favoritesOnTop", it).apply()
         },
+        snowTotals = snowTotals,
         selectedResortID = selectedResortID,
     )
     // A change that could not be saved is said, not silently dropped (`FavoritesSaveFailure` on iOS).
@@ -253,15 +282,18 @@ fun ResortListScreen(
     onSelect: (Resort) -> Unit,
     searchText: String = "",
     onSearchTextChange: (String) -> Unit = {},
+    sortOrder: ResortSortOrder = ResortSortOrder.NAME,
+    onSortOrderChange: (ResortSortOrder) -> Unit = {},
     favoritesOnTop: Boolean = true,
     onFavoritesOnTopChange: (Boolean) -> Unit = {},
+    snowTotals: SnowTotals? = null,
     selectedResortID: String? = null,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.resorts_title)) },
-                actions = { SortMenu(favoritesOnTop, onFavoritesOnTopChange) },
+                actions = { SortMenu(sortOrder, onSortOrderChange, favoritesOnTop, onFavoritesOnTopChange) },
             )
         },
     ) { padding ->
@@ -275,7 +307,7 @@ fun ResortListScreen(
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                 )
             }
-            ResortRows(resorts, favorites, onSelect, selectedResortID)
+            ResortRows(resorts, favorites, onSelect, sortOrder, snowTotals, selectedResortID)
         }
     }
 }
@@ -303,15 +335,31 @@ private fun SearchField(text: String, onTextChange: (String) -> Unit) {
     )
 }
 
-/** Port of the list's Sort menu; only the name order exists so far, so it holds "Favourites on Top". */
+/** Port of the list's Sort menu: the orders, then "Favourites on Top". Distance comes with location. */
 @Composable
-private fun SortMenu(favoritesOnTop: Boolean, onFavoritesOnTopChange: (Boolean) -> Unit) {
+private fun SortMenu(
+    sortOrder: ResortSortOrder,
+    onSortOrderChange: (ResortSortOrder) -> Unit,
+    favoritesOnTop: Boolean,
+    onFavoritesOnTopChange: (Boolean) -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(painterResource(R.drawable.ic_sort), contentDescription = stringResource(R.string.sort))
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            ResortSortOrder.entries.forEach { order ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(sortOrderLabel(order))) },
+                    leadingIcon = { RadioButton(selected = order == sortOrder, onClick = null) },
+                    onClick = {
+                        onSortOrderChange(order)
+                        expanded = false
+                    },
+                )
+            }
+            HorizontalDivider()
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.favourites_on_top)) },
                 trailingIcon = { Checkbox(checked = favoritesOnTop, onCheckedChange = null) },
@@ -321,14 +369,33 @@ private fun SortMenu(favoritesOnTop: Boolean, onFavoritesOnTopChange: (Boolean) 
     }
 }
 
+private fun sortOrderLabel(order: ResortSortOrder) = when (order) {
+    ResortSortOrder.NAME -> R.string.sort_name
+    ResortSortOrder.FORECAST_SNOW -> R.string.sort_snow_forecast
+    ResortSortOrder.RECENT_SNOW -> R.string.sort_recent_snow
+}
+
+/** "24 cm in the last 7 days" or "12 cm expected in the next 5 days", read in place of a row's figure. */
+@Composable
+private fun snowSentence(kind: SnowTotals.Kind, amount: String) = when (kind) {
+    SnowTotals.Kind.RECENT -> stringResource(R.string.snow_in_last_days, amount, kind.dayCount)
+    SnowTotals.Kind.FORECAST -> stringResource(R.string.snow_expected_next_days, amount, kind.dayCount)
+}
+
 @Composable
 private fun ResortRows(
     resorts: List<Resort>,
     favorites: List<FavoriteResort>,
     onSelect: (Resort) -> Unit,
+    sortOrder: ResortSortOrder,
+    snowTotals: SnowTotals?,
     selectedResortID: String?,
 ) {
-    LazyColumn {
+    val locale = LocalConfiguration.current.locales[0]
+    // A new order starts from its top; the list would otherwise stay on the row that was visible.
+    val listState = rememberLazyListState()
+    LaunchedEffect(sortOrder) { listState.scrollToItem(0) }
+    LazyColumn(state = listState) {
         items(resorts, key = { it.id }) { resort ->
             val favorite = favorites.firstOrNull { it.resortID == resort.id }
             ListItem(
@@ -341,16 +408,37 @@ private fun ResortRows(
                         MaterialTheme.colorScheme.surface
                     },
                 ),
-                supportingContent = { Text(resort.region) },
+                supportingContent = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(resort.region)
+                        // The snow fallen lately, unless the list is sorted by it and the figure on the right says it.
+                        val recent = snowTotals?.centimetres(SnowTotals.Kind.RECENT, resort.id)
+                        if (recent != null && sortOrder != ResortSortOrder.RECENT_SNOW) {
+                            val amount = centimetres(recent, locale)
+                            val sentence = snowSentence(SnowTotals.Kind.RECENT, amount)
+                            Text("· ❄ $amount", modifier = Modifier.semantics { contentDescription = sentence })
+                        }
+                    }
+                },
                 trailingContent = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            if (resort.webcams.isEmpty()) {
-                                stringResource(R.string.forecast_only)
-                            } else {
-                                pluralStringResource(R.plurals.webcam_count, resort.webcams.size, resort.webcams.size)
-                            },
-                        )
+                        val kind = sortOrder.snowKind
+                        if (kind != null) {
+                            // The figure the list is sorted by.
+                            snowTotals?.centimetres(kind, resort.id)?.let { cm ->
+                                val amount = centimetres(cm, locale)
+                                val sentence = snowSentence(kind, amount)
+                                Text(amount, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { contentDescription = sentence })
+                            }
+                        } else {
+                            Text(
+                                if (resort.webcams.isEmpty()) {
+                                    stringResource(R.string.forecast_only)
+                                } else {
+                                    pluralStringResource(R.plurals.webcam_count, resort.webcams.size, resort.webcams.size)
+                                },
+                            )
+                        }
                         if (favorite != null) {
                             if (favorite.isDefault) Text(stringResource(R.string.default_label))
                             Icon(
