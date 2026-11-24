@@ -51,8 +51,17 @@ import com.tanukee.flakesight.core.SnapshotSize
 import com.tanukee.flakesight.core.Webcam
 import com.tanukee.flakesight.core.WebcamSnapshot
 import com.tanukee.flakesight.core.WidgetWebcamResolver
+import androidx.glance.appwidget.updateAll
+import androidx.work.Constraints
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
 import kotlinx.coroutines.CancellationException
 import java.io.File
+import java.time.Duration
 
 /**
  * Latest image of a webcam with the time it was taken. Port of `WebcamWidget`
@@ -62,8 +71,9 @@ import java.io.File
  * the default resort's first webcam, else the first catalogue resort's
  * (`WidgetWebcamResolver`). The widget runs in the app's own process, so it reads
  * the favourites file directly where iOS needs an App Group. Android refreshes it
- * every 30 minutes, as iOS's timeline; the app refreshes it too when the default
- * resort changes. Tapping opens the webcam in the app.
+ * every 30 minutes, as iOS's timeline, and 15 minutes after a failed download
+ * ([WidgetRetryWorker]); the app refreshes it too when the default resort
+ * changes. Tapping opens the webcam in the app.
  */
 class WebcamWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
@@ -108,6 +118,7 @@ class WebcamWidget : GlanceAppWidget() {
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
+            WidgetRetryWorker.schedule(context)
             // A failed refresh keeps the last good image. Its real capture time still decides
             // whether it is flagged as stale, so an old picture is never passed off as current.
             webcamService.cachedSnapshot(webcam, SnapshotSize.THUMBNAIL) ?: store.snapshot(webcam, SnapshotSize.THUMBNAIL)
@@ -206,4 +217,32 @@ class WebcamWidget : GlanceAppWidget() {
 
 class WebcamWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = WebcamWidget()
+}
+
+/**
+ * Reloads the widgets a quarter of an hour after a failed download instead of
+ * at the next 30-minute refresh. Port of `WebcamTimelineProvider.retryInterval`.
+ */
+class WidgetRetryWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
+    override suspend fun doWork(): Result {
+        WebcamWidget().updateAll(applicationContext)
+        return Result.success()
+    }
+
+    companion object {
+        private const val NAME = "widget-retry"
+        private val RETRY_INTERVAL: Duration = Duration.ofMinutes(15)
+
+        /**
+         * 15 minutes after the latest failure, as iOS. [ExistingWorkPolicy.REPLACE] also books
+         * the next one when the retry itself fails: replacing it only cancels a reload already asked for.
+         */
+        fun schedule(context: Context) {
+            val request = OneTimeWorkRequestBuilder<WidgetRetryWorker>()
+                .setInitialDelay(RETRY_INTERVAL)
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(NAME, ExistingWorkPolicy.REPLACE, request)
+        }
+    }
 }
