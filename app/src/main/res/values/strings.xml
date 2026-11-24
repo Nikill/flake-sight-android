@@ -113,6 +113,45 @@
     <!-- %1$s is an altitude, "1,700 m". -->
     <string name="freezing_level_at">0 °C at %1$s</string>
 
+    <!-- The avalanche bulletin section of the advanced weather screen -->
+    <string name="avalanche_bulletin">Avalanche Bulletin</string>
+    <!-- %1$s is the massif, "Mont-Blanc"; %2$s when it came out, "23 Nov, 15:30". -->
+    <string name="massif_issued">%1$s massif, issued %2$s</string>
+    <string name="most_exposed_slopes">Most exposed slopes</string>
+    <!-- Read by TalkBack: %1$s is a list of compass points. -->
+    <string name="most_exposed_slopes_spoken">Most exposed slopes: %1$s</string>
+    <!-- %1$s is a level, "4/5 High". -->
+    <string name="tomorrow_up_to">Tomorrow: up to %1$s</string>
+    <string name="risk_whole_massif">A level for the whole massif, off-piste. Read the full bulletin before leaving the marked runs.</string>
+    <string name="fresh_snow_24_hours">Fresh Snow in 24 Hours</string>
+    <!-- %1$s is an altitude, "1,800 m". -->
+    <string name="fresh_snow_subtitle">At %1$s, observed then forecast</string>
+    <string name="forecast_short">Forecast</string>
+    <!-- Read by TalkBack: %1$s is an amount, "5 cm". -->
+    <string name="amount_forecast">%1$s, forecast</string>
+    <string name="snow_depth_this_week">Snow Depth This Week</string>
+    <!-- %1$s is a change, "+85 cm in 6 days". -->
+    <string name="at_the_summit_change">At the summit: %1$s</string>
+    <string name="rain_or_snow">Rain or Snow</string>
+    <string name="freezing_level_and_wind">Freezing Level and Wind</string>
+    <string name="every_six_hours">Every six hours, from the bulletin</string>
+    <!-- Read by TalkBack: %1$s is a time, %2$s and %3$s altitudes. -->
+    <string name="rain_snow_limit_spoken">%1$s: rain-snow limit %2$s, freezing level %3$s.</string>
+    <!-- Read by TalkBack: %1$d is a speed, %2$s where it comes from, "SW", %3$s an altitude. -->
+    <string name="wind_spoken">%1$d km/h %2$s at %3$s</string>
+    <string name="rain_snow">Rain-snow</string>
+    <string name="read_full_bulletin">Read the full bulletin on meteofrance.com</string>
+    <string name="bulletin_licence">Snow depth: Météo-France avalanche bulletins, Licence Ouverte 2.0.</string>
+    <!-- Compass abbreviations. -->
+    <string name="aspect_n">N</string>
+    <string name="aspect_ne">NE</string>
+    <string name="aspect_e">E</string>
+    <string name="aspect_se">SE</string>
+    <string name="aspect_s">S</string>
+    <string name="aspect_sw">SW</string>
+    <string name="aspect_w">W</string>
+    <string name="aspect_nw">NW</string>
+
     <!-- Snow on the ground and avalanche risk, from Météo-France's avalanche bulletin -->
     <string name="snow_on_the_ground">Snow on the Ground</string>
     <!-- %1$s is an altitude, "1,300 m". -->
