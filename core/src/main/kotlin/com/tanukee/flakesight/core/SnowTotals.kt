@@ -30,6 +30,39 @@ data class SnowTotals(val entries: Map<String, Entry>, val fetchedAt: Instant) {
 
     /** Whole centimetres for one or more, otherwise `null` so a row never shows "0 cm". */
     fun centimetres(kind: Kind, resortID: String): Int? = amount(kind, resortID)?.let(DailyForecast::centimetres)
+
+    /** The step of the map's scale for the resort, or `null` when it was not fetched. */
+    fun band(kind: Kind, resortID: String): SnowBand? = amount(kind, resortID)?.let(SnowBand::of)
+}
+
+/**
+ * The step of the map's snow scale a total falls in. One scale serves both the
+ * recent and the forecast totals, so the legend stays put when the map
+ * switches between them. Port of `SnowBand`; the colours are the app's.
+ */
+enum class SnowBand {
+    /** Under a centimetre: what the rows and pins show as no snow. */
+    NONE,
+    LIGHT,
+    MODERATE,
+    HEAVY,
+    DEEP;
+
+    /** The first whole centimetre of the step. */
+    val lowerBound: Int get() = LOWER_BOUNDS[ordinal]
+
+    /** The last whole centimetre of the step, `null` for the top one. */
+    val upperBound: Int? get() = LOWER_BOUNDS.getOrNull(ordinal + 1)?.minus(1)
+
+    companion object {
+        private val LOWER_BOUNDS = listOf(0, DailyForecast.SNOW_THRESHOLD, 10, 30, 50)
+
+        /** The step for a total, judged on the whole centimetre shown, so a pin reading "10 cm" is never coloured as "1 to 9 cm". */
+        fun of(centimetres: Double): SnowBand {
+            val shown = DailyForecast.wholeNumber(kotlin.math.max(centimetres, 0.0))
+            return entries[LOWER_BOUNDS.indexOfLast { shown >= it }.coerceAtLeast(0)]
+        }
+    }
 }
 
 /**
