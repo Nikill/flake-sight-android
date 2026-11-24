@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.VerticalDivider
@@ -136,6 +135,8 @@ fun ResortBrowser(
     var selectedResortID by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedWebcamID by rememberSaveable { mutableStateOf<String?>(null) }
     var isShowingForecast by rememberSaveable { mutableStateOf(false) }
+    // Under the resort on a phone, so Back from a resort opened on the map returns to the map.
+    var isShowingMap by rememberSaveable { mutableStateOf(false) }
     val resort = selectedResortID?.let(repository::resort)
     val webcam = selectedWebcamID?.let { resort?.webcam(it) }
     val selectResort: (Resort) -> Unit = {
@@ -159,17 +160,24 @@ fun ResortBrowser(
     // The totals feed every row's recent snow as well as the snow sorts, so they load whatever the sort.
     // On failure the list simply stays alphabetical without figures, as the forecast strip hides itself.
     var snowTotals by remember { mutableStateOf(forecastService.cachedSnowTotals(repository.resorts)) }
+    var snowTotalsFailed by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         try {
             snowTotals = forecastService.snowTotals(repository.resorts)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
+            snowTotalsFailed = true
         }
     }
     val visibleResorts = remember(favorites, favoritesOnTop, sortOrder, snowTotals, searchText) {
         repository.sortedResorts(sortOrder, favorites.map { it.resortID }, favoritesOnTop, snowTotals)
             .filter { it.matches(searchText) }
+    }
+    // On a wide window, closes the resort beside the list to show the map there.
+    val showMap = {
+        selectedResortID = null
+        isShowingMap = true
     }
     @Composable
     fun ResortList(selectedResortID: String?) = ResortListScreen(
@@ -191,6 +199,15 @@ fun ResortBrowser(
         snowTotals = snowTotals,
         snowDepthReport = snowDepthReport,
         selectedResortID = selectedResortID,
+        onShowMap = showMap,
+    )
+    @Composable
+    fun Map(onBack: (() -> Unit)?) = ResortMapScreen(
+        repository.resorts,
+        snowTotals,
+        snowTotalsFailed,
+        onOpenResort = selectResort,
+        onBack = onBack,
     )
     // A change that could not be saved is said, not silently dropped (`FavoritesSaveFailure` on iOS).
     var saveFailure by remember { mutableStateOf<String?>(null) }
@@ -237,6 +254,10 @@ fun ResortBrowser(
         val windowWidth = maxWidth
         if (windowWidth < TWO_PANE_MIN_WIDTH) {
             when {
+                resort == null && isShowingMap -> {
+                    BackHandler { isShowingMap = false }
+                    Map(onBack = { isShowingMap = false })
+                }
                 resort == null -> ResortList(selectedResortID = null)
                 !isOverResort -> {
                     BackHandler { selectedResortID = null }
@@ -252,7 +273,8 @@ fun ResortBrowser(
                 VerticalDivider()
                 Box(Modifier.weight(1f)) {
                     when {
-                        resort == null -> NoResortSelected()
+                        // The map until a resort is chosen, as on iPad.
+                        resort == null -> Map(onBack = null)
                         // The resort is the pane's root: Back only closes what is over it.
                         !isOverResort -> ResortPane(resort, onBack = null)
                         else -> OverResort(resort)
@@ -273,18 +295,6 @@ private fun listPaneWidth(windowWidth: Dp, layoutInfo: WindowLayoutInfo?): Dp {
         ?.firstOrNull { it.isSeparating && it.orientation == FoldingFeature.Orientation.VERTICAL }
     return hinge?.let { with(LocalDensity.current) { it.bounds.left.toDp() } }
         ?: (windowWidth * 0.4f).coerceIn(280.dp, 360.dp)
-}
-
-/** The detail pane before any resort is chosen. iOS shows the map there, not ported yet. */
-@Composable
-private fun NoResortSelected() {
-    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Text(
-            stringResource(R.string.select_resort),
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
 }
 
 /** The favourite star's colour: iOS system yellow, as on the iPhone. */
@@ -316,12 +326,20 @@ fun ResortListScreen(
     snowTotals: SnowTotals? = null,
     snowDepthReport: SnowDepthReport? = null,
     selectedResortID: String? = null,
+    onShowMap: (() -> Unit)? = null,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.resorts_title)) },
-                actions = { SortMenu(sortOrder, onSortOrderChange, favoritesOnTop, onFavoritesOnTopChange) },
+                actions = {
+                    if (onShowMap != null) {
+                        IconButton(onClick = onShowMap) {
+                            Icon(painterResource(R.drawable.ic_map), contentDescription = stringResource(R.string.map))
+                        }
+                    }
+                    SortMenu(sortOrder, onSortOrderChange, favoritesOnTop, onFavoritesOnTopChange)
+                },
             )
         },
     ) { padding ->
@@ -405,7 +423,7 @@ private fun sortOrderLabel(order: ResortSortOrder) = when (order) {
 
 /** "24 cm in the last 7 days" or "12 cm expected in the next 5 days", read in place of a row's figure. */
 @Composable
-private fun snowSentence(kind: SnowTotals.Kind, amount: String) = when (kind) {
+internal fun snowSentence(kind: SnowTotals.Kind, amount: String) = when (kind) {
     SnowTotals.Kind.RECENT -> stringResource(R.string.snow_in_last_days, amount, kind.dayCount)
     SnowTotals.Kind.FORECAST -> stringResource(R.string.snow_expected_next_days, amount, kind.dayCount)
 }
