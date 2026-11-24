@@ -44,6 +44,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import com.tanukee.flakesight.core.ForecastBriefing
+import com.tanukee.flakesight.core.ForecastConfidence
+import com.tanukee.flakesight.core.SnowGaugeScale
+import com.tanukee.flakesight.core.SnowfallRange
+import com.tanukee.flakesight.core.withRanges
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import com.tanukee.flakesight.core.ForecastPeriod
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -70,7 +82,17 @@ fun ForecastStrip(resort: Resort, showModelSnowDepth: Boolean = true, onOpenAdva
     var hasFailed by remember(resort.id) { mutableStateOf(false) }
     // Snow soon and the good days ahead; left out when the hourly forecast cannot be fetched.
     var briefing by remember(resort.id) { mutableStateOf<ForecastBriefing?>(null) }
+    // The models' amounts give each day its range; optional, so either can arrive first.
+    var models by remember(resort.id) { mutableStateOf(forecastService.cachedModelSnowfall(resort)) }
     LaunchedEffect(resort.id) {
+        launch {
+            try {
+                models = forecastService.modelSnowfall(resort)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+            }
+        }
         launch {
             try {
                 briefing = ForecastBriefing(forecastService.detailedForecast(resort), Instant.now(), resort.timeZone)
@@ -88,7 +110,7 @@ fun ForecastStrip(resort: Resort, showModelSnowDepth: Boolean = true, onOpenAdva
         }
     }
 
-    val shown = forecast
+    val shown = forecast?.let { daily -> models?.let(daily::withRanges) ?: daily }
     when {
         shown != null -> StripContent(shown, briefing, resort, isPlaceholder = false, showModelSnowDepth, onOpenAdvanced)
         !hasFailed -> StripContent(placeholder(resort), null, resort, isPlaceholder = true)
@@ -162,6 +184,52 @@ private fun StripContent(
 }
 
 private val LEVEL_COLUMN_WIDTH = 76.dp
+
+/**
+ * A day's snow as a small bar whose top is sharp when the weather models
+ * agree and fades out when they do not: solid up to the lowest amount any of
+ * them gives, then fading to the highest. A dry day is a flat line, so a row
+ * of bars still reads as a row. Port of `FuzzySnowBar`.
+ */
+@Composable
+private fun FuzzySnowBar(day: DailyForecast, scale: SnowGaugeScale, modifier: Modifier = Modifier) {
+    val barHeight = 32.dp
+    val low = barHeight * scale.fraction(day.snowfallRange?.low ?: day.snowfall).toFloat()
+    val high = barHeight * scale.fraction(day.snowfallRange?.high ?: day.snowfall).toFloat()
+    val dry = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+    Box(modifier.width(14.dp).height(barHeight).clearAndSetSemantics {}, contentAlignment = Alignment.BottomCenter) {
+        if (high < 3.dp) {
+            Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(50)).background(dry))
+        } else {
+            // The share of the bar the models all agree on stays solid.
+            val solid = (low / high).coerceIn(0f, 1f)
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(high)
+                    .clip(RoundedCornerShape(topStart = 7.dp, topEnd = 7.dp, bottomStart = 2.dp, bottomEnd = 2.dp))
+                    .background(Brush.verticalGradient(0f to SnowBlue.copy(alpha = 0.06f), (1 - solid) to SnowBlue, 1f to SnowBlue)),
+            )
+        }
+    }
+}
+
+/** "between 5 and 20 centimetres, low confidence", inside a sentence read aloud. */
+@Composable
+internal fun spokenRange(range: SnowfallRange, locale: Locale): String {
+    val high = MeasureFormat.getInstance(locale, MeasureFormat.FormatWidth.WIDE).format(Measure(range.highCentimetres, MeasureUnit.CENTIMETER))
+    val confidence = stringResource(
+        if (range.confidence == ForecastConfidence.HIGH) R.string.high_confidence_spoken else R.string.low_confidence_spoken,
+    )
+    return stringResource(R.string.range_spoken, java.text.NumberFormat.getIntegerInstance(locale).format(range.lowCentimetres), high, confidence)
+}
+
+/** "5-20 cm", whole centimetres; "12 cm" when both ends round alike. */
+internal fun rangeLabel(range: SnowfallRange, locale: Locale): String {
+    val high = centimetres(range.highCentimetres, locale)
+    if (range.lowCentimetres == range.highCentimetres) return high
+    return java.text.NumberFormat.getIntegerInstance(locale).format(range.lowCentimetres) + "-" + high
+}
 
 /**
  * The sentences under the grid, folded under "Forecast Details": open until
@@ -247,7 +315,8 @@ private fun snowDepthSentence(briefing: ForecastBriefing, locale: Locale): Strin
 @Composable
 private fun LevelRow(level: LevelForecast, locale: Locale) {
     // The dry days of a snowy row keep a blank line so its temperatures stay aligned; a dry row skips it.
-    val hasSnow = level.days.any { it.snowfallCentimetres != null }
+    val hasSnow = level.days.any { it.snowfallCentimetres != null || it.snowfallRange != null }
+    val scale = SnowGaugeScale(level.days)
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             levelSymbol(level.level) + (level.level.altitude?.let { " " + metres(it, locale) } ?: ""),
@@ -259,6 +328,7 @@ private fun LevelRow(level: LevelForecast, locale: Locale) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                 Text(conditionSymbol(day.condition), fontSize = 22.sp)
                 if (hasSnow) {
+                    FuzzySnowBar(day, scale, Modifier.padding(top = 2.dp))
                     Text(
                         day.snowfallCentimetres?.let { centimetres(it, locale) } ?: " ",
                         style = MaterialTheme.typography.bodySmall,
@@ -342,6 +412,7 @@ private fun daySentence(forecast: ResortForecast, index: Int, resort: Resort, lo
             levelLabel,
             conditionLabel(levelDay.condition),
             levelDay.snowfallCentimetres?.let { centimetres(it, locale) },
+            levelDay.snowfallRange?.let { spokenRange(it, locale) },
             levelDay.maxTemperatureDegrees?.let { stringResource(R.string.max_temperature, degrees(it)) },
         ).joinToString(", ")
     }

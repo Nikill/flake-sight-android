@@ -200,6 +200,47 @@ class ForecastServiceTests {
         assertFailsWith<ForecastError.MalformedResponse> { ForecastService.detailedForecast(twoLocations.encodeToByteArray(), resort(), now) }
     }
 
+    @Test
+    fun theModelsRequestAsksForEachModelsDailySnowfall() {
+        assertEquals(
+            "$BASE?latitude=45.76,45.76&longitude=6.59,6.59&elevation=2700,1650&daily=snowfall_sum&models=meteofrance_seamless,icon_seamless,ecmwf_ifs025,gfs_seamless&forecast_days=5&timezone=Europe/Paris",
+            ForecastService.modelSnowfallRequestURL(resort(), BASE),
+        )
+    }
+
+    /** Two days of each model's snowfall; [models] maps a model to its days. */
+    private fun modelLocation(models: Map<String, String>, days: String = "\"2027-01-15\", \"2027-01-16\""): String {
+        val series = models.entries.joinToString(", ") { (model, values) -> "\"snowfall_sum_$model\": [$values]" }
+        return """{"latitude": 45.76, "longitude": 6.59, "daily": {"time": [$days], $series}}"""
+    }
+
+    @Test
+    fun eachModelKeepsItsAmountsInTheOrderOfTheModels() {
+        val summit = modelLocation(
+            mapOf("meteofrance_seamless" to "15.9, null", "icon_seamless" to "48.2, 12.5", "ecmwf_ifs025" to "27.2, 25.8", "gfs_seamless" to "36.2, 10.9"),
+        )
+        // A model Open-Meteo left out counts as having no amount.
+        val village = modelLocation(mapOf("icon_seamless" to "40, 10", "gfs_seamless" to "30, 0"))
+        val models = ForecastService.modelSnowfall("[$summit, $village]".encodeToByteArray(), resort(), now)
+        assertEquals(listOf(ForecastLevel.Summit(2700), ForecastLevel.Village(1650)), models.levels.map { it.level })
+        assertEquals(listOf(15.9, 48.2, 27.2, 36.2), models.levels[0].days[friday])
+        assertEquals(listOf(null, 12.5, 25.8, 10.9), models.levels[0].days[friday.plusDays(1)])
+        assertEquals(listOf(null, 40.0, null, 30.0), models.levels[1].days[friday])
+    }
+
+    @Test
+    fun raggedModelSeriesAreRejected() {
+        val body = "[${modelLocation(mapOf("icon_seamless" to "1"))}, ${modelLocation(mapOf("icon_seamless" to "1, 2"))}]"
+        assertFailsWith<ForecastError.MalformedResponse> { ForecastService.modelSnowfall(body.encodeToByteArray(), resort(), now) }
+    }
+
+    @Test
+    fun theModelsAnswerNeedsEveryLevel() {
+        assertFailsWith<ForecastError.MalformedResponse> {
+            ForecastService.modelSnowfall(modelLocation(mapOf("icon_seamless" to "1, 2")).encodeToByteArray(), resort(), now)
+        }
+    }
+
     // HTTP
 
     @Test
@@ -277,6 +318,26 @@ class ForecastServiceTests {
         clock.advance(Duration.ofMinutes(2))
         service.detailedForecast(resort())
         assertEquals(2, http.requestCount(hourlyURL))
+    }
+
+    @Test
+    fun theModelsAreCachedLikeTheForecast() = runBlocking<Unit> {
+        val url = ForecastService.modelSnowfallRequestURL(resort(), BASE)
+        val location = modelLocation(mapOf("icon_seamless" to "4, 2", "gfs_seamless" to "6, 0"))
+        val http = StubHttpClient(mapOf(url to response("[$location, $location]")))
+        val service = ForecastService(http, BASE) { clock.now }
+
+        assertNull(service.cachedModelSnowfall(resort()))
+        val first = service.modelSnowfall(resort())
+        clock.advance(Duration.ofMinutes(29))
+        assertEquals(first, service.cachedModelSnowfall(resort()))
+        service.modelSnowfall(resort())
+        assertEquals(1, http.requestCount(url))
+
+        clock.advance(Duration.ofMinutes(2))
+        assertNull(service.cachedModelSnowfall(resort()))
+        service.modelSnowfall(resort())
+        assertEquals(2, http.requestCount(url))
     }
 
     @Test
