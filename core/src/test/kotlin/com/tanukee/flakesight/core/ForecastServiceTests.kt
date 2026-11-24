@@ -49,6 +49,20 @@ class ForecastServiceTests {
             """.trimIndent()
         }
 
+        fun hourlyLocation(snow: String = "0, 1.2, 0.4", visibility: String = "24000, 800, null") = """
+            {"latitude": 45.76, "longitude": 6.59,
+             "hourly": {"time": ["2027-01-15T09:00", "2027-01-15T10:00", "2027-01-15T11:00"],
+                        "snowfall": [$snow],
+                        "rain": [0, 0.3, null],
+                        "freezing_level_height": [1500, 1450, null],
+                        "wind_gusts_10m": [20.2, 61.0, null],
+                        "cloud_cover": [10, 100, null],
+                        "visibility": [$visibility],
+                        "snow_depth": [0.93, 0.95, null]}}
+        """.trimIndent()
+
+        val twoHourlyLocations = "[${hourlyLocation()}, ${hourlyLocation(snow = "0, 0, 0")}]"
+
         fun parse(body: String, resort: Resort = resort(), fetchedAt: Instant = now) =
             ForecastService.forecast(body.encodeToByteArray(), resort, fetchedAt)
 
@@ -86,6 +100,14 @@ class ForecastServiceTests {
         assertEquals(
             "$BASE?latitude=45.76&longitude=6.59&daily=weather_code,temperature_2m_max,snowfall_sum&past_days=7&forecast_days=5&timezone=Europe/Paris",
             ForecastService.requestURL(resort(village = null, summit = null), BASE),
+        )
+    }
+
+    @Test
+    fun theDetailedRequestAsksForWhatTheSentencesReadHourByHour() {
+        assertEquals(
+            "$BASE?latitude=45.76,45.76&longitude=6.59,6.59&elevation=2700,1650&hourly=snowfall,rain,freezing_level_height,wind_gusts_10m,cloud_cover,visibility,snow_depth&forecast_days=5&timezone=Europe/Paris",
+            ForecastService.detailedRequestURL(resort(), BASE),
         )
     }
 
@@ -150,6 +172,34 @@ class ForecastServiceTests {
         assertFailsWith<ForecastError.MalformedResponse> { parse("<html>") }
     }
 
+    @Test
+    fun hourlyLocationsBecomeTheResortLevels() {
+        val forecast = ForecastService.detailedForecast(twoHourlyLocations.encodeToByteArray(), resort(), now)
+        assertEquals(listOf(ForecastLevel.Summit(2700), ForecastLevel.Village(1650)), forecast.levels.map { it.level })
+
+        val summit = forecast.levels[0].hours
+        assertEquals(listOf(now, now.plusSeconds(3600), now.plusSeconds(7200)), summit.map { it.start })
+        assertEquals(listOf(0.0, 1.2, 0.4), summit.map { it.snowfall })
+        assertEquals(listOf(0.0, 0.3, 0.0), summit.map { it.rain })
+        assertEquals(listOf(1500.0, 1450.0, null), summit.map { it.freezingLevel })
+        assertEquals(listOf(20.2, 61.0, null), summit.map { it.windGusts })
+        assertEquals(listOf(10, 100, null), summit.map { it.cloudCover })
+        assertEquals(listOf(24000.0, 800.0, null), summit.map { it.visibility })
+        assertEquals(listOf(93.0, 95.0, null), summit.map { it.snowDepth })
+        assertEquals(listOf(0.0, 0.0, 0.0), forecast.levels[1].hours.map { it.snowfall })
+    }
+
+    @Test
+    fun raggedHourlyArraysAreRejected() {
+        val body = "[${hourlyLocation(visibility = "24000, 800")}, ${hourlyLocation()}]"
+        assertFailsWith<ForecastError.MalformedResponse> { ForecastService.detailedForecast(body.encodeToByteArray(), resort(), now) }
+    }
+
+    @Test
+    fun aDailyAnswerIsNotADetailedOne() {
+        assertFailsWith<ForecastError.MalformedResponse> { ForecastService.detailedForecast(twoLocations.encodeToByteArray(), resort(), now) }
+    }
+
     // HTTP
 
     @Test
@@ -208,6 +258,25 @@ class ForecastServiceTests {
         assertSame(first.await(), second.await())
         assertEquals(1, http.requestCount(ForecastService.requestURL(resort(), BASE)))
         assertEquals(0, service.inFlightCount)
+    }
+
+    @Test
+    fun theDetailedForecastIsCachedApartFromTheDailyOne() = runBlocking<Unit> {
+        val dailyURL = ForecastService.requestURL(resort(), BASE)
+        val hourlyURL = ForecastService.detailedRequestURL(resort(), BASE)
+        val http = StubHttpClient(mapOf(dailyURL to response(twoLocations), hourlyURL to response(twoHourlyLocations)))
+        val service = ForecastService(http, BASE) { clock.now }
+
+        service.forecast(resort())
+        val first = service.detailedForecast(resort())
+        clock.advance(Duration.ofMinutes(29))
+        assertEquals(first, service.detailedForecast(resort()))
+        assertEquals(1, http.requestCount(hourlyURL))
+        assertEquals(1, http.requestCount(dailyURL))
+
+        clock.advance(Duration.ofMinutes(2))
+        service.detailedForecast(resort())
+        assertEquals(2, http.requestCount(hourlyURL))
     }
 
     @Test
