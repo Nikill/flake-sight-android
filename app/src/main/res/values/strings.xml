@@ -17,6 +17,19 @@
     <string name="no_webcams">No webcams</string>
     <string name="no_webcams_description">This resort does not publish a webcam Flake Sight can show yet.</string>
 
+    <!-- Favourites -->
+    <string name="add_to_favourites">Add to Favourites</string>
+    <string name="remove_from_favourites">Remove from Favourites</string>
+    <string name="favourite">Favourite</string>
+    <!-- After a favourite in the list: the resort the widgets will show. -->
+    <string name="default_label">Default</string>
+    <string name="default_resort">Default resort</string>
+    <string name="set_as_default">Set as Default</string>
+    <string name="favourites_not_saved">Favourites Not Saved</string>
+    <!-- %1$s is the system's reason, e.g. "No space left on device". -->
+    <string name="change_not_saved">This change couldn\'t be saved: %1$s</string>
+    <string name="ok">OK</string>
+
     <!-- Webcam screen -->
     <string name="refresh">Refresh</string>
     <!-- %1$s is the webcam's name. -->

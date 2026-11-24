@@ -45,6 +45,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Spacer
+import com.tanukee.flakesight.core.FavoriteResort
 import com.tanukee.flakesight.core.Resort
 import com.tanukee.flakesight.core.SnapshotFreshness
 import com.tanukee.flakesight.core.SnapshotSize
@@ -81,7 +83,14 @@ internal data class ImageState(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ResortScreen(resort: Resort, onBack: (() -> Unit)?, onSelectWebcam: (Webcam) -> Unit) {
+fun ResortScreen(
+    resort: Resort,
+    favorite: FavoriteResort?,
+    onToggleFavorite: () -> Unit,
+    onSetDefault: () -> Unit,
+    onBack: (() -> Unit)?,
+    onSelectWebcam: (Webcam) -> Unit,
+) {
     val cards = remember(resort.id) { mutableStateMapOf<String, ImageState>() }
     // Reordered only once every card has settled, so cards do not shuffle while the screen fills up.
     var orderedWebcams by remember(resort.id) { mutableStateOf(resort.webcams) }
@@ -114,6 +123,15 @@ fun ResortScreen(resort: Resort, onBack: (() -> Unit)?, onSelectWebcam: (Webcam)
                         }
                     }
                 },
+                actions = {
+                    IconButton(onClick = onToggleFavorite) {
+                        if (favorite == null) {
+                            Icon(painterResource(R.drawable.ic_star_border), stringResource(R.string.add_to_favourites))
+                        } else {
+                            Icon(painterResource(R.drawable.ic_star), stringResource(R.string.remove_from_favourites), tint = FavoriteYellow)
+                        }
+                    }
+                },
             )
         },
     ) { padding ->
@@ -125,7 +143,7 @@ fun ResortScreen(resort: Resort, onBack: (() -> Unit)?, onSelectWebcam: (Webcam)
             verticalArrangement = Arrangement.spacedBy(20.dp),
             modifier = Modifier.padding(padding),
         ) {
-            item(span = { GridItemSpan(maxLineSpan) }) { ResortHeader(resort) }
+            item(span = { GridItemSpan(maxLineSpan) }) { ResortHeader(resort, favorite, onSetDefault) }
             if (resort.webcams.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) { NoWebcams() }
             }
@@ -181,7 +199,7 @@ private suspend fun decode(snapshot: WebcamSnapshot, maxPixelSize: Int): Bitmap?
 }
 
 @Composable
-private fun ResortHeader(resort: Resort) {
+private fun ResortHeader(resort: Resort, favorite: FavoriteResort?, onSetDefault: () -> Unit) {
     val country = Locale.Builder().setRegion(resort.country).build().displayCountry
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("${resort.region} · $country", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -192,8 +210,17 @@ private fun ResortHeader(resort: Resort) {
             )
         }
         val uriHandler = LocalUriHandler.current
-        TextButton(onClick = { uriHandler.openUri(resort.websiteURL) }, contentPadding = PaddingValues(0.dp)) {
-            Text(stringResource(R.string.website))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { uriHandler.openUri(resort.websiteURL) }, contentPadding = PaddingValues(0.dp)) {
+                Text(stringResource(R.string.website))
+            }
+            Spacer(Modifier.weight(1f))
+            if (favorite?.isDefault == true) {
+                Text(stringResource(R.string.default_resort), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else if (resort.webcams.isNotEmpty()) {
+                // The default resort is what the widgets will show.
+                TextButton(onClick = onSetDefault) { Text(stringResource(R.string.set_as_default)) }
+            }
         }
     }
 }
