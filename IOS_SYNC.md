@@ -1,6 +1,6 @@
 # iOS sync
 
-The iOS app ([Nikill/ski-patrol](https://github.com/Nikill/ski-patrol)) is the reference. This app follows what ships on its `main` branch.
+The iOS app ([Nikill/ski-patrol](https://github.com/Nikill/ski-patrol)) is the reference. This app follows its `dev` branch, and may also port features from iOS pull requests still open (such as #70 to #73, the 1.3 redesign) when the developer says so: port from the pull request's latest commit, and note in the port status that it follows an open pull request, so a later change there is not missed.
 
 ## Reference point
 
@@ -12,7 +12,7 @@ The iOS app ([Nikill/ski-patrol](https://github.com/Nikill/ski-patrol)) is the r
 
 ## How a sync works
 
-1. Read `CHANGELOG.md` in the iOS repository: every entry with a pull request number above the last one ported is to do. Each entry names the surfaces it touches.
+1. Read `CHANGELOG.md` on the iOS `dev` branch (or on the open pull request's branch): every entry with a pull request number above the last one ported is to do. Each entry names the surfaces it touches.
 2. Skip entries marked **[Apple only]**. **Catalogue** entries mean copying `ResortCatalog.json`. **Data** entries mean porting `SkiPatrolKit` code and its tests to `core`. **App**, **Widgets**, **Watch** and **CarPlay** map to the Android app, Glance widgets, Wear OS and Android Auto.
 3. Read the merged pull request of each entry for the detail: the changelog line says what changes, the pull request says how.
 4. Port, then update the table above and the port status below in the same pull request.
