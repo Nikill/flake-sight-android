@@ -81,7 +81,7 @@ internal data class ImageState(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ResortScreen(resort: Resort, onBack: () -> Unit, onSelectWebcam: (Webcam) -> Unit) {
+fun ResortScreen(resort: Resort, onBack: (() -> Unit)?, onSelectWebcam: (Webcam) -> Unit) {
     val cards = remember(resort.id) { mutableStateMapOf<String, ImageState>() }
     // Reordered only once every card has settled, so cards do not shuffle while the screen fills up.
     var orderedWebcams by remember(resort.id) { mutableStateOf(resort.webcams) }
@@ -107,8 +107,11 @@ fun ResortScreen(resort: Resort, onBack: () -> Unit, onSelectWebcam: (Webcam) ->
             TopAppBar(
                 title = { Text(resort.name) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
+                    // No Back beside the list, where the resort is the pane's root.
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
+                        }
                     }
                 },
             )

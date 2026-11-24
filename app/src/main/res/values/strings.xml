@@ -8,6 +8,9 @@
     </plurals>
     <string name="forecast_only">Forecast only</string>
 
+    <!-- Shown beside the list on a wide window before a resort is chosen. -->
+    <string name="select_resort">Choose a resort to see its webcams.</string>
+
     <!-- Resort screen -->
     <string name="back">Back</string>
     <string name="website">Website</string>
