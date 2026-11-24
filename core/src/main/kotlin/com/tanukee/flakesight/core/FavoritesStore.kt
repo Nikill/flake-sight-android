@@ -78,15 +78,7 @@ class FavoritesStore(private val file: File, private val now: () -> Instant = In
 
     private fun save(favorites: List<FavoriteResort>) {
         val sorted = favorites.sortedWith(oldestFirst)
-        // Written beside the file then moved over it, so a crash mid-write never leaves half a file.
-        val temporary = File(file.absoluteFile.parentFile, "${file.name}.tmp")
-        try {
-            temporary.writeText(json.encodeToString(sorted))
-            Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-        } catch (e: Exception) {
-            temporary.delete()
-            throw e as? IOException ?: IOException(e)
-        }
+        file.writeTextAtomically(json.encodeToString(sorted))
         state.value = sorted
     }
 
@@ -101,6 +93,21 @@ class FavoritesStore(private val file: File, private val now: () -> Instant = In
     private companion object {
         val json = Json { ignoreUnknownKeys = true }
         val oldestFirst = compareBy<FavoriteResort>({ it.addedAt }, { it.resortID })
+    }
+}
+
+/**
+ * Written beside the file then moved over it, so a crash mid-write never
+ * leaves half a file. Any failure throws [IOException] and leaves the file as it was.
+ */
+internal fun File.writeTextAtomically(text: String) {
+    val temporary = File(absoluteFile.parentFile, "$name.tmp")
+    try {
+        temporary.writeText(text)
+        Files.move(temporary.toPath(), toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+    } catch (e: Exception) {
+        temporary.delete()
+        throw e as? IOException ?: IOException(e)
     }
 }
 
