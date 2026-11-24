@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
@@ -56,7 +55,15 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
@@ -202,7 +209,7 @@ fun ResortBrowser(
         isShowingMap = true
     }
     @Composable
-    fun ResortList(selectedResortID: String?) = ResortListScreen(
+    fun ResortList(selectedResortID: String?, isSidebar: Boolean) = ResortListScreen(
         visibleResorts,
         favorites,
         onSelect = selectResort,
@@ -220,6 +227,7 @@ fun ResortBrowser(
         selectedResortID = selectedResortID,
         onShowMap = showMap,
         sortLocation = sortLocation,
+        isSidebar = isSidebar,
     )
     val requestMapLocation = rememberLocationRequest(locationProvider)
     @Composable
@@ -300,7 +308,7 @@ fun ResortBrowser(
                     BackHandler { isShowingMap = false }
                     Map(onBack = { isShowingMap = false })
                 }
-                resort == null -> ResortList(selectedResortID = null)
+                resort == null -> ResortList(selectedResortID = null, isSidebar = false)
                 !isOverResort -> {
                     BackHandler { selectedResortID = null }
                     ResortPane(resort, onBack = { selectedResortID = null })
@@ -310,7 +318,7 @@ fun ResortBrowser(
         } else {
             Row {
                 Box(Modifier.width(listPaneWidth(windowWidth, layoutInfo))) {
-                    ResortList(selectedResortID)
+                    ResortList(selectedResortID, isSidebar = true)
                 }
                 VerticalDivider()
                 Box(Modifier.weight(1f)) {
@@ -338,6 +346,8 @@ private fun listPaneWidth(windowWidth: Dp, layoutInfo: WindowLayoutInfo?): Dp {
     return hinge?.let { with(LocalDensity.current) { it.bounds.left.toDp() } }
         ?: (windowWidth * 0.4f).coerceIn(280.dp, 360.dp)
 }
+
+private val ROW_GROUP_RADIUS = 24.dp
 
 /** The favourite star's colour: iOS system yellow, as on the iPhone. */
 val FavoriteYellow = Color(0xFFFFCC00)
@@ -370,6 +380,8 @@ fun ResortListScreen(
     selectedResortID: String? = null,
     onShowMap: (() -> Unit)? = null,
     sortLocation: Coordinate? = null,
+    /** Beside the selected resort or the map on a wide window, as the iPad and unfolded iPhone sidebar. */
+    isSidebar: Boolean = false,
 ) {
     Scaffold(
         topBar = {
@@ -377,7 +389,8 @@ fun ResortListScreen(
                 title = { Text(stringResource(R.string.resorts_title)) },
                 actions = {
                     if (onShowMap != null) {
-                        IconButton(onClick = onShowMap) {
+                        // The map is what shows beside the list when no resort is selected.
+                        IconButton(onClick = onShowMap, enabled = !isSidebar || selectedResortID != null) {
                             Icon(painterResource(R.drawable.ic_map), contentDescription = stringResource(R.string.map))
                         }
                     }
@@ -396,7 +409,7 @@ fun ResortListScreen(
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                 )
             }
-            ResortRows(resorts, favorites, onSelect, sortOrder, sortLocation, snowTotals, snowDepthReport, selectedResortID)
+            ResortRows(resorts, favorites, favoritesOnTop, onSelect, sortOrder, sortLocation, snowTotals, snowDepthReport, selectedResortID)
         }
     }
 }
@@ -405,9 +418,17 @@ fun ResortListScreen(
 @Composable
 private fun SearchField(text: String, onTextChange: (String) -> Unit) {
     val focusManager = LocalFocusManager.current
-    OutlinedTextField(
+    // A filled pill rather than a boxed form field, like the system search fields.
+    TextField(
         value = text,
         onValueChange = onTextChange,
+        shape = CircleShape,
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
         placeholder = { Text(stringResource(R.string.search_prompt)) },
         leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
         trailingIcon = {
@@ -476,6 +497,7 @@ internal fun snowSentence(kind: SnowTotals.Kind, amount: String) = when (kind) {
 private fun ResortRows(
     resorts: List<Resort>,
     favorites: List<FavoriteResort>,
+    favoritesOnTop: Boolean,
     onSelect: (Resort) -> Unit,
     sortOrder: ResortSortOrder,
     sortLocation: Coordinate?,
@@ -487,17 +509,34 @@ private fun ResortRows(
     // A new order, or the position arriving, starts from the top; the list would otherwise stay on the row that was visible.
     val listState = rememberLazyListState()
     LaunchedEffect(sortOrder, sortLocation) { listState.scrollToItem(0) }
-    LazyColumn(state = listState) {
-        items(resorts, key = { it.id }) { resort ->
+    // Favourites on top sit in a rounded group of their own, set apart from the other resorts.
+    val favoriteIDs = favorites.map { it.resortID }.toSet()
+    val groupedCount = if (favoritesOnTop) resorts.takeWhile { it.id in favoriteIDs }.size else 0
+    val groupColor = MaterialTheme.colorScheme.surfaceContainer
+    LazyColumn(state = listState, contentPadding = PaddingValues(vertical = 4.dp)) {
+        itemsIndexed(resorts, key = { _, resort -> resort.id }) { index, resort ->
             val favorite = favorites.firstOrNull { it.resortID == resort.id }
+            val isGrouped = index < groupedCount
+            val groupShape = when {
+                groupedCount == 1 -> RoundedCornerShape(ROW_GROUP_RADIUS)
+                index == 0 -> RoundedCornerShape(topStart = ROW_GROUP_RADIUS, topEnd = ROW_GROUP_RADIUS)
+                index == groupedCount - 1 -> RoundedCornerShape(bottomStart = ROW_GROUP_RADIUS, bottomEnd = ROW_GROUP_RADIUS)
+                else -> RectangleShape
+            }
             ListItem(
-                modifier = Modifier.clickable { onSelect(resort) },
+                // Rows without separators, each a rounded card when pressed or selected, as the iOS sidebar.
+                modifier = Modifier
+                    .padding(start = 8.dp, end = 8.dp, bottom = if (index == groupedCount - 1) 16.dp else 0.dp)
+                    .then(if (isGrouped) Modifier.background(groupColor, groupShape) else Modifier)
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { onSelect(resort) },
                 // Marks the resort shown in the other pane.
                 colors = ListItemDefaults.colors(
                     containerColor = if (resort.id == selectedResortID) {
                         MaterialTheme.colorScheme.secondaryContainer
                     } else {
-                        MaterialTheme.colorScheme.surface
+                        Color.Transparent
                     },
                 ),
                 supportingContent = {
@@ -553,7 +592,6 @@ private fun ResortRows(
             ) {
                 Text(resort.name)
             }
-            HorizontalDivider()
         }
     }
 }
