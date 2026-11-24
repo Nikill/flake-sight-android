@@ -57,6 +57,22 @@ class ResortRepository(val resorts: List<Resort>) {
         return favorites + others
     }
 
+    /**
+     * The webcam platforms in use, the one hosting the most webcams first, so the
+     * About screen cannot go stale when a provider is added or dropped. Direct
+     * images are not a platform: they come from each resort's own website and are
+     * credited through [hasResortWebsiteWebcams]. Port of `creditedProviderTypes`.
+     */
+    val creditedProviderTypes: List<WebcamProviderType>
+        get() = resorts.flatMap { it.webcams }.map { it.provider }.filter { it.brandName != null }
+            .groupingBy { it }.eachCount().entries
+            .sortedWith(compareByDescending<Map.Entry<WebcamProviderType, Int>> { it.value }.thenBy { it.key.rawValue })
+            .map { it.key }
+
+    /** `true` when at least one webcam is a plain image published by a resort. */
+    val hasResortWebsiteWebcams: Boolean
+        get() = resorts.any { resort -> resort.webcams.any { it.provider == WebcamProviderType.DIRECT_IMAGE } }
+
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
 

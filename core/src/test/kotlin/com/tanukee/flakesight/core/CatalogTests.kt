@@ -5,6 +5,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /** Port of `CatalogTests.swift`. Keep the two files in step (see IOS_SYNC.md). */
@@ -131,6 +132,19 @@ class CatalogTests {
             assertTrue(distance <= 3000, "${resort.id} car park is ${distance.toInt()} m from the resort centre")
             assertTrue(parking.name?.isNotEmpty() ?: true, "${resort.id} car park has an empty name")
         }
+    }
+
+    @Test
+    fun creditsListPlatformsByWeightAndResortWebsites() {
+        assertEquals(
+            listOf(WebcamProviderType.WEBCAM_HD, WebcamProviderType.SKAPING, WebcamProviderType.VIEWSURF, WebcamProviderType.ROUNDSHOT),
+            repository.creditedProviderTypes,
+        )
+        assertTrue(repository.hasResortWebsiteWebcams)
+
+        val platformsOnly = ResortRepository(repository.resorts.filter { it.id == "les-7-laux" })
+        assertEquals(listOf(WebcamProviderType.SKAPING), platformsOnly.creditedProviderTypes)
+        assertFalse(platformsOnly.hasResortWebsiteWebcams)
     }
 
     @Test
