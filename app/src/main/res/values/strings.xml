@@ -261,6 +261,36 @@
     <string name="widget_settings_title">Choose a Webcam</string>
     <string name="widget_follow_default">Follows the default resort chosen in the app</string>
 
+    <!-- About -->
+    <string name="about">About</string>
+    <string name="about_tagline">Live webcams from ski resorts, to check the snow and the weather before you head up the mountain.</string>
+    <!-- %1$s is "0.1.0 (1)". -->
+    <string name="version">Version %1$s</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="support">Support</string>
+    <string name="credits">Credits</string>
+    <string name="developer">Developer</string>
+    <string name="webcams_credit">Webcams</string>
+    <string name="snow_depth">Snow depth</string>
+    <!-- Ends the list of webcam platforms: "Webcam HD, Skaping and resort websites". -->
+    <string name="resort_websites">resort websites</string>
+    <string name="images_property">Webcam images remain the property of their respective owners.</string>
+    <string name="open_meteo_licence">Weather data by Open-Meteo.com, CC BY 4.0.</string>
+
+    <!-- Privacy policy: the iOS text, adapted to Android (the widget is part of the app, the map is Google Maps). Keep the public copy in sync. -->
+    <string name="privacy_no_data">Flake Sight collects no personal data. There is no account, no analytics and no tracking.</string>
+    <string name="privacy_favourites">Your favourite resorts and your default resort are stored on your device. The Flake Sight widget, which is part of the app, reads them there, and they never leave your device.</string>
+    <string name="privacy_location">Your approximate location is used only when you choose to sort resorts by distance or open the map. It is read on the device at that moment and is never stored or transmitted by Flake Sight.</string>
+    <!-- %1$s is the list of webcam platforms, "Webcam HD, Skaping and resort websites". -->
+    <string name="privacy_webcams">Webcam images are downloaded directly from the companies and resorts that operate the cameras (%1$s). Like any website you visit, they can see your IP address and the time of your request. Flake Sight sends them nothing else, and their own privacy policies apply to that data.</string>
+    <string name="privacy_weather">Weather forecasts come from Open-Meteo (open-meteo.com). The app sends it the coordinates and altitudes of the resort you are viewing, never your own location. Like the webcam providers, Open-Meteo can see your IP address and the time of your request, and its own privacy policy applies to that data.</string>
+    <string name="privacy_map">The map is drawn by Google Maps. When you open it, Google receives the area shown, your IP address and information about your device and, if you allow it, uses your location to show your position. Google\'s privacy policy applies to that data.</string>
+    <string name="privacy_tanukee">Each time it opens, the app downloads two short files from tanukee.com, the developer\'s website: a list naming any webcams that are no longer shown, and the snow depths of Météo-France\'s avalanche bulletins. The requests carry nothing about you. Like any website, tanukee.com\'s host can see your IP address and the time of your request, and the developer does not use them.</string>
+    <string name="privacy_storage">Downloaded images are cached on your device to limit network traffic. The last image shown by the widget, and the images of your favourite resorts\' webcams taken around 16:00, are kept in the app\'s storage so they can still be shown later. All are removed when you delete the app.</string>
+    <!-- %1$s is the support email address. -->
+    <string name="privacy_questions">Questions about this policy can be sent to %1$s.</string>
+    <string name="privacy_last_updated">Last updated: 24 November 2026</string>
+
     <!-- Webcam errors -->
     <string name="error_no_snapshot">This webcam has no image available.</string>
     <!-- %1$s is the provider's name, e.g. "Panomax". -->
