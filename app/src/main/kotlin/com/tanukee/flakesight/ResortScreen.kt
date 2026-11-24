@@ -78,7 +78,8 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /** One per process, so its memory cache and throttle outlive the screens. */
-internal val webcamService = WebcamService()
+/** One service for the app and the widget; its downloads near 16:00 can become afternoon images. */
+internal val webcamService = WebcamService(onDownload = ::recordAfternoon)
 
 /** What a webcam view shows: the last image loaded, and why the latest load failed if it did. */
 internal data class ImageState(

@@ -32,8 +32,8 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `CatalogTests` | Ported | except `creditsListPlatformsByWeightAndResortWebsites` |
 | `ResortSeason` phase and wording | Ported | `phase` in `core`; the summary sentences are the app's strings (`seasonSummary` in `ResortScreen.kt`) |
 | `ResortSeasonTests` | Ported | the summary tests check the phase and day each sentence reads |
-| Providers (`DirectImage`, Skaping, Roundshot, Viewsurf), registry, `WebcamService`, freshness | Ported | `core/.../WebcamService.kt`, `*Provider.kt`, `SnapshotFreshness.kt`. EXIF read by `Exif.kt` instead of ImageIO. Archive lookup (`ArchiveProbe`, `archivedSnapshotReference`) comes with the afternoon images. `label`/`systemImage` wording goes in the app with the first screen showing an image |
-| `ProviderTests`, `WebcamServiceCacheTests`, `WebcamServiceCaptureTimeTests`, `FreshnessOrderingTests` | Ported | except `downsamplerLimitsLongestSide` (decoding lives in the app); `ArchiveProviderTests` and `LiveSourceTests` not yet |
+| Providers (`DirectImage`, Skaping, Roundshot, Viewsurf), registry, `WebcamService`, freshness | Ported | `core/.../WebcamService.kt`, `*Provider.kt`, `SnapshotFreshness.kt`. EXIF read by `Exif.kt` instead of ImageIO. Archive lookup (`ArchiveProbe`, `keepsArchive`, `archivedSnapshotReference`) on Skaping and Roundshot, with HEAD requests through `HttpClient.head`. `label`/`systemImage` wording goes in the app with the first screen showing an image |
+| `ProviderTests`, `WebcamServiceCacheTests`, `WebcamServiceCaptureTimeTests`, `FreshnessOrderingTests` | Ported | except `downsamplerLimitsLongestSide` (decoding lives in the app); `ArchiveProviderTests` ported; `LiveSourceTests` not yet |
 | `SnapshotLoader`, `ImageDownsampler` | Partly | in the app: `loadImage` and `decode` (Android's decoder straight to display size); the widget crops with `ContentScale.Crop` instead of `croppedThumbnail` |
 | `LastSnapshotStore` | Ported | under the app's cache directory |
 | `LastSnapshotStoreTests` | Ported | |
@@ -56,7 +56,10 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `FavoritesStoreTests` | Ported | plus Android-only persistence and failure tests |
 | `ResortSortingTests` | Ported | |
 | Webcam widget (`WebcamWidget`, `WebcamTimelineProvider`) | Partly | Jetpack Glance, any size from 2 x 2: the webcam chosen in its settings (`WebcamWidgetConfigureActivity`, the port of `WebcamWidgetIntent`: the default resort, then every webcam by resort with a search; reopened from the widget's Settings from Android 12), else the default resort's first webcam, else the first catalogue resort's, name, resort and capture time over a gradient, the orange badge when stale, the last good image after a failed refresh; tapping opens the webcam. Refreshed every 30 minutes and when the default resort changes. No 15-minute retry or entry at the moment an image turns stale (Android has no timelines) |
-| Afternoon images | Not yet | |
+| Afternoon images (`AfternoonDay`, `AfternoonWindow`, `AfternoonSnapshot`, `AfternoonSnapshotStore`, `AfternoonSnapshotService`) | Ported | `core/.../Afternoon.kt`; days are `LocalDate`s; the store's downscaling is the app's decoder (passed in), its directory the no-backup files; wording ("Today", "Yesterday", "Tue 27", "Yesterday, 15:30") in the app |
+| `AfternoonWindowTests`, `AfternoonSnapshotStoreTests`, `AfternoonSnapshotServiceTests` | Ported | the two wording tests are the app's strings; the downscaling tests check the store keeps what its downscaler gives |
+| `AfternoonCaptureTask` | Ported | `AfternoonCaptureWorker` (WorkManager) at the next 15:45 Paris time, booked at each launch and after each run, network required |
+| `AfternoonLoader` | Ported | in `WebcamScreen` |
 | Watch → Wear OS, CarPlay → Android Auto | Parked | until further notice; what each needs is in `docs/specs/WEAR_OS.md` and `docs/specs/ANDROID_AUTO.md`. iOS changes to the Watch and CarPlay are not synced meanwhile |
 
 | iOS app screen | Android | Notes |
@@ -72,4 +75,4 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `WeatherModelsTable` | Ported | segmented level picker, each model's amount, the agreement row |
 | `BulletinSection` | Ported | drawn in Compose: danger bands and slope rose, fresh snow bars, the week's depth lines, rain or snow bands with the freezing level and the wind every six hours |
 | `ForecastStrip` | Partly | five days at each level (condition as emoji, snow, maximum), "Forecast Details" (snow soon, good days, recent snow, model snow depth) folded and remembered as on iOS, Open-Meteo credit, one TalkBack sentence per day with the range; the grid and the Advanced Weather button open the advanced screen. Snow bars sharp or fading with the models' agreement (`FuzzySnowBar`) |
-| `WebcamDetailView` | Partly | panorama scrolling sideways from its middle, refresh, capture time, altitude, orientation, source link. No afternoon images (with their area); no live stream player, as no catalogued webcam has a stream |
+| `WebcamDetailView` | Partly | panorama scrolling sideways from its middle, refresh, capture time, altitude, orientation, source link; "Around 16:00" with Now and one chip per day, the afternoon image with its day and time in place of the latest one, no Refresh while it shows. No live stream player, as no catalogued webcam has a stream |
