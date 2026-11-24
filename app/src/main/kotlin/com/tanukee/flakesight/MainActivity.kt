@@ -132,17 +132,23 @@ fun ResortBrowser(
     // Refreshed each time the app opens; a failure keeps the stored report.
     val snowDepthReport by snowDepthStore.report.collectAsState()
     LaunchedEffect(snowDepthStore) { snowDepthStore.refresh() }
-    // Saved IDs rather than a navigation library: two levels, resort then webcam.
+    // Saved state rather than a navigation library: the resort, then a webcam or the advanced weather over it.
     var selectedResortID by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedWebcamID by rememberSaveable { mutableStateOf<String?>(null) }
+    var isShowingForecast by rememberSaveable { mutableStateOf(false) }
     val resort = selectedResortID?.let(repository::resort)
     val webcam = selectedWebcamID?.let { resort?.webcam(it) }
     val selectResort: (Resort) -> Unit = {
         selectedResortID = it.id
         selectedWebcamID = null
+        isShowingForecast = false
     }
     val selectWebcam: (Webcam) -> Unit = { selectedWebcamID = it.id }
-    val closeWebcam = { selectedWebcamID = null }
+    val closeOverResort = {
+        selectedWebcamID = null
+        isShowingForecast = false
+    }
+    val isOverResort = webcam != null || isShowingForecast
 
     val favorites by favoritesStore.favorites.collectAsState()
     // Remembered between launches under the iOS key, `favoritesOnTop`.
@@ -204,7 +210,19 @@ fun ResortBrowser(
         onBack = onBack,
         onSelectWebcam = selectWebcam,
         snowDepth = snowDepthReport?.reading(resort),
+        onOpenForecast = { isShowingForecast = true },
     )
+
+    /** The webcam or the advanced weather, over its resort; Back returns to the resort. */
+    @Composable
+    fun OverResort(resort: Resort) {
+        BackHandler(onBack = closeOverResort)
+        if (webcam != null) {
+            WebcamScreen(webcam, resort, onBack = closeOverResort)
+        } else {
+            AdvancedForecastScreen(resort, snowDepthReport?.reading(resort), onBack = closeOverResort)
+        }
+    }
 
     saveFailure?.let { reason ->
         AlertDialog(
@@ -220,14 +238,11 @@ fun ResortBrowser(
         if (windowWidth < TWO_PANE_MIN_WIDTH) {
             when {
                 resort == null -> ResortList(selectedResortID = null)
-                webcam == null -> {
+                !isOverResort -> {
                     BackHandler { selectedResortID = null }
                     ResortPane(resort, onBack = { selectedResortID = null })
                 }
-                else -> {
-                    BackHandler(onBack = closeWebcam)
-                    WebcamScreen(webcam, resort, onBack = closeWebcam)
-                }
+                else -> OverResort(resort)
             }
         } else {
             Row {
@@ -239,11 +254,8 @@ fun ResortBrowser(
                     when {
                         resort == null -> NoResortSelected()
                         // The resort is the pane's root: Back only closes what is over it.
-                        webcam == null -> ResortPane(resort, onBack = null)
-                        else -> {
-                            BackHandler(onBack = closeWebcam)
-                            WebcamScreen(webcam, resort, onBack = closeWebcam)
-                        }
+                        !isOverResort -> ResortPane(resort, onBack = null)
+                        else -> OverResort(resort)
                     }
                 }
             }

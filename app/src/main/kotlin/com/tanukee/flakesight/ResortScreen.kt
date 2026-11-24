@@ -93,6 +93,8 @@ fun ResortScreen(
     onSelectWebcam: (Webcam) -> Unit,
     /** The massif's avalanche bulletin read at this resort, when recent. */
     snowDepth: SnowDepthReading? = null,
+    /** Opens the advanced weather: from the forecast strip, the snow card and the avalanche badge. */
+    onOpenForecast: (() -> Unit)? = null,
 ) {
     val cards = remember(resort.id) { mutableStateMapOf<String, ImageState>() }
     // Reordered only once every card has settled, so cards do not shuffle while the screen fills up.
@@ -146,7 +148,7 @@ fun ResortScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp),
             modifier = Modifier.padding(padding),
         ) {
-            item(span = { GridItemSpan(maxLineSpan) }) { ResortHeader(resort, favorite, onSetDefault, snowDepth) }
+            item(span = { GridItemSpan(maxLineSpan) }) { ResortHeader(resort, favorite, onSetDefault, snowDepth, onOpenForecast) }
             if (resort.webcams.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) { NoWebcams() }
             }
@@ -202,7 +204,13 @@ private suspend fun decode(snapshot: WebcamSnapshot, maxPixelSize: Int): Bitmap?
 }
 
 @Composable
-private fun ResortHeader(resort: Resort, favorite: FavoriteResort?, onSetDefault: () -> Unit, snowDepth: SnowDepthReading?) {
+private fun ResortHeader(
+    resort: Resort,
+    favorite: FavoriteResort?,
+    onSetDefault: () -> Unit,
+    snowDepth: SnowDepthReading?,
+    onOpenForecast: (() -> Unit)?,
+) {
     val country = Locale.Builder().setRegion(resort.country).build().displayCountry
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("${resort.region} · $country", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -228,12 +236,12 @@ private fun ResortHeader(resort: Resort, favorite: FavoriteResort?, onSetDefault
         Spacer(Modifier.height(8.dp))
         if (snowDepth != null) {
             Spacer(Modifier.height(4.dp))
-            SnowyMountainCard(snowDepth)
+            SnowyMountainCard(snowDepth, onOpenForecast)
             Spacer(Modifier.height(4.dp))
-            AvalancheRiskBadge(snowDepth)
+            AvalancheRiskBadge(snowDepth, onOpenForecast)
             Spacer(Modifier.height(8.dp))
         }
-        ForecastStrip(resort, showModelSnowDepth = snowDepth == null)
+        ForecastStrip(resort, showModelSnowDepth = snowDepth == null, onOpenAdvanced = onOpenForecast)
     }
 }
 

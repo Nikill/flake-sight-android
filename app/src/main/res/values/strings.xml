@@ -93,6 +93,26 @@
     <!-- Read by TalkBack: %1$s is the day, %2$s what each level expects. -->
     <string name="day_summary">%1$s: %2$s</string>
 
+    <!-- Advanced weather screen -->
+    <string name="advanced_weather">Advanced Weather</string>
+    <string name="forecast_unavailable">Forecast Unavailable</string>
+    <string name="forecast_could_not_load">The forecast could not be loaded.</string>
+    <string name="snow_and_rain_by_altitude">Snow and Rain by Altitude</string>
+    <!-- The first column of the chart: the snow on the ground at each level, from the avalanche bulletin. -->
+    <string name="ground">Ground</string>
+    <!-- Legend entries. -->
+    <string name="legend_snow">Snow</string>
+    <string name="legend_rain">Rain</string>
+    <string name="legend_freezing_level" translatable="false">0 °C</string>
+    <!-- %1$s is an altitude, "1,300 m": the bulletin's snow line. -->
+    <string name="snow_from">Snow from %1$s</string>
+    <!-- Read by TalkBack: %1$s is an amount, "38 cm". -->
+    <string name="amount_of_snow">%1$s of snow</string>
+    <!-- Read by TalkBack, inside a sentence. -->
+    <string name="rain_spoken">rain</string>
+    <!-- %1$s is an altitude, "1,700 m". -->
+    <string name="freezing_level_at">0 °C at %1$s</string>
+
     <!-- Snow on the ground and avalanche risk, from Météo-France's avalanche bulletin -->
     <string name="snow_on_the_ground">Snow on the Ground</string>
     <!-- %1$s is an altitude, "1,300 m". -->

@@ -69,6 +69,18 @@
     <string name="today_weekday">Aujourd\'hui, %1$s</string>
     <string name="day_summary">%1$s : %2$s</string>
 
+    <string name="advanced_weather">Météo avancée</string>
+    <string name="forecast_unavailable">Prévisions indisponibles</string>
+    <string name="forecast_could_not_load">Les prévisions n\'ont pas pu être chargées.</string>
+    <string name="snow_and_rain_by_altitude">Neige et pluie selon l\'altitude</string>
+    <string name="ground">Au sol</string>
+    <string name="legend_snow">Neige</string>
+    <string name="legend_rain">Pluie</string>
+    <string name="snow_from">Neige dès %1$s</string>
+    <string name="amount_of_snow">%1$s de neige</string>
+    <string name="rain_spoken">pluie</string>
+    <string name="freezing_level_at">0 °C à %1$s</string>
+
     <string name="snow_on_the_ground">Neige au sol</string>
     <string name="snow_line">Limite d\'enneigement %1$s</string>
     <string name="snow_change_up">+%1$s en %2$d jours</string>
