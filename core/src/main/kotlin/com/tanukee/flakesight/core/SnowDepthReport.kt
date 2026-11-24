@@ -8,7 +8,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.time.Duration
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -91,9 +93,19 @@ data class SnowDepthReport(val version: Int = 1, val massifs: Map<String, Massif
         val avalancheRisk: AvalancheRisk? = null,
         /** The past week of snow cover, oldest first, ending with this one. */
         val history: List<Snapshot>? = null,
+        /** The most exposed aspects as the file writes them, "N" to "NW". */
+        val exposedSlopes: List<String>? = null,
+        val freshSnow: FreshSnow? = null,
+        val weather: MountainWeather? = null,
     ) {
         /** Today's snow cover. */
         val current: Snapshot get() = Snapshot(observedOn, snowLineNorth, snowLineSouth, levels)
+
+        /** The aspects the app knows, clockwise from north. */
+        val exposedAspects: List<SlopeAspect> get() = exposedSlopes.orEmpty().mapNotNull(SlopeAspect::fromRawValue)
+
+        /** When the bulletin came out, or `null` when malformed. */
+        val issueDate: Instant? get() = bulletinTime(issuedAt)
 
         /** The depth at [altitude]; see [Snapshot.depth]. */
         fun depth(altitude: Int): SnowDepthReading.Depth? = current.depth(altitude)
@@ -181,6 +193,98 @@ data class SnowDepthReport(val version: Int = 1, val massifs: Map<String, Massif
         fun fromJson(text: String): SnowDepthReport = json.decodeFromString(text)
     }
 }
+
+/** A slope aspect, clockwise from north. Port of `SlopeAspect`; [rawValue] is the file's. */
+enum class SlopeAspect(val rawValue: String) {
+    NORTH("N"), NORTH_EAST("NE"), EAST("E"), SOUTH_EAST("SE"), SOUTH("S"), SOUTH_WEST("SW"), WEST("W"), NORTH_WEST("NW");
+
+    /** Clockwise from north, in degrees. */
+    val degrees: Double get() = ordinal * 45.0
+
+    companion object {
+        fun fromRawValue(raw: String?): SlopeAspect? = entries.firstOrNull { it.rawValue == raw }
+    }
+}
+
+/**
+ * Fresh snow over 24 hours at one altitude of the massif, as a range: the
+ * last days observed, then the coming days forecast. Port of `FreshSnow`.
+ */
+@Serializable
+data class FreshSnow(
+    /** Metres. */
+    val altitude: Int,
+    /** Oldest first. */
+    val days: List<Day>,
+) {
+    @Serializable
+    data class Day(
+        /** "2026-11-20", French local time. */
+        val date: String,
+        val minimum: Int,
+        val maximum: Int,
+        val isForecast: Boolean,
+    ) {
+        val day: LocalDate? get() = runCatching { LocalDate.parse(date) }.getOrNull()
+    }
+}
+
+/** The bulletin's mountain forecast, every six hours. Port of `MountainWeather`. */
+@Serializable
+data class MountainWeather(
+    /** Metres, usually 2,000 and 4,000. */
+    val windAltitudes: List<Int?>,
+    /** Earliest first. */
+    val periods: List<Period>,
+) {
+    @Serializable
+    data class Wind(
+        /** km/h. */
+        val speed: Int,
+        /** Where the wind comes from, as the file writes it. */
+        val direction: String? = null,
+    ) {
+        /** A direction the app does not know, such as "Calme", reads as none rather than failing the whole file. */
+        val aspect: SlopeAspect? get() = SlopeAspect.fromRawValue(direction)
+    }
+
+    @Serializable
+    data class Period(
+        /** "2026-11-22T06:00+01:00". */
+        val time: String,
+        /** At [windAltitudes], in that order. */
+        val wind: List<Wind?> = emptyList(),
+        /** Metres. */
+        val freezingLevel: Int? = null,
+        /** Metres; below it, rain. */
+        val rainSnowLimit: Int? = null,
+    ) {
+        val date: Instant? get() = bulletinTime(time)
+    }
+
+    /** The first period that has not ended yet (each lasts six hours), or the last one when they all have. */
+    fun currentPeriod(now: Instant = Instant.now()): Period? =
+        periods.firstOrNull { (it.date ?: Instant.MIN) + Duration.ofHours(6) > now } ?: periods.lastOrNull()
+
+    /**
+     * The rain-snow limit for each day the periods cover, in [zone], from the
+     * period nearest midday, for the mountain profile.
+     */
+    fun rainSnowLimits(zone: ZoneId): Map<LocalDate, Int> {
+        val kept = mutableMapOf<LocalDate, Pair<Int, Int>>()
+        for (period in periods) {
+            val date = period.date?.atZone(zone) ?: continue
+            val limit = period.rainSnowLimit ?: continue
+            val held = kept[date.toLocalDate()]
+            if (held != null && kotlin.math.abs(held.first - 12) <= kotlin.math.abs(date.hour - 12)) continue
+            kept[date.toLocalDate()] = date.hour to limit
+        }
+        return kept.mapValues { it.value.second }
+    }
+}
+
+/** A bulletin time, "2026-11-22T06:00+01:00", or `null` when malformed. */
+private fun bulletinTime(text: String): Instant? = runCatching { OffsetDateTime.parse(text).toInstant() }.getOrNull()
 
 /**
  * The avalanche danger level, on the European five-level scale, below and

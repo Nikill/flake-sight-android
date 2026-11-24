@@ -67,16 +67,16 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 /** The forecast's colours, as `SnowPalette` on iOS: the snow blue of the snow card, rain cyan, the freezing level orange. */
-private val Rain = Color(0xFF32ADE6)
-private val FreezingLevel = Color(0xFFFF9500)
+internal val Rain = Color(0xFF32ADE6)
+internal val FreezingLevel = Color(0xFFFF9500)
 
 /**
  * The forecast in detail: the coming days across the mountain (what falls at
  * the summit and in the village, the freezing level between them, with the
- * avalanche bulletin's snow on the ground and snow line), then the snow of
- * the last days. Port of `AdvancedForecastView`; the bulletin section and the
- * weather models table come next. Reuses the resort screen's requests from
- * the cache.
+ * avalanche bulletin's snow on the ground, snow line and rain-snow limit),
+ * the snow of the last days, then the rest of the bulletin. Port of
+ * `AdvancedForecastView`; the weather models table comes next. Reuses the
+ * resort screen's requests from the cache.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,7 +147,7 @@ private fun AdvancedContent(forecast: ResortForecast, detailed: DetailedForecast
         modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
     ) {
         // A resort without catalogued altitudes has no mountain to draw.
-        MountainProfile.of(forecast, detailed, resort.timeZone)?.let { MountainProfileChart(it, snowDepth?.bulletin) }
+        MountainProfile.of(forecast, detailed, resort.timeZone)?.let { MountainProfileChart(it, snowDepth?.bulletin, resort) }
         recentSnowSentence(forecast)?.let { sentence ->
             Text(
                 "❄️  $sentence",
@@ -159,6 +159,8 @@ private fun AdvancedContent(forecast: ResortForecast, detailed: DetailedForecast
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             )
         }
+        val bulletin = snowDepth?.bulletin
+        if (snowDepth != null && bulletin != null) BulletinSection(snowDepth, bulletin, resort.timeZone)
         val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
         TextButton(onClick = { uriHandler.openUri(ForecastService.ATTRIBUTION_URL) }, contentPadding = PaddingValues(0.dp)) {
             Text(
@@ -178,17 +180,20 @@ private val CHART_HEIGHT = 260.dp
  * The coming days across the mountain: the summit and the village at their
  * altitude over a mountain outline, what falls at each every day, and the
  * freezing level between them as a dashed line. With the massif's bulletin, a
- * first column gives the snow on the ground at each level (north over south)
- * and the snow line runs across. Port of `MountainProfileView`; the
- * bulletin's rain-snow limit comes with the bulletin section.
+ * first column gives the snow on the ground at each level (north over south),
+ * the snow line runs across, and the bulletin's rain-snow limit follows the
+ * days it covers. Port of `MountainProfileView`.
  */
 @Composable
-private fun MountainProfileChart(profile: MountainProfile, bulletin: SnowDepthReport.Massif?) {
+private fun MountainProfileChart(profile: MountainProfile, bulletin: SnowDepthReport.Massif?, resort: Resort) {
     val locale = LocalConfiguration.current.locales[0]
     val snapshot = bulletin?.current
     val snowLine = snapshot?.snowLine?.takeIf { it.toDouble() in profile.altitudeDomain }
     val columns = (if (snapshot != null) 1 else 0) + profile.days.size
     val firstDayColumn = columns - profile.days.size
+    // The bulletin's rain-snow limit for each day it covers, the midday period when there is one.
+    val rainSnowLimits = bulletin?.weather?.rainSnowLimits(resort.timeZone).orEmpty()
+    val limitPoints = profile.days.mapIndexedNotNull { index, day -> rainSnowLimits[day.date]?.let { index to it } }
     val description = profile.days.map { daySummary(it, locale) }.joinToString("\n")
     val lineColor = MaterialTheme.colorScheme.onSurfaceVariant
     val domain = profile.altitudeDomain
@@ -244,6 +249,15 @@ private fun MountainProfileChart(profile: MountainProfile, bulletin: SnowDepthRe
                         style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))),
                     )
                 }
+                val limits = limitPoints.map { (index, altitude) -> Offset(x(firstDayColumn + index).toPx(), y(profile.clamped(altitude.toDouble())).toPx()) }
+                if (limits.size > 1) {
+                    val path = Path().apply {
+                        moveTo(limits[0].x, limits[0].y)
+                        limits.drop(1).forEach { lineTo(it.x, it.y) }
+                    }
+                    drawPath(path, Rain, style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.dp.toPx(), 3.dp.toPx()))))
+                }
+                limits.forEach { drawCircle(Rain, 3.dp.toPx(), it) }
             }
 
             // The levels on the left, at their altitude.
@@ -272,12 +286,12 @@ private fun MountainProfileChart(profile: MountainProfile, bulletin: SnowDepthRe
                 ColumnLabel(day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale), Modifier.centredAt(x(column), plotHeight + DAY_ROW_HEIGHT / 2))
             }
         }
-        Legend(snapshot?.snowLine, locale)
+        Legend(snapshot?.snowLine, hasRainSnowLimit = limitPoints.isNotEmpty(), locale)
     }
 }
 
 /** Places the element with its centre at ([x], [y]) inside the chart box. */
-private fun Modifier.centredAt(x: Dp, y: Dp) = layout { measurable, constraints ->
+internal fun Modifier.centredAt(x: Dp, y: Dp) = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
     layout(placeable.width, placeable.height) {
         placeable.place(x.roundToPx() - placeable.width / 2, y.roundToPx() - placeable.height / 2)
@@ -348,7 +362,7 @@ private fun GroundBadge(north: SnowDepthReading.Depth?, south: SnowDepthReading.
 }
 
 @Composable
-private fun Legend(snowLine: Int?, locale: Locale) {
+private fun Legend(snowLine: Int?, hasRainSnowLimit: Boolean, locale: Locale) {
     @Composable
     fun dash(color: Color, on: Float, off: Float) = Canvas(Modifier.width(18.dp).height(2.dp)) {
         drawLine(
@@ -367,6 +381,12 @@ private fun Legend(snowLine: Int?, locale: Locale) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             dash(FreezingLevel, 4f, 3f)
             Text(stringResource(R.string.legend_freezing_level), style = style)
+        }
+        if (hasRainSnowLimit) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                dash(Rain, 1f, 3f)
+                Text(stringResource(R.string.rain_snow), style = style)
+            }
         }
         if (snowLine != null) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {

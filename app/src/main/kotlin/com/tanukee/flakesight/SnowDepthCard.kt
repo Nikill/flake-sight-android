@@ -227,7 +227,7 @@ fun AvalancheRiskBadge(reading: SnowDepthReading, onClick: (() -> Unit)? = null)
 }
 
 /** The European avalanche danger scale's colours, as Météo-France and every Alpine bulletin use them. */
-private fun avalancheColor(level: Int) = when (level) {
+internal fun avalancheColor(level: Int) = when (level) {
     1 -> Color(0xFFCCFF66)
     2 -> Color(0xFFFFE600)
     3 -> Color(0xFFFF9900)
@@ -237,7 +237,7 @@ private fun avalancheColor(level: Int) = when (level) {
 
 /** "4/5 High". */
 @Composable
-private fun avalancheLevelLabel(level: Int): String {
+internal fun avalancheLevelLabel(level: Int): String {
     val name = stringResource(
         when (level) {
             1 -> R.string.avalanche_low
@@ -252,7 +252,7 @@ private fun avalancheLevelLabel(level: Int): String {
 
 /** "4/5 High above 2,200 m, 3/5 Considerable below", or "3/5 Considerable". */
 @Composable
-private fun avalancheSummaryLabel(summary: AvalancheRisk.Summary): String = when (summary) {
+internal fun avalancheSummaryLabel(summary: AvalancheRisk.Summary): String = when (summary) {
     is AvalancheRisk.Summary.Single -> avalancheLevelLabel(summary.level)
     is AvalancheRisk.Summary.Split -> stringResource(
         R.string.avalanche_split,
@@ -264,7 +264,7 @@ private fun avalancheSummaryLabel(summary: AvalancheRisk.Summary): String = when
 
 /** "+55 cm in 7 days", "-10 cm in 7 days" or "No change in 7 days" at the top level; `null` without the week's history. */
 @Composable
-private fun changeLabel(reading: SnowDepthReading, locale: Locale): String? {
+internal fun changeLabel(reading: SnowDepthReading, locale: Locale): String? {
     val (centimetres, days) = reading.change() ?: return null
     return when {
         centimetres > 0 -> stringResource(R.string.snow_change_up, centimetres(centimetres, locale), days)
