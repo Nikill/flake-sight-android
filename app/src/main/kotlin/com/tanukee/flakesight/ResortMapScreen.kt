@@ -468,7 +468,7 @@ private fun MapPanel(modifier: Modifier, content: @Composable () -> Unit) {
 private val MAP_PANEL_MAX_WIDTH: Dp = 500.dp
 
 /** Google Maps driving directions to the car park, or the resort centre (`Resort.drivingDestination`). */
-private fun directionsURL(resort: Resort): String {
+internal fun directionsURL(resort: Resort): String {
     val (latitude, longitude) = resort.drivingDestination
     return "https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving"
 }

@@ -26,7 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -116,10 +119,14 @@ fun ResortScreen(
         }
     }
 
+    // A large title that shrinks into the bar as the page scrolls, as iOS's large navigation title.
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text(resort.name) },
+            LargeTopAppBar(
+                title = { Text(resort.name, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     // No Back beside the list, where the resort is the pane's root.
                     if (onBack != null) {
@@ -221,9 +228,12 @@ private fun ResortHeader(
             )
         }
         val uriHandler = LocalUriHandler.current
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             TextButton(onClick = { uriHandler.openUri(resort.websiteURL) }, contentPadding = PaddingValues(0.dp)) {
                 Text(stringResource(R.string.website))
+            }
+            TextButton(onClick = { uriHandler.openUri(directionsURL(resort)) }, contentPadding = PaddingValues(0.dp)) {
+                Text(stringResource(R.string.directions))
             }
             Spacer(Modifier.weight(1f))
             if (favorite?.isDefault == true) {
@@ -233,9 +243,7 @@ private fun ResortHeader(
                 TextButton(onClick = onSetDefault) { Text(stringResource(R.string.set_as_default)) }
             }
         }
-        Spacer(Modifier.height(8.dp))
         if (snowDepth != null) {
-            Spacer(Modifier.height(4.dp))
             SnowyMountainCard(snowDepth, onOpenForecast)
             Spacer(Modifier.height(4.dp))
             AvalancheRiskBadge(snowDepth, onOpenForecast)
