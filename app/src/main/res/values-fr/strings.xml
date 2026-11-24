@@ -171,6 +171,10 @@
     <string name="freshness_last_image">Dernière image le %1$s</string>
     <string name="freshness_unknown">Heure inconnue</string>
 
+    <string name="widget_name">Webcam</string>
+    <string name="widget_description">La dernière image d\'une webcam et l\'heure à laquelle elle a été prise.</string>
+    <string name="no_webcam_available">Aucune webcam disponible</string>
+
     <string name="error_no_snapshot">Aucune image n\'est disponible pour cette webcam.</string>
     <string name="error_unsupported_provider">Les webcams %1$s ne sont pas encore prises en charge.</string>
     <string name="error_latest_image_not_found">La dernière image est introuvable sur la page du fournisseur.</string>

@@ -201,7 +201,7 @@ internal suspend fun loadImage(
 }
 
 /** Decodes straight to display size: a full panorama decoded as-is costs tens of MB. */
-private suspend fun decode(snapshot: WebcamSnapshot, maxPixelSize: Int): Bitmap? = withContext(Dispatchers.Default) {
+internal suspend fun decode(snapshot: WebcamSnapshot, maxPixelSize: Int): Bitmap? = withContext(Dispatchers.Default) {
     runCatching {
         ImageDecoder.decodeBitmap(ImageDecoder.createSource(ByteBuffer.wrap(snapshot.imageData))) { decoder, info, _ ->
             val scale = maxPixelSize.toFloat() / max(info.size.width, info.size.height)

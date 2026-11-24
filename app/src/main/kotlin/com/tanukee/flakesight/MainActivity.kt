@@ -72,6 +72,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.res.painterResource
 import android.content.Intent
+import androidx.glance.appwidget.updateAll
+import com.tanukee.flakesight.core.DeepLink
 import android.net.Uri
 import android.provider.Settings
 import com.tanukee.flakesight.core.Coordinate
@@ -102,6 +104,14 @@ class MainActivity : ComponentActivity() {
     /** The last avalanche bulletins' snow depths, kept for offline use. */
     private val snowDepthStore by lazy { SnowDepthStore(File(filesDir, "snow-depth.json")) }
 
+    /** The webcam a tapped widget asks to open (`skipatrol://webcam/<id>`), until the browser shows it. */
+    private var deepLinkWebcamID by mutableStateOf<String?>(null)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        deepLinkWebcamID = intent.dataString?.let(DeepLink::webcamID)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -110,12 +120,14 @@ class MainActivity : ComponentActivity() {
         if (HttpResponseCache.getInstalled() == null) {
             HttpResponseCache.install(File(cacheDir, "WebcamImages"), 150L * 1024 * 1024)
         }
+        // Not again after a rotation, which would reopen a webcam the user has closed.
+        if (savedInstanceState == null) deepLinkWebcamID = intent.dataString?.let(DeepLink::webcamID)
         val windowLayoutInfo = WindowInfoTracker.getOrCreate(this).windowLayoutInfo(this)
         setContent {
             FlakeSightTheme {
                 val repository = remember { ResortRepository.bundled() }
                 val layoutInfo by windowLayoutInfo.collectAsState(initial = null)
-                ResortBrowser(repository, favoritesStore, snowDepthStore, layoutInfo)
+                ResortBrowser(repository, favoritesStore, snowDepthStore, layoutInfo, deepLinkWebcamID) { deepLinkWebcamID = null }
             }
         }
     }
@@ -138,6 +150,8 @@ fun ResortBrowser(
     favoritesStore: FavoritesStore,
     snowDepthStore: SnowDepthStore,
     layoutInfo: WindowLayoutInfo?,
+    deepLinkWebcamID: String? = null,
+    onDeepLinkHandled: () -> Unit = {},
 ) {
     // Refreshed each time the app opens; a failure keeps the stored report.
     val snowDepthReport by snowDepthStore.report.collectAsState()
@@ -161,8 +175,26 @@ fun ResortBrowser(
         isShowingForecast = false
     }
     val isOverResort = webcam != null || isShowingForecast
+    LaunchedEffect(deepLinkWebcamID) {
+        deepLinkWebcamID?.let(repository::webcam)?.let { (resort, webcam) ->
+            selectedResortID = resort.id
+            selectedWebcamID = webcam.id
+            isShowingForecast = false
+        }
+        if (deepLinkWebcamID != null) onDeepLinkHandled()
+    }
 
     val favorites by favoritesStore.favorites.collectAsState()
+    // The widget follows the default resort: redraw it when that changes, not on every launch.
+    val defaultResortID = favorites.firstOrNull { it.isDefault }?.resortID
+    var widgetResortID by rememberSaveable { mutableStateOf(defaultResortID) }
+    val appContext = LocalContext.current.applicationContext
+    LaunchedEffect(defaultResortID) {
+        if (defaultResortID != widgetResortID) {
+            widgetResortID = defaultResortID
+            WebcamWidget().updateAll(appContext)
+        }
+    }
     // Remembered between launches under the iOS key, `favoritesOnTop`.
     val settings = LocalContext.current.let { remember { it.getSharedPreferences("settings", Context.MODE_PRIVATE) } }
     var favoritesOnTop by remember { mutableStateOf(settings.getBoolean("favoritesOnTop", true)) }

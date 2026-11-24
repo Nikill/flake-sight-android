@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Under the widget's caption: clear at the top, dark at the bottom, so white text stays readable on snow. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="270"
+        android:endColor="#CC000000"
+        android:startColor="#00000000" />
+</shape>
