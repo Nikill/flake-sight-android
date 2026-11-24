@@ -178,6 +178,7 @@ fun ResortBrowser(
     var isShowingForecast by rememberSaveable { mutableStateOf(false) }
     // Under the resort on a phone, so Back from a resort opened on the map returns to the map.
     var isShowingMap by rememberSaveable { mutableStateOf(false) }
+    var isShowingAbout by rememberSaveable { mutableStateOf(false) }
     val resort = selectedResortID?.let(repository::resort)
     val webcam = selectedWebcamID?.let { resort?.webcam(it) }
     val selectResort: (Resort) -> Unit = {
@@ -277,6 +278,7 @@ fun ResortBrowser(
         snowDepthReport = snowDepthReport,
         selectedResortID = selectedResortID,
         onShowMap = showMap,
+        onShowAbout = { isShowingAbout = true },
         sortLocation = sortLocation,
         isSidebar = isSidebar,
     )
@@ -349,6 +351,13 @@ fun ResortBrowser(
             title = { Text(stringResource(R.string.favourites_not_saved)) },
             text = { Text(stringResource(R.string.change_not_saved, reason)) },
         )
+    }
+
+    // Over both panes, as the iOS sheet.
+    if (isShowingAbout) {
+        BackHandler { isShowingAbout = false }
+        AboutScreen(repository, onClose = { isShowingAbout = false })
+        return
     }
 
     BoxWithConstraints {
@@ -430,6 +439,7 @@ fun ResortListScreen(
     snowDepthReport: SnowDepthReport? = null,
     selectedResortID: String? = null,
     onShowMap: (() -> Unit)? = null,
+    onShowAbout: (() -> Unit)? = null,
     sortLocation: Coordinate? = null,
     /** Beside the selected resort or the map on a wide window, as the iPad and unfolded iPhone sidebar. */
     isSidebar: Boolean = false,
@@ -446,6 +456,11 @@ fun ResortListScreen(
                         }
                     }
                     SortMenu(sortOrder, onSortOrderChange, favoritesOnTop, onFavoritesOnTopChange)
+                    if (onShowAbout != null) {
+                        IconButton(onClick = onShowAbout) {
+                            Icon(painterResource(R.drawable.ic_info), contentDescription = stringResource(R.string.about))
+                        }
+                    }
                 },
             )
         },

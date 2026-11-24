@@ -59,13 +59,17 @@ data class WebcamAttribution(
  * older app can still read a newer catalogue.
  */
 @Serializable(with = WebcamProviderTypeSerializer::class)
-enum class WebcamProviderType(val rawValue: String) {
-    WEBCAM_HD("webcamHD"),
-    SKAPING("skaping"),
-    VIEWSURF("viewsurf"),
-    PANOMAX("panomax"),
-    ROUNDSHOT("roundshot"),
-    SKYLINE_WEBCAMS("skylineWebcams"),
+enum class WebcamProviderType(
+    val rawValue: String,
+    /** The platform's own name, as credited in About; `null` for what is not a platform. */
+    val brandName: String? = null,
+) {
+    WEBCAM_HD("webcamHD", "Webcam HD"),
+    SKAPING("skaping", "Skaping"),
+    VIEWSURF("viewsurf", "Viewsurf"),
+    PANOMAX("panomax", "Panomax"),
+    ROUNDSHOT("roundshot", "Roundshot"),
+    SKYLINE_WEBCAMS("skylineWebcams", "SkylineWebcams"),
     DIRECT_IMAGE("directImage"),
     HLS("hls"),
     UNKNOWN("unknown"),

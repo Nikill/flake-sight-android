@@ -187,6 +187,31 @@
     <string name="widget_settings_title">Choisir une webcam</string>
     <string name="widget_follow_default">Suit la station par défaut choisie dans l\'app</string>
 
+    <string name="about">À propos</string>
+    <string name="about_tagline">Les webcams des stations de ski en direct, pour vérifier la neige et la météo avant de monter.</string>
+    <string name="version">Version %1$s</string>
+    <string name="privacy_policy">Politique de confidentialité</string>
+    <string name="support">Assistance</string>
+    <string name="credits">Crédits</string>
+    <string name="developer">Développeur</string>
+    <string name="webcams_credit">Webcams</string>
+    <string name="snow_depth">Hauteur de neige</string>
+    <string name="resort_websites">sites web des stations</string>
+    <string name="images_property">Les images des webcams restent la propriété de leurs détenteurs respectifs.</string>
+    <string name="open_meteo_licence">Données météo par Open-Meteo.com, CC BY 4.0.</string>
+
+    <string name="privacy_no_data">Flake Sight ne collecte aucune donnée personnelle. Il n\'y a ni compte, ni mesure d\'audience, ni suivi.</string>
+    <string name="privacy_favourites">Vos stations favorites et votre station par défaut sont enregistrées sur votre appareil. Le widget Flake Sight, qui fait partie de l\'app, les lit à cet endroit, et elles ne quittent jamais votre appareil.</string>
+    <string name="privacy_location">Votre position approximative n\'est utilisée que lorsque vous choisissez de trier les stations par distance ou d\'ouvrir la carte. Elle est lue sur l\'appareil à ce moment-là et n\'est jamais enregistrée ni transmise par Flake Sight.</string>
+    <string name="privacy_webcams">Les images des webcams sont téléchargées directement auprès des sociétés et des stations qui exploitent les caméras (%1$s). Comme tout site web que vous visitez, elles peuvent voir votre adresse IP et l\'heure de votre requête. Flake Sight ne leur envoie rien d\'autre, et leurs propres politiques de confidentialité s\'appliquent à ces données.</string>
+    <string name="privacy_weather">Les prévisions météo proviennent d\'Open-Meteo (open-meteo.com). L\'app lui envoie les coordonnées et les altitudes de la station que vous consultez, jamais votre propre position. Comme les fournisseurs de webcams, Open-Meteo peut voir votre adresse IP et l\'heure de votre requête, et sa propre politique de confidentialité s\'applique à ces données.</string>
+    <string name="privacy_map">La carte est affichée par Google Maps. Quand vous l\'ouvrez, Google reçoit la zone affichée, votre adresse IP et des informations sur votre appareil et, si vous l\'autorisez, utilise votre position pour l\'afficher. La politique de confidentialité de Google s\'applique à ces données.</string>
+    <string name="privacy_tanukee">À chaque ouverture, l\'app télécharge depuis tanukee.com, le site du développeur, deux courts fichiers : la liste des webcams qui ne sont plus affichées, et les hauteurs de neige des bulletins d\'avalanche de Météo-France. Les requêtes ne contiennent rien sur vous. Comme pour tout site web, l\'hébergeur de tanukee.com peut voir votre adresse IP et l\'heure de votre requête, et le développeur ne les utilise pas.</string>
+    <string name="privacy_storage">Les images téléchargées sont mises en cache sur votre appareil pour limiter le trafic réseau. La dernière image affichée par le widget, et les images des webcams de vos stations favorites prises vers 16:00, sont conservées dans le stockage de l\'app pour pouvoir être affichées plus tard. Toutes sont supprimées lorsque vous supprimez l\'app.</string>
+    <string name="privacy_questions">Les questions sur cette politique peuvent être envoyées à %1$s.</string>
+    <string name="privacy_last_updated">Dernière mise à jour : 24 novembre 2026</string>
+    <string name="privacy_online">La lire sur tanukee.com</string>
+
     <string name="error_no_snapshot">Aucune image n\'est disponible pour cette webcam.</string>
     <string name="error_unsupported_provider">Les webcams %1$s ne sont pas encore prises en charge.</string>
     <string name="error_latest_image_not_found">La dernière image est introuvable sur la page du fournisseur.</string>
