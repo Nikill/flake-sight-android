@@ -37,7 +37,16 @@ import com.tanukee.flakesight.core.Resort
 import com.tanukee.flakesight.core.ResortForecast
 import com.tanukee.flakesight.core.WeatherCondition
 import com.tanukee.flakesight.core.forecastLevels
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import com.tanukee.flakesight.core.ForecastBriefing
+import com.tanukee.flakesight.core.ForecastPeriod
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.time.Instant
 import java.util.Locale
 
@@ -57,7 +66,17 @@ internal val forecastService = ForecastService()
 fun ForecastStrip(resort: Resort) {
     var forecast by remember(resort.id) { mutableStateOf(forecastService.cachedForecast(resort)) }
     var hasFailed by remember(resort.id) { mutableStateOf(false) }
+    // Snow soon and the good days ahead; left out when the hourly forecast cannot be fetched.
+    var briefing by remember(resort.id) { mutableStateOf<ForecastBriefing?>(null) }
     LaunchedEffect(resort.id) {
+        launch {
+            try {
+                briefing = ForecastBriefing(forecastService.detailedForecast(resort), Instant.now(), resort.timeZone)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+            }
+        }
         try {
             forecast = forecastService.forecast(resort)
         } catch (e: CancellationException) {
@@ -69,13 +88,13 @@ fun ForecastStrip(resort: Resort) {
 
     val shown = forecast
     when {
-        shown != null -> StripContent(shown, resort, isPlaceholder = false)
-        !hasFailed -> StripContent(placeholder(resort), resort, isPlaceholder = true)
+        shown != null -> StripContent(shown, briefing, resort, isPlaceholder = false)
+        !hasFailed -> StripContent(placeholder(resort), null, resort, isPlaceholder = true)
     }
 }
 
 @Composable
-private fun StripContent(forecast: ResortForecast, resort: Resort, isPlaceholder: Boolean) {
+private fun StripContent(forecast: ResortForecast, briefing: ForecastBriefing?, resort: Resort, isPlaceholder: Boolean) {
     val locale = LocalConfiguration.current.locales[0]
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.weather), style = MaterialTheme.typography.titleMedium)
@@ -102,7 +121,13 @@ private fun StripContent(forecast: ResortForecast, resort: Resort, isPlaceholder
             forecast.levels.forEach { LevelRow(it, locale) }
         }
         if (!isPlaceholder) {
-            recentSnowSentence(forecast)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+            val sentences = listOfNotNull(
+                briefing?.let { upcomingSnowSentence(it, locale) },
+                briefing?.let { goodDaysSentence(it, locale) },
+                recentSnowSentence(forecast),
+                briefing?.let { snowDepthSentence(it, locale) },
+            )
+            if (sentences.isNotEmpty()) ForecastDetails(sentences)
         }
         val uriHandler = LocalUriHandler.current
         TextButton(onClick = { uriHandler.openUri(ForecastService.ATTRIBUTION_URL) }, contentPadding = PaddingValues(0.dp)) {
@@ -116,6 +141,87 @@ private fun StripContent(forecast: ResortForecast, resort: Resort, isPlaceholder
 }
 
 private val LEVEL_COLUMN_WIDTH = 76.dp
+
+/**
+ * The sentences under the grid, folded under "Forecast Details": open until
+ * the user folds them, which then holds for every resort, as on iOS.
+ */
+@Composable
+private fun ForecastDetails(sentences: List<String>) {
+    val settings = LocalContext.current.let { remember { it.getSharedPreferences("settings", Context.MODE_PRIVATE) } }
+    var expanded by remember { mutableStateOf(settings.getBoolean("forecastDetailsExpanded", true)) }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        TextButton(
+            onClick = {
+                expanded = !expanded
+                settings.edit().putBoolean("forecastDetailsExpanded", expanded).apply()
+            },
+            contentPadding = PaddingValues(0.dp),
+        ) {
+            val state = stringResource(if (expanded) R.string.expanded else R.string.collapsed)
+            // The arrow is drawn, not read: TalkBack says whether the details are open instead.
+            Text(if (expanded) "▾ " else "▸ ", Modifier.clearAndSetSemantics {})
+            Text(stringResource(R.string.forecast_details), Modifier.semantics { stateDescription = state })
+        }
+        if (expanded) {
+            sentences.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
+        }
+    }
+}
+
+/** "Snow expected at the summit from 15:00 to 21:00: about 4 cm.", or that none is coming. */
+@Composable
+private fun upcomingSnowSentence(briefing: ForecastBriefing, locale: Locale): String {
+    val snow = briefing.upcomingSnow ?: return stringResource(R.string.no_snow_next_24_hours)
+    val place = placePhrase(snow.level)
+    val amount = centimetres(DailyForecast.centimetres(snow.amount) ?: 1, locale)
+    val end = briefingTime(snow.end, briefing, locale)
+    return if (snow.start <= briefing.now) {
+        stringResource(R.string.snowing_now_until, place, end, amount)
+    } else {
+        stringResource(R.string.snow_expected_from_to, place, briefingTime(snow.start, briefing, locale), end, amount)
+    }
+}
+
+/** "15:00" today, "Saturday 03:00" on another day, 24-hour as on iOS. */
+private fun briefingTime(instant: Instant, briefing: ForecastBriefing, locale: Locale): String {
+    val local = instant.atZone(briefing.zone)
+    val sameDay = local.toLocalDate() == briefing.now.atZone(briefing.zone).toLocalDate()
+    return DateTimeFormatter.ofPattern(if (sameDay) "HH:mm" else "EEEE HH:mm", locale).format(local)
+}
+
+/** "Saturday: 21 cm of fresh snow and clear skies." for each good day, or that none is coming. */
+@Composable
+private fun goodDaysSentence(briefing: ForecastBriefing, locale: Locale): String {
+    if (briefing.goodDays.isEmpty()) return stringResource(R.string.no_good_day)
+    return briefing.goodDays.map { day ->
+        val weekday = day.period.day.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
+        val label = if (day.isWholeDay) {
+            weekday
+        } else {
+            stringResource(
+                when (day.period.part) {
+                    ForecastPeriod.Part.MORNING -> R.string.period_morning
+                    ForecastPeriod.Part.AFTERNOON -> R.string.period_afternoon
+                    ForecastPeriod.Part.NIGHT -> R.string.period_night
+                },
+                weekday,
+            )
+        }
+        // The weekday starts the sentence: "samedi" becomes "Samedi".
+        val start = label.replaceFirstChar { it.titlecase(locale) }
+        // At least the fresh-snow threshold, so never under a centimetre.
+        stringResource(R.string.good_day, start, centimetres(DailyForecast.centimetres(day.freshSnow) ?: 0, locale))
+    }.joinToString(" ")
+}
+
+/** "About 95 cm of snow on the ground at the summit (model estimate).", or nothing under 5 cm. */
+@Composable
+private fun snowDepthSentence(briefing: ForecastBriefing, locale: Locale): String? {
+    val depth = briefing.roundedSnowDepth ?: return null
+    val level = briefing.snowDepth?.level ?: return null
+    return stringResource(R.string.snow_depth_model, centimetres(depth, locale), placePhrase(level))
+}
 
 @Composable
 private fun LevelRow(level: LevelForecast, locale: Locale) {

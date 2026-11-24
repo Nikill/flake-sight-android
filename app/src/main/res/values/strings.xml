@@ -68,6 +68,24 @@
     <!-- %1$s is a place phrase, "in the village". -->
     <string name="recent_snow_none_at">none %1$s</string>
     <string name="no_recent_snow">No snow in the last %1$d days.</string>
+    <string name="forecast_details">Forecast Details</string>
+    <!-- Read by TalkBack after "Forecast Details". -->
+    <string name="expanded">Expanded</string>
+    <string name="collapsed">Collapsed</string>
+    <!-- %1$s is a weekday, "Saturday". The night runs from 18:00 to 09:00. -->
+    <string name="period_morning">%1$s morning</string>
+    <string name="period_afternoon">%1$s afternoon</string>
+    <string name="period_night">%1$s night</string>
+    <string name="no_snow_next_24_hours">No snow expected in the next 24 hours.</string>
+    <!-- %1$s is a place phrase, "at the summit"; %2$s and %3$s times, "15:00" or "Saturday 03:00"; %4$s an amount, "4 cm". -->
+    <string name="snow_expected_from_to">Snow expected %1$s from %2$s to %3$s: about %4$s.</string>
+    <!-- %1$s is a place phrase, %2$s a time, %3$s an amount. -->
+    <string name="snowing_now_until">Snowing now %1$s until %2$s: about %3$s more.</string>
+    <!-- %1$s is a day or part of a day, "Saturday morning"; %2$s an amount, "21 cm". -->
+    <string name="good_day">%1$s: %2$s of fresh snow and clear skies.</string>
+    <string name="no_good_day">No day with fresh snow and clear skies in the next five days.</string>
+    <!-- %1$s is an amount, "95 cm"; %2$s a place phrase, "at the summit". -->
+    <string name="snow_depth_model">About %1$s of snow on the ground %2$s (model estimate).</string>
     <!-- Read by TalkBack: %1$s is a temperature, "-4°". -->
     <string name="max_temperature">max %1$s</string>
     <!-- Read by TalkBack: %1$s is a weekday, "Friday". -->
