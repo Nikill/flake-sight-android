@@ -61,6 +61,8 @@ data class DailyForecast(
     val maxTemperature: Double?,
     /** Snowfall over the day in centimetres. */
     val snowfall: Double,
+    /** How far other weather models agree on [snowfall]; `null` when they could not be fetched or no snow is in play. */
+    val snowfallRange: SnowfallRange? = null,
 ) {
     /** A measurable fall, or a snow sky even without one. */
     val isSnowExpected: Boolean

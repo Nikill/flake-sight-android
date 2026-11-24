@@ -12,6 +12,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.KSerializer
@@ -40,6 +44,7 @@ class ForecastService(
     private val lock = Any()
     private val cache = mutableMapOf<String, ResortForecast>()
     private val detailedCache = mutableMapOf<String, DetailedForecast>()
+    private val modelCache = mutableMapOf<String, ModelSnowfall>()
 
     /** Requests under way, so concurrent callers for one resort share a request. */
     private val inFlight = mutableMapOf<String, Deferred<ResortForecast>>()
@@ -57,6 +62,21 @@ class ForecastService(
      * The resort's hour-by-hour forecast, from memory when fresh. Only the
      * resort screen asks for it, once, so callers are not coalesced.
      */
+    /** The last model comparison still valid, so a screen can draw the ranges before awaiting. */
+    fun cachedModelSnowfall(resort: Resort): ModelSnowfall? =
+        synchronized(lock) { modelCache[resort.id] }?.takeIf { isFresh(it.fetchedAt, resort.timeZone) }
+
+    /**
+     * Each model's daily snowfall at the resort's levels, from memory when
+     * fresh. Only the resort screens ask for it, so callers are not coalesced.
+     */
+    suspend fun modelSnowfall(resort: Resort): ModelSnowfall {
+        cachedModelSnowfall(resort)?.let { return it }
+        val models = modelSnowfall(load(modelSnowfallRequestURL(resort, baseURL)), resort, now())
+        synchronized(lock) { modelCache[resort.id] = models }
+        return models
+    }
+
     suspend fun detailedForecast(resort: Resort): DetailedForecast {
         synchronized(lock) { detailedCache[resort.id] }?.takeIf { isFresh(it.fetchedAt, resort.timeZone) }?.let { return it }
         val forecast = detailedForecast(load(detailedRequestURL(resort, baseURL)), resort, now())
@@ -178,10 +198,48 @@ class ForecastService(
         fun detailedRequestURL(resort: Resort, baseURL: String): String =
             levelsURL(resort, baseURL, "hourly" to HOURLY_VARIABLES)
 
+        /** The daily snowfall again, once per model of [SnowfallRange.MODELS]. */
+        fun modelSnowfallRequestURL(resort: Resort, baseURL: String): String =
+            levelsURL(resort, baseURL, "daily" to "snowfall_sum", models = SnowfallRange.MODELS)
+
+        /**
+         * Parses the models' answer: one location per level, each model's days
+         * under `snowfall_sum_<model>`. A model left out of the answer counts as
+         * having no amount, like a day past its range.
+         */
+        fun modelSnowfall(data: ByteArray, resort: Resort, fetchedAt: Instant): ModelSnowfall {
+            val locations = runCatching {
+                when (val root = json.parseToJsonElement(data.decodeToString())) {
+                    is JsonArray -> root.map { it.jsonObject }
+                    else -> listOf(root.jsonObject)
+                }
+            }.getOrElse { throw ForecastError.MalformedResponse() }
+            val levels = resort.forecastLevels
+            if (locations.size != levels.size) throw ForecastError.MalformedResponse()
+            val forecasts = levels.zip(locations) { level, location ->
+                runCatching {
+                    val daily = location.getValue("daily").jsonObject
+                    val time = daily.getValue("time").jsonArray.map { LocalDate.parse(it.jsonPrimitive.content) }
+                    val series = SnowfallRange.MODELS.map { model ->
+                        daily["snowfall_sum_$model"]?.jsonArray?.map { it.jsonPrimitive.doubleOrNull }
+                    }
+                    require(time.isNotEmpty() && series.all { it == null || it.size == time.size })
+                    ModelSnowfall.Level(level, time.withIndex().associate { (index, date) -> date to series.map { it?.get(index) } })
+                }.getOrElse { throw ForecastError.MalformedResponse() }
+            }
+            return ModelSnowfall(resort.id, forecasts, fetchedAt)
+        }
+
         /** The `hourly` series asked for, in the order of [Hourly]. */
         private const val HOURLY_VARIABLES = "snowfall,rain,freezing_level_height,wind_gusts_10m,cloud_cover,visibility,snow_depth"
 
-        private fun levelsURL(resort: Resort, baseURL: String, series: Pair<String, String>, pastDays: Int = 0): String {
+        private fun levelsURL(
+            resort: Resort,
+            baseURL: String,
+            series: Pair<String, String>,
+            pastDays: Int = 0,
+            models: List<String> = emptyList(),
+        ): String {
             val levels = resort.forecastLevels
             fun repeated(value: Double) = List(levels.size) { value.toString() }.joinToString(",")
             val altitudes = levels.mapNotNull { it.altitude }
@@ -190,6 +248,7 @@ class ForecastService(
                 "longitude" to repeated(resort.longitude),
                 altitudes.takeIf { it.size == levels.size }?.let { "elevation" to it.joinToString(",") },
                 series,
+                models.takeIf { it.isNotEmpty() }?.let { "models" to it.joinToString(",") },
                 pastDays.takeIf { it > 0 }?.let { "past_days" to it.toString() },
                 "forecast_days" to DAY_COUNT.toString(),
                 "timezone" to resort.timeZoneIdentifier,
