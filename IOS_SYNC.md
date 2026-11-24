@@ -26,7 +26,15 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `ResortRepository` (bundled, lookup, search) | Partly | `available()` and withdrawn content not yet; credits not yet |
 | `CatalogTests` | Ported | except `creditsListPlatformsByWeightAndResortWebsites` |
 | `ResortSeason` phase and wording | Not yet | |
-| Providers, `WebcamService`, freshness | Not yet | |
+| Providers (`DirectImage`, Skaping, Roundshot, Viewsurf), registry, `WebcamService`, freshness | Ported | `core/.../WebcamService.kt`, `*Provider.kt`, `SnapshotFreshness.kt`. EXIF read by `Exif.kt` instead of ImageIO. Archive lookup (`ArchiveProbe`, `archivedSnapshotReference`) comes with the afternoon images. `label`/`systemImage` wording goes in the app with the first screen showing an image |
+| `ProviderTests`, `WebcamServiceCacheTests`, `WebcamServiceCaptureTimeTests`, `FreshnessOrderingTests` | Ported | except `downsamplerLimitsLongestSide` (decoding lives in the app); `ArchiveProviderTests` and `LiveSourceTests` not yet |
+| `SnapshotLoader`, `ImageDownsampler`, `LastSnapshotStore` | Not yet | app side and widgets |
 | Forecast, snow depth, avalanche bulletin | Not yet | |
 | Favourites, widgets, afternoon images | Not yet | |
 | Watch → Wear OS, CarPlay → Android Auto | Not yet | after the phone app |
+
+| iOS app screen | Android | Notes |
+|---|---|---|
+| App icon | Ported | adaptive icon from `AppIcon.png` on its corner colour |
+| `ResortListView` | Partly | list only: no search, sorting, favourites or map |
+| `ResortDetailView`, `WebcamCard` | Partly | header, website link, webcam cards ordered by freshness. No favourites, directions, season, snow or forecast; cards do not open `WebcamDetailView` yet |
