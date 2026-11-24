@@ -100,10 +100,13 @@ class FavoritesStore(private val file: File, private val now: () -> Instant = In
  * Written beside the file then moved over it, so a crash mid-write never
  * leaves half a file. Any failure throws [IOException] and leaves the file as it was.
  */
-internal fun File.writeTextAtomically(text: String) {
+internal fun File.writeTextAtomically(text: String) = writeBytesAtomically(text.toByteArray())
+
+/** As [writeTextAtomically], for any bytes. */
+internal fun File.writeBytesAtomically(bytes: ByteArray) {
     val temporary = File(absoluteFile.parentFile, "$name.tmp")
     try {
-        temporary.writeText(text)
+        temporary.writeBytes(bytes)
         Files.move(temporary.toPath(), toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
     } catch (e: Exception) {
         temporary.delete()
