@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,16 +63,14 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /** One per process, so its memory cache and throttle outlive the screens. */
-private val webcamService = WebcamService()
+internal val webcamService = WebcamService()
 
-/** Longest side, in pixels, of a card image: `ImageDownsampler.thumbnailPixelSize` on iOS. */
-private const val THUMBNAIL_PIXEL_SIZE = 1200
-
-/** What a card shows: the last image loaded, and why the latest load failed if it did. */
-private data class CardState(
+/** What a webcam view shows: the last image loaded, and why the latest load failed if it did. */
+internal data class ImageState(
     val snapshot: WebcamSnapshot? = null,
     val image: Bitmap? = null,
     val error: Throwable? = null,
+    val isLoading: Boolean = false,
 ) {
     val isSettled get() = image != null || error != null
 }
@@ -82,14 +81,18 @@ private data class CardState(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ResortScreen(resort: Resort, onBack: () -> Unit) {
-    val cards = remember(resort.id) { mutableStateMapOf<String, CardState>() }
+fun ResortScreen(resort: Resort, onBack: () -> Unit, onSelectWebcam: (Webcam) -> Unit) {
+    val cards = remember(resort.id) { mutableStateMapOf<String, ImageState>() }
     // Reordered only once every card has settled, so cards do not shuffle while the screen fills up.
     var orderedWebcams by remember(resort.id) { mutableStateOf(resort.webcams) }
     val allSettled = resort.webcams.all { cards[it.id]?.isSettled == true }
 
     LaunchedEffect(resort.id) {
-        for (webcam in resort.webcams) launch { load(webcam, resort) { cards[webcam.id] = it(cards[webcam.id] ?: CardState()) } }
+        for (webcam in resort.webcams) {
+            launch {
+                loadImage(webcam, resort, SnapshotSize.THUMBNAIL) { cards[webcam.id] = it(cards[webcam.id] ?: ImageState()) }
+            }
+        }
     }
     LaunchedEffect(allSettled) {
         if (allSettled) {
@@ -124,36 +127,51 @@ fun ResortScreen(resort: Resort, onBack: () -> Unit) {
                 item(span = { GridItemSpan(maxLineSpan) }) { NoWebcams() }
             }
             items(orderedWebcams, key = { it.id }) { webcam ->
-                WebcamCard(webcam, resort, cards[webcam.id] ?: CardState(), Modifier.animateItem())
+                WebcamCard(
+                    webcam, resort, cards[webcam.id] ?: ImageState(),
+                    Modifier.animateItem().clickable { onSelectWebcam(webcam) },
+                )
             }
         }
     }
 }
 
 /**
- * Shows the in-memory image straight away, then the latest one. A failed
- * refresh keeps the image already shown, as on iOS.
+ * Port of `SnapshotLoader.load`. Shows the in-memory image straight away (a
+ * full-size view can start from the card's thumbnail), then the latest one.
+ * A failed refresh keeps the image already shown.
  */
-private suspend fun load(webcam: Webcam, resort: Resort, update: ((CardState) -> CardState) -> Unit) {
-    webcamService.cachedSnapshot(webcam, SnapshotSize.THUMBNAIL)?.let { cached ->
-        decode(cached)?.let { image -> update { it.copy(snapshot = cached, image = image) } }
+internal suspend fun loadImage(
+    webcam: Webcam,
+    resort: Resort,
+    size: SnapshotSize,
+    forceRefresh: Boolean = false,
+    update: ((ImageState) -> ImageState) -> Unit,
+) {
+    // Longest decoded side: `ImageDownsampler.thumbnailPixelSize` and `detailPixelSize` on iOS.
+    val maxPixelSize = if (size == SnapshotSize.THUMBNAIL) 1200 else 4096
+    if (!forceRefresh) {
+        val cached = webcamService.cachedSnapshot(webcam, size) ?: webcamService.cachedSnapshot(webcam, SnapshotSize.THUMBNAIL)
+        cached?.let { decode(it, maxPixelSize) }?.let { image -> update { it.copy(snapshot = cached, image = image) } }
     }
+    update { it.copy(isLoading = true, error = null) }
     try {
-        val latest = webcamService.latestSnapshot(webcam, resort, SnapshotSize.THUMBNAIL)
-        val image = decode(latest) ?: throw WebcamError.NotAnImage()
-        update { CardState(latest, image) }
+        val latest = webcamService.latestSnapshot(webcam, resort, size, forceRefresh)
+        val image = decode(latest, maxPixelSize) ?: throw WebcamError.NotAnImage()
+        update { ImageState(latest, image) }
     } catch (e: CancellationException) {
+        update { it.copy(isLoading = false) }
         throw e
     } catch (e: Exception) {
-        update { it.copy(error = e) }
+        update { it.copy(error = e, isLoading = false) }
     }
 }
 
-/** Decodes straight to card size: a full panorama decoded as-is costs tens of MB. */
-private suspend fun decode(snapshot: WebcamSnapshot): Bitmap? = withContext(Dispatchers.Default) {
+/** Decodes straight to display size: a full panorama decoded as-is costs tens of MB. */
+private suspend fun decode(snapshot: WebcamSnapshot, maxPixelSize: Int): Bitmap? = withContext(Dispatchers.Default) {
     runCatching {
         ImageDecoder.decodeBitmap(ImageDecoder.createSource(ByteBuffer.wrap(snapshot.imageData))) { decoder, info, _ ->
-            val scale = THUMBNAIL_PIXEL_SIZE.toFloat() / max(info.size.width, info.size.height)
+            val scale = maxPixelSize.toFloat() / max(info.size.width, info.size.height)
             if (scale < 1) decoder.setTargetSize((info.size.width * scale).roundToInt(), (info.size.height * scale).roundToInt())
         }
     }.getOrNull()
@@ -195,7 +213,7 @@ private fun NoWebcams() {
 
 /** Port of `WebcamCard`: cropped latest image, name, update time and provider. */
 @Composable
-private fun WebcamCard(webcam: Webcam, resort: Resort, state: CardState, modifier: Modifier = Modifier) {
+private fun WebcamCard(webcam: Webcam, resort: Resort, state: ImageState, modifier: Modifier = Modifier) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier) {
         Box(
             contentAlignment = Alignment.Center,
@@ -238,7 +256,7 @@ private fun WebcamCard(webcam: Webcam, resort: Resort, state: CardState, modifie
 
 /** "Updated 14:30", "Last image 11 Apr 2026" or "Time unknown", in the resort's time zone. */
 @Composable
-private fun FreshnessLabel(freshness: SnapshotFreshness, resort: Resort) {
+internal fun FreshnessLabel(freshness: SnapshotFreshness, resort: Resort) {
     val text = freshness.shortLabel(resort.timeZone)
     Text(
         when (freshness) {
@@ -253,7 +271,7 @@ private fun FreshnessLabel(freshness: SnapshotFreshness, resort: Resort) {
 }
 
 @Composable
-private fun errorMessage(error: Throwable, webcam: Webcam): String = when (error) {
+internal fun errorMessage(error: Throwable, webcam: Webcam): String = when (error) {
     is WebcamError.NoSnapshotAvailable -> stringResource(R.string.error_no_snapshot)
     is WebcamError.UnsupportedProvider -> stringResource(R.string.error_unsupported_provider, webcam.attribution.providerName)
     is WebcamError.LatestImageNotFound -> stringResource(R.string.error_latest_image_not_found)

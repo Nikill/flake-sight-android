@@ -37,4 +37,5 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 |---|---|---|
 | App icon | Ported | adaptive icon from `AppIcon.png` on its corner colour |
 | `ResortListView` | Partly | list only: no search, sorting, favourites or map |
-| `ResortDetailView`, `WebcamCard` | Partly | header, website link, webcam cards ordered by freshness. No favourites, directions, season, snow or forecast; cards do not open `WebcamDetailView` yet |
+| `ResortDetailView`, `WebcamCard` | Partly | header, website link, webcam cards ordered by freshness. No favourites, directions, season, snow or forecast |
+| `WebcamDetailView` | Partly | panorama scrolling sideways from its middle, refresh, capture time, altitude, orientation, source link. No afternoon images (with their area); no live stream player, as no catalogued webcam has a stream |

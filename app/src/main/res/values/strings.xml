@@ -14,6 +14,21 @@
     <string name="no_webcams">No webcams</string>
     <string name="no_webcams_description">This resort does not publish a webcam Flake Sight can show yet.</string>
 
+    <!-- Webcam screen -->
+    <string name="refresh">Refresh</string>
+    <!-- %1$s is the webcam's name. -->
+    <string name="latest_image_from">Latest image from %1$s</string>
+    <string name="image_unavailable">Image unavailable</string>
+    <string name="try_again">Try Again</string>
+    <!-- %1$s is a viewing direction as published by the source. -->
+    <string name="facing">Facing %1$s</string>
+    <string name="source">Source</string>
+    <!-- %1$s is the provider's name, e.g. Skaping. -->
+    <string name="via_provider">via %1$s</string>
+    <!-- %1$s is the image owner, e.g. Les Saisies; %2$s the provider. -->
+    <string name="owner_via_provider">© %1$s · via %2$s</string>
+    <string name="view_on_provider">View on %1$s</string>
+
     <!-- Snapshot freshness: %1$s is a time ("14:30") or a date ("11 Apr 2026") in the resort's time zone. -->
     <string name="freshness_updated">Updated %1$s</string>
     <string name="freshness_last_image">Last image %1$s</string>

@@ -12,6 +12,16 @@
     <string name="no_webcams">Aucune webcam</string>
     <string name="no_webcams_description">Cette station ne publie pas encore de webcam que Flake Sight peut afficher.</string>
 
+    <string name="refresh">Actualiser</string>
+    <string name="latest_image_from">Dernière image de %1$s</string>
+    <string name="image_unavailable">Image indisponible</string>
+    <string name="try_again">Réessayer</string>
+    <string name="facing">Orientée vers %1$s</string>
+    <string name="source">Source</string>
+    <string name="via_provider">via %1$s</string>
+    <string name="owner_via_provider">© %1$s · via %2$s</string>
+    <string name="view_on_provider">Voir sur %1$s</string>
+
     <string name="freshness_updated">Mise à jour à %1$s</string>
     <string name="freshness_last_image">Dernière image le %1$s</string>
     <string name="freshness_unknown">Heure inconnue</string>
