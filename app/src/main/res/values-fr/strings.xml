@@ -11,6 +11,11 @@
     <string name="clear_search">Effacer la recherche</string>
     <string name="no_search_results">Aucune station ne correspond à « %1$s ».</string>
     <string name="sort">Trier</string>
+    <string name="sort_name">Nom</string>
+    <string name="sort_snow_forecast">Neige prévue</string>
+    <string name="sort_recent_snow">Neige récente</string>
+    <string name="snow_in_last_days">%1$s sur les %2$d derniers jours</string>
+    <string name="snow_expected_next_days">%1$s attendus sur les %2$d prochains jours</string>
     <string name="favourites_on_top">Favoris en premier</string>
 
     <string name="select_resort">Choisissez une station pour voir ses webcams.</string>

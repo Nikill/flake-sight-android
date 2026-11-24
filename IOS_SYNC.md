@@ -23,18 +23,20 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | SkiPatrolKit area | Android | Notes |
 |---|---|---|
 | Catalogue models (`Resort`, `Webcam`, `Parking`, `ResortSeason`, provider and capability types) | Ported | `core/.../Resort.kt`, `Webcam.kt` |
-| `ResortRepository` (bundled, lookup, search, `sortedResorts`) | Partly | `sortedResorts` for the name order with "Favourites on Top"; distance and snow orders, `available()`, withdrawn content and credits not yet |
+| `ResortRepository` (bundled, lookup, search, `sortedResorts`) | Partly | `sortedResorts` for the name and snow orders with "Favourites on Top"; distance order, `available()`, withdrawn content and credits not yet |
+| `SnowTotals`, `ResortSortOrder`, `Resort.snowRankingLevel`, `ForecastService.snowTotals` | Partly | totals, batching, cache and the snow orders; `ResortSortOrder` has no `distance` yet (a stored `distance` reads as name). `SnowBand` and the sentences for the map not yet |
+| `SnowTotalsTests` | Ported | `labelsSkipLessThanACentimetre` checks the centimetres the app formats |
 | `CatalogTests` | Ported | except `creditsListPlatformsByWeightAndResortWebsites` |
 | `ResortSeason` phase and wording | Not yet | |
 | Providers (`DirectImage`, Skaping, Roundshot, Viewsurf), registry, `WebcamService`, freshness | Ported | `core/.../WebcamService.kt`, `*Provider.kt`, `SnapshotFreshness.kt`. EXIF read by `Exif.kt` instead of ImageIO. Archive lookup (`ArchiveProbe`, `archivedSnapshotReference`) comes with the afternoon images. `label`/`systemImage` wording goes in the app with the first screen showing an image |
 | `ProviderTests`, `WebcamServiceCacheTests`, `WebcamServiceCaptureTimeTests`, `FreshnessOrderingTests` | Ported | except `downsamplerLimitsLongestSide` (decoding lives in the app); `ArchiveProviderTests` and `LiveSourceTests` not yet |
 | `SnapshotLoader`, `ImageDownsampler`, `LastSnapshotStore` | Not yet | app side and widgets |
-| `ForecastService` (daily), `ResortForecast`, `ForecastLevel`, `DailyForecast`, `WeatherCondition` | Partly | daily forecast with its cache and recent snowfall; wording moves to the app's strings, `core` gives whole centimetres, degrees and weekdays. Hourly forecast, models' snowfall and `SnowfallRange`, snow totals, `snowSummary` not yet |
+| `ForecastService` (daily, snow totals), `ResortForecast`, `ForecastLevel`, `DailyForecast`, `WeatherCondition` | Partly | daily forecast with its cache and recent snowfall, snow totals; wording moves to the app's strings, `core` gives whole centimetres, degrees and weekdays. Hourly forecast, models' snowfall and `SnowfallRange`, `snowSummary` not yet |
 | `ForecastServiceTests`, `ForecastDisplayTests` | Partly | daily request, parsing, HTTP and cache tests; display tests as values. Hourly, models, snow summary and VoiceOver tests with those features |
-| `ForecastBriefing`, `SnowTotals`, `SnowBand`, snow depth, avalanche bulletin | Not yet | |
+| `ForecastBriefing`, `SnowBand`, snow depth, avalanche bulletin | Not yet | |
 | `FavoriteResort`, `FavoritesStore` | Ported | JSON file in the app's files instead of SwiftData, written atomically; a failed write throws and changes nothing |
 | `FavoritesStoreTests` | Ported | plus Android-only persistence and failure tests |
-| `ResortSortingTests` | Partly | name order and favourites tests; distance and snow tests with those orders |
+| `ResortSortingTests` | Partly | name, snow and favourites tests; distance tests with that order |
 | Widgets, afternoon images | Not yet | |
 | Watch → Wear OS, CarPlay → Android Auto | Not yet | after the phone app |
 
@@ -42,7 +44,7 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 |---|---|---|
 | App icon | Ported | adaptive icon from `AppIcon.png` on its corner colour |
 | `ResortBrowserView` | Partly | stack below 600 dp; list beside the resort from 600 dp (unfolded foldable, tablet), split at the hinge in book posture; folding keeps the resort and webcam on screen. No map in the empty detail pane, no widget deep links |
-| `ResortListView` | Partly | alphabetical, favourites first with their star and "Default"; search on names, regions and webcams; Sort menu with the remembered "Favourites on Top" toggle. No distance or snow orders, swipe to favourite, map, About or snow figures |
+| `ResortListView` | Partly | alphabetical, favourites first with their star and "Default"; search on names, regions and webcams; Sort menu with Name, Snow Forecast and Recent Snow and the "Favourites on Top" toggle, both remembered under the iOS keys; each row's recent snow, and the sorted figure on the right. No distance order, snow depth line, swipe to favourite, map or About |
 | `ResortDetailView`, `WebcamCard` | Partly | header, website link, favourite star, Set as Default, forecast strip, webcam cards ordered by freshness; save failures shown as on iOS. No directions, season, snow depth card or avalanche badge |
 | `ForecastStrip` | Partly | five days at each level (condition as emoji, snow, maximum), recent snow sentence, Open-Meteo credit, one TalkBack sentence per day. No snow bars, models' ranges, hourly sentences or advanced weather screen |
 | `WebcamDetailView` | Partly | panorama scrolling sideways from its middle, refresh, capture time, altitude, orientation, source link. No afternoon images (with their area); no live stream player, as no catalogued webcam has a stream |

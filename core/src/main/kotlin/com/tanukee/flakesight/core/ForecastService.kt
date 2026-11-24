@@ -12,7 +12,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
+import java.time.ZoneId
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -37,11 +41,51 @@ class ForecastService(
 
     /** Requests under way, so concurrent callers for one resort share a request. */
     private val inFlight = mutableMapOf<String, Deferred<ResortForecast>>()
+    private var snowTotalsCache: SnowTotals? = null
+
+    /** The snow-totals load under way, shared by concurrent callers. */
+    private var snowTotalsInFlight: Deferred<SnowTotals>? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** The last forecast still valid, so a screen can draw before awaiting. */
     fun cachedForecast(resort: Resort): ResortForecast? =
-        synchronized(lock) { cache[resort.id] }?.takeIf { isFresh(it.fetchedAt, resort) }
+        synchronized(lock) { cache[resort.id] }?.takeIf { isFresh(it.fetchedAt, resort.timeZone) }
+
+    /**
+     * The last snow totals still valid and covering every resort asked for,
+     * so the list can sort before awaiting.
+     */
+    fun cachedSnowTotals(resorts: List<Resort>): SnowTotals? = synchronized(lock) { snowTotalsCache }?.takeIf { cached ->
+        isFresh(cached.fetchedAt, resorts.firstOrNull()?.timeZone ?: ZoneId.systemDefault()) &&
+            resorts.all { it.id in cached.entries }
+    }
+
+    /**
+     * Recent and coming snow for every resort, at its [Resort.snowRankingLevel]:
+     * a few multi-location requests (one per [SNOW_TOTALS_BATCH_SIZE] resorts)
+     * instead of one per resort. From memory when fresh; concurrent callers share one load.
+     */
+    suspend fun snowTotals(resorts: List<Resort>): SnowTotals {
+        cachedSnowTotals(resorts)?.let { return it }
+        val task = synchronized(lock) {
+            snowTotalsInFlight ?: scope.async(start = CoroutineStart.LAZY) {
+                try {
+                    val fetchedAt = now()
+                    val entries = coroutineScope {
+                        snowTotalsBatches(resorts).map { batch ->
+                            async { snowTotalsEntries(load(snowTotalsRequestURL(batch, baseURL)), batch) }
+                        }.awaitAll()
+                    }.fold(emptyMap<String, SnowTotals.Entry>()) { all, batch -> all + batch }
+                    SnowTotals(entries, fetchedAt).also { synchronized(lock) { snowTotalsCache = it } }
+                } finally {
+                    val self = coroutineContext.job
+                    synchronized(lock) { if (snowTotalsInFlight === self) snowTotalsInFlight = null }
+                }
+            }.also { snowTotalsInFlight = it }
+        }
+        task.start()
+        return task.await()
+    }
 
     /**
      * The resort's forecast, from memory when fresh, otherwise one request
@@ -67,10 +111,10 @@ class ForecastService(
     }
 
     /** Fresh means recent and still the same resort-local day: a cached "today" must not survive midnight. */
-    private fun isFresh(fetchedAt: Instant, resort: Resort): Boolean {
+    private fun isFresh(fetchedAt: Instant, zone: ZoneId): Boolean {
         val current = now()
         return Duration.between(fetchedAt, current) < MINIMUM_REFRESH_INTERVAL &&
-            fetchedAt.atZone(resort.timeZone).toLocalDate() == current.atZone(resort.timeZone).toLocalDate()
+            fetchedAt.atZone(zone).toLocalDate() == current.atZone(zone).toLocalDate()
     }
 
     /** Never from the HTTP cache: a stale forecast is worse than none. */
@@ -99,7 +143,15 @@ class ForecastService(
         /** Days before today that count as recent snow. */
         const val SNOW_RANKING_PAST_DAYS = 7
 
+        /** Locations per snow-totals request, to keep the URL short. */
+        const val SNOW_TOTALS_BATCH_SIZE = 100
+
         private val json = Json { ignoreUnknownKeys = true }
+
+        private fun url(baseURL: String, items: List<Pair<String, String>>): String {
+            val separator = if ('?' in baseURL) "&" else "?"
+            return baseURL + separator + items.joinToString("&") { (name, value) -> "$name=$value" }
+        }
 
         /**
          * One request for every level of the resort: the coordinates repeated,
@@ -119,8 +171,52 @@ class ForecastService(
                 "forecast_days" to DAY_COUNT.toString(),
                 "timezone" to resort.timeZoneIdentifier,
             )
-            val separator = if ('?' in baseURL) "&" else "?"
-            return baseURL + separator + items.joinToString("&") { (name, value) -> "$name=$value" }
+            return url(baseURL, items)
+        }
+
+        /**
+         * The resorts split into requests: those with an altitude and those
+         * without apart (`elevation` is all or nothing), then at most
+         * [SNOW_TOTALS_BATCH_SIZE] per request.
+         */
+        fun snowTotalsBatches(resorts: List<Resort>): List<List<Resort>> {
+            val (withAltitude, withoutAltitude) = resorts.partition { it.snowRankingLevel.altitude != null }
+            return listOf(withAltitude, withoutAltitude).flatMap { it.chunked(SNOW_TOTALS_BATCH_SIZE) }
+        }
+
+        /**
+         * One location per resort at its [Resort.snowRankingLevel], daily
+         * snowfall from [SNOW_RANKING_PAST_DAYS] days ago to the end of the forecast.
+         */
+        fun snowTotalsRequestURL(resorts: List<Resort>, baseURL: String): String {
+            require(resorts.isNotEmpty()) { "No resort to ask for" }
+            val altitudes = resorts.mapNotNull { it.snowRankingLevel.altitude }
+            val items = listOfNotNull(
+                "latitude" to resorts.joinToString(",") { it.latitude.toString() },
+                "longitude" to resorts.joinToString(",") { it.longitude.toString() },
+                altitudes.takeIf { it.size == resorts.size }?.let { "elevation" to it.joinToString(",") },
+                "daily" to "snowfall_sum",
+                "past_days" to SNOW_RANKING_PAST_DAYS.toString(),
+                "forecast_days" to DAY_COUNT.toString(),
+                "timezone" to resorts.joinToString(",") { it.timeZoneIdentifier },
+            )
+            return url(baseURL, items)
+        }
+
+        /** Parses a snow-totals answer: one location per resort, in order, each with the past days then the forecast days. */
+        fun snowTotalsEntries(data: ByteArray, resorts: List<Resort>): Map<String, SnowTotals.Entry> {
+            val locations = decodeLocations(data, SnowLocation.serializer())
+            if (locations.size != resorts.size) throw ForecastError.MalformedResponse()
+            val dayCount = SNOW_RANKING_PAST_DAYS + DAY_COUNT
+            return resorts.zip(locations) { resort, location ->
+                val daily = location.daily
+                if (daily.time.size != dayCount || daily.snowfallSum.size != dayCount) throw ForecastError.MalformedResponse()
+                val snowfall = daily.snowfallSum.map { it ?: 0.0 }
+                resort.id to SnowTotals.Entry(
+                    recent = snowfall.take(SNOW_RANKING_PAST_DAYS).sum(),
+                    forecast = snowfall.drop(SNOW_RANKING_PAST_DAYS).sum(),
+                )
+            }.toMap()
         }
 
         /**
@@ -131,7 +227,7 @@ class ForecastService(
          * [SNOW_RANKING_PAST_DAYS] of them; the forecast days start today.
          */
         fun forecast(data: ByteArray, resort: Resort, fetchedAt: Instant): ResortForecast {
-            val locations = decodeLocations(data)
+            val locations = decodeLocations(data, OpenMeteoLocation.serializer())
             val levels = resort.forecastLevels
             if (locations.size != levels.size) throw ForecastError.MalformedResponse()
             val today = fetchedAt.atZone(resort.timeZone).toLocalDate()
@@ -159,10 +255,10 @@ class ForecastService(
         }
 
         /** An array of locations when several were asked for, a single object otherwise. */
-        private fun decodeLocations(data: ByteArray): List<OpenMeteoLocation> = runCatching {
+        private fun <T> decodeLocations(data: ByteArray, serializer: KSerializer<T>): List<T> = runCatching {
             when (val root = json.parseToJsonElement(data.decodeToString())) {
-                is JsonArray -> json.decodeFromJsonElement<List<OpenMeteoLocation>>(root)
-                else -> listOf(json.decodeFromJsonElement<OpenMeteoLocation>(root))
+                is JsonArray -> json.decodeFromJsonElement(ListSerializer(serializer), root)
+                else -> listOf(json.decodeFromJsonElement(serializer, root))
             }
         }.getOrElse { throw ForecastError.MalformedResponse() }
     }
@@ -177,6 +273,12 @@ class ForecastService(
         @SerialName("temperature_2m_max") val temperatureMax: List<Double?>,
         @SerialName("snowfall_sum") val snowfallSum: List<Double?>,
     )
+
+    @Serializable
+    private class SnowLocation(val daily: SnowDaily)
+
+    @Serializable
+    private class SnowDaily(val time: List<String>, @SerialName("snowfall_sum") val snowfallSum: List<Double?>)
 
     @Serializable
     private class OpenMeteoFailure(val error: Boolean, val reason: String)

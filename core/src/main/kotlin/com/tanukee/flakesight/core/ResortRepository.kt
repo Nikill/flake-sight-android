@@ -24,15 +24,32 @@ class ResortRepository(val resorts: List<Resort>) {
     }
 
     /**
-     * The catalogue for the resort list: alphabetical, favourites first when
-     * [favoritesFirst] (both groups alphabetical), mixed in otherwise. Unknown
-     * favourite IDs are ignored. Port of `sortedResorts` for the name order;
-     * distance and snow orders come with location and forecasts.
+     * The whole catalogue in the resort list's [order], favourites first when
+     * [favoritesFirst] (both groups in that order), mixed in otherwise. Unknown
+     * favourite IDs are ignored. Port of `sortedResorts`; distance comes with location.
+     *
+     * Resorts are alphabetical, then most snow first (to the whole centimetre,
+     * as shown) with [snow]. Without it, or for a resort missing from it, the
+     * order stays alphabetical, the missing ones last.
      */
-    fun sortedResorts(favoriteIDs: Collection<String>, favoritesFirst: Boolean = true): List<Resort> {
+    fun sortedResorts(
+        order: ResortSortOrder,
+        favoriteIDs: Collection<String>,
+        favoritesFirst: Boolean = true,
+        snow: SnowTotals? = null,
+    ): List<Resort> {
         // Accent-aware, like localizedStandardCompare: Brévent before Col, Dôme after.
         val collator = Collator.getInstance(Locale.FRENCH)
-        val sorted = resorts.sortedWith { a, b -> collator.compare(a.name, b.name) }
+        val alphabetical = resorts.sortedWith { a, b -> collator.compare(a.name, b.name) }
+        val kind = order.snowKind
+        // `sortedBy` is stable, so equal amounts stay alphabetical; missing totals rank below zero.
+        val sorted = if (kind != null && snow != null) {
+            alphabetical.sortedBy { resort ->
+                snow.amount(kind, resort.id)?.let { -DailyForecast.wholeNumber(it).toDouble() } ?: Double.POSITIVE_INFINITY
+            }
+        } else {
+            alphabetical
+        }
         if (!favoritesFirst) return sorted
         val (favorites, others) = sorted.partition { it.id in favoriteIDs }
         return favorites + others
