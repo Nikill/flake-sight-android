@@ -290,6 +290,8 @@
     <!-- %1$s is the support email address. -->
     <string name="privacy_questions">Questions about this policy can be sent to %1$s.</string>
     <string name="privacy_last_updated">Last updated: 24 November 2026</string>
+    <!-- Opens the same policy on tanukee.com. -->
+    <string name="privacy_online">Read it on tanukee.com</string>
 
     <!-- Webcam errors -->
     <string name="error_no_snapshot">This webcam has no image available.</string>

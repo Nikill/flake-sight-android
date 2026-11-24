@@ -20,6 +20,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +46,13 @@ import java.net.URLEncoder
 
 /** Where support requests go, as on iOS (`AppLinks.supportEmail`). */
 private const val SUPPORT_EMAIL = "n.balligand@yahoo.com"
+
+/**
+ * The policy's public copy, which Google Play also links to; beside the iOS
+ * one (`/flake-sight/privacy/`). Keep the page and the strings in step.
+ */
+internal const val PRIVACY_POLICY_URL = "https://tanukee.com/flake-sight/android/privacy/"
+internal const val PRIVACY_POLICY_URL_FR = "https://tanukee.com/flake-sight/fr/android/privacy/"
 
 /**
  * App information, over the resort list. Port of `AboutView`; Apple's licence
@@ -180,6 +189,11 @@ private fun PrivacyPolicyScreen(webcamCredits: String, onBack: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            val uriHandler = LocalUriHandler.current
+            val url = if (LocalConfiguration.current.locales[0].language == "fr") PRIVACY_POLICY_URL_FR else PRIVACY_POLICY_URL
+            TextButton(onClick = { uriHandler.openUri(url) }, contentPadding = PaddingValues(0.dp)) {
+                Text(stringResource(R.string.privacy_online))
+            }
         }
     }
 }

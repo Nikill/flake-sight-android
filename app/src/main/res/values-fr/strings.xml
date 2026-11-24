@@ -210,6 +210,7 @@
     <string name="privacy_storage">Les images téléchargées sont mises en cache sur votre appareil pour limiter le trafic réseau. La dernière image affichée par le widget, et les images des webcams de vos stations favorites prises vers 16:00, sont conservées dans le stockage de l\'app pour pouvoir être affichées plus tard. Toutes sont supprimées lorsque vous supprimez l\'app.</string>
     <string name="privacy_questions">Les questions sur cette politique peuvent être envoyées à %1$s.</string>
     <string name="privacy_last_updated">Dernière mise à jour : 24 novembre 2026</string>
+    <string name="privacy_online">La lire sur tanukee.com</string>
 
     <string name="error_no_snapshot">Aucune image n\'est disponible pour cette webcam.</string>
     <string name="error_unsupported_provider">Les webcams %1$s ne sont pas encore prises en charge.</string>
