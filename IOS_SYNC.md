@@ -23,7 +23,9 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | SkiPatrolKit area | Android | Notes |
 |---|---|---|
 | Catalogue models (`Resort`, `Webcam`, `Parking`, `ResortSeason`, provider and capability types) | Ported | `core/.../Resort.kt`, `Webcam.kt` |
-| `ResortRepository` (bundled, lookup, search, `sortedResorts`) | Partly | `sortedResorts` for every order with "Favourites on Top", the position as a `Coordinate` instead of `CLLocation`; `resortsByFavorites` (CarPlay, Watch), `available()`, withdrawn content and credits not yet |
+| `ResortRepository` (bundled, lookup, search, `sortedResorts`) | Partly | `sortedResorts` for every order with "Favourites on Top", the position as a `Coordinate` instead of `CLLocation`; `available()` is the app's `availableRepository` (the bundled catalogue `removing` the stored list); `resortsByFavorites` (CarPlay, Watch) and credits not yet |
+| `DisabledContent`, `DisabledContentLoader`, `ResortRepository.removing` | Ported | `core/.../DisabledContent.kt`: `DisabledContentStore` keeps the last list in the app's files instead of the App Group; the app refreshes it each time it comes to the foreground and redraws the widget when it changed. The list, the widget, its settings and the background capture start from it |
+| `DisabledContentTests` | Ported | `sharedStateStoresTheList` becomes a file round trip; `watchPayloadCarriesTheList` with Wear OS |
 | `Resort.distance`, `nearest` | Ported | `distanceFrom`, `Iterable<Resort>.nearest` |
 | `DistanceSortingTests` | Ported | read `sortedResorts` instead of `resortsByFavorites` until CarPlay and the Watch are ported |
 | `LocationProvider` | Ported | in the app (`LocationProvider.kt`): one fix on demand, approximate position only |

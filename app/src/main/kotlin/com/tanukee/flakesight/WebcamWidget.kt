@@ -46,7 +46,6 @@ import com.tanukee.flakesight.core.DeepLink
 import com.tanukee.flakesight.core.FavoritesStore
 import com.tanukee.flakesight.core.LastSnapshotStore
 import com.tanukee.flakesight.core.Resort
-import com.tanukee.flakesight.core.ResortRepository
 import com.tanukee.flakesight.core.SnapshotFreshness
 import com.tanukee.flakesight.core.SnapshotSize
 import com.tanukee.flakesight.core.Webcam
@@ -100,7 +99,7 @@ class WebcamWidget : GlanceAppWidget() {
 
     private suspend fun entry(context: Context, configuredWebcamID: String?): Entry {
         val defaultResortID = FavoritesStore(File(context.filesDir, "favorites.json")).defaultResortID()
-        val (resort, webcam) = WidgetWebcamResolver.resolve(configuredWebcamID, defaultResortID, repository) ?: return Entry.NoWebcam
+        val (resort, webcam) = WidgetWebcamResolver.resolve(configuredWebcamID, defaultResortID, availableRepository(context)) ?: return Entry.NoWebcam
         // The widget may run without the app: its downloads near 16:00 count as afternoon images too.
         afternoonService(context)
         val store = LastSnapshotStore(File(context.cacheDir, "LastSnapshots"))
@@ -197,7 +196,6 @@ class WebcamWidget : GlanceAppWidget() {
         /** The webcam chosen in the widget's settings; absent to follow the default resort. */
         val WEBCAM_KEY = stringPreferencesKey("webcamID")
 
-        private val repository by lazy { ResortRepository.bundled() }
         private const val WIDGET_PIXEL_SIZE = 800
         private val White = ColorProvider(Color.White)
         private val Dimmed = ColorProvider(Color.White.copy(alpha = 0.8f))

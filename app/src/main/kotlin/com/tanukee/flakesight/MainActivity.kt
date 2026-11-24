@@ -72,6 +72,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.res.painterResource
 import android.content.Intent
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.glance.appwidget.updateAll
 import com.tanukee.flakesight.core.DeepLink
 import android.net.Uri
@@ -107,6 +109,14 @@ class MainActivity : ComponentActivity() {
     /** The webcam a tapped widget asks to open (`skipatrol://webcam/<id>`), until the browser shows it. */
     private var deepLinkWebcamID by mutableStateOf<String?>(null)
 
+    /** Each time the app comes to the foreground: withdrawn content disappears within minutes of being listed. */
+    override fun onStart() {
+        super.onStart()
+        lifecycleScope.launch {
+            if (disabledContentStore(this@MainActivity).refresh()) WebcamWidget().updateAll(applicationContext)
+        }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         deepLinkWebcamID = intent.dataString?.let(DeepLink::webcamID)
@@ -129,7 +139,9 @@ class MainActivity : ComponentActivity() {
         val windowLayoutInfo = WindowInfoTracker.getOrCreate(this).windowLayoutInfo(this)
         setContent {
             FlakeSightTheme {
-                val repository = remember { ResortRepository.bundled() }
+                // Rebuilt when a newer list of withdrawn content arrives.
+                val disabled by disabledContentStore(this).content.collectAsState()
+                val repository = remember(disabled) { availableRepository(this) }
                 val layoutInfo by windowLayoutInfo.collectAsState(initial = null)
                 ResortBrowser(repository, favoritesStore, snowDepthStore, layoutInfo, deepLinkWebcamID) { deepLinkWebcamID = null }
             }
@@ -237,7 +249,8 @@ fun ResortBrowser(
             snowTotalsFailed = true
         }
     }
-    val visibleResorts = remember(favorites, favoritesOnTop, sortOrder, sortLocation, snowTotals, searchText) {
+    // The repository changes when content is withdrawn or comes back.
+    val visibleResorts = remember(repository, favorites, favoritesOnTop, sortOrder, sortLocation, snowTotals, searchText) {
         repository.sortedResorts(sortOrder, favorites.map { it.resortID }, favoritesOnTop, sortLocation, snowTotals)
             .filter { it.matches(searchText) }
     }

@@ -15,7 +15,6 @@ import com.tanukee.flakesight.core.AfternoonSnapshotService
 import com.tanukee.flakesight.core.AfternoonSnapshotStore
 import com.tanukee.flakesight.core.AfternoonWindow
 import com.tanukee.flakesight.core.FavoritesStore
-import com.tanukee.flakesight.core.ResortRepository
 import com.tanukee.flakesight.core.Webcam
 import com.tanukee.flakesight.core.WebcamSnapshot
 import java.io.ByteArrayOutputStream
@@ -84,7 +83,7 @@ private fun downscaled(data: ByteArray): ByteArray? {
 class AfternoonCaptureWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
         try {
-            val repository = ResortRepository.bundled()
+            val repository = availableRepository(applicationContext)
             val favorites = favoritesStore(applicationContext).favorites.value.mapNotNull { repository.resort(it.resortID) }
             afternoonService(applicationContext).captureFavorites(favorites, webcamService)
         } finally {
