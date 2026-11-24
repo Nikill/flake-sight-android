@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
@@ -61,6 +60,10 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
@@ -344,6 +347,8 @@ private fun listPaneWidth(windowWidth: Dp, layoutInfo: WindowLayoutInfo?): Dp {
         ?: (windowWidth * 0.4f).coerceIn(280.dp, 360.dp)
 }
 
+private val ROW_GROUP_RADIUS = 24.dp
+
 /** The favourite star's colour: iOS system yellow, as on the iPhone. */
 val FavoriteYellow = Color(0xFFFFCC00)
 
@@ -404,7 +409,7 @@ fun ResortListScreen(
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                 )
             }
-            ResortRows(resorts, favorites, onSelect, sortOrder, sortLocation, snowTotals, snowDepthReport, selectedResortID, isSidebar)
+            ResortRows(resorts, favorites, favoritesOnTop, onSelect, sortOrder, sortLocation, snowTotals, snowDepthReport, selectedResortID)
         }
     }
 }
@@ -492,34 +497,46 @@ internal fun snowSentence(kind: SnowTotals.Kind, amount: String) = when (kind) {
 private fun ResortRows(
     resorts: List<Resort>,
     favorites: List<FavoriteResort>,
+    favoritesOnTop: Boolean,
     onSelect: (Resort) -> Unit,
     sortOrder: ResortSortOrder,
     sortLocation: Coordinate?,
     snowTotals: SnowTotals?,
     snowDepthReport: SnowDepthReport?,
     selectedResortID: String?,
-    isSidebar: Boolean,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     // A new order, or the position arriving, starts from the top; the list would otherwise stay on the row that was visible.
     val listState = rememberLazyListState()
     LaunchedEffect(sortOrder, sortLocation) { listState.scrollToItem(0) }
-    LazyColumn(state = listState) {
-        items(resorts, key = { it.id }) { resort ->
+    // Favourites on top sit in a rounded group of their own, set apart from the other resorts.
+    val favoriteIDs = favorites.map { it.resortID }.toSet()
+    val groupedCount = if (favoritesOnTop) resorts.takeWhile { it.id in favoriteIDs }.size else 0
+    val groupColor = MaterialTheme.colorScheme.surfaceContainer
+    LazyColumn(state = listState, contentPadding = PaddingValues(vertical = 4.dp)) {
+        itemsIndexed(resorts, key = { _, resort -> resort.id }) { index, resort ->
             val favorite = favorites.firstOrNull { it.resortID == resort.id }
+            val isGrouped = index < groupedCount
+            val groupShape = when {
+                groupedCount == 1 -> RoundedCornerShape(ROW_GROUP_RADIUS)
+                index == 0 -> RoundedCornerShape(topStart = ROW_GROUP_RADIUS, topEnd = ROW_GROUP_RADIUS)
+                index == groupedCount - 1 -> RoundedCornerShape(bottomStart = ROW_GROUP_RADIUS, bottomEnd = ROW_GROUP_RADIUS)
+                else -> RectangleShape
+            }
             ListItem(
-                // In the sidebar, rows without separators and the selected one as a rounded card, as on iPad.
-                modifier = if (isSidebar) {
-                    Modifier.padding(horizontal = 8.dp, vertical = 2.dp).clip(RoundedCornerShape(16.dp)).clickable { onSelect(resort) }
-                } else {
-                    Modifier.clickable { onSelect(resort) }
-                },
+                // Rows without separators, each a rounded card when pressed or selected, as the iOS sidebar.
+                modifier = Modifier
+                    .padding(start = 8.dp, end = 8.dp, bottom = if (index == groupedCount - 1) 16.dp else 0.dp)
+                    .then(if (isGrouped) Modifier.background(groupColor, groupShape) else Modifier)
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { onSelect(resort) },
                 // Marks the resort shown in the other pane.
                 colors = ListItemDefaults.colors(
                     containerColor = if (resort.id == selectedResortID) {
                         MaterialTheme.colorScheme.secondaryContainer
                     } else {
-                        MaterialTheme.colorScheme.surface
+                        Color.Transparent
                     },
                 ),
                 supportingContent = {
@@ -575,7 +592,6 @@ private fun ResortRows(
             ) {
                 Text(resort.name)
             }
-            if (!isSidebar) HorizontalDivider()
         }
     }
 }
