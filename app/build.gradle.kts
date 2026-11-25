@@ -5,6 +5,11 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// Secrets kept out of the repository, in local.properties: the Maps key and the upload key.
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
 android {
     namespace = "com.tanukee.flakesight"
     compileSdk {
@@ -19,15 +24,28 @@ android {
         versionCode = 1
         versionName = "0.1.0"
 
-        // The Google Maps key stays out of the repository: `MAPS_API_KEY=...` in
-        // local.properties. Without it the build still works and the map has no tiles.
-        val localProperties = Properties()
-        rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { localProperties.load(it) }
+        // `MAPS_API_KEY=...` in local.properties. Without it the build still works and the map has no tiles.
         manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
+    }
+
+    // The upload key Google Play checks; Play then signs the app with its own key.
+    // `UPLOAD_STORE_FILE`, `UPLOAD_STORE_PASSWORD`, `UPLOAD_KEY_ALIAS` and `UPLOAD_KEY_PASSWORD` in
+    // local.properties. Without them the release build is left unsigned.
+    val uploadStoreFile = localProperties.getProperty("UPLOAD_STORE_FILE")
+    signingConfigs {
+        if (uploadStoreFile != null) {
+            create("upload") {
+                storeFile = file(uploadStoreFile)
+                storePassword = localProperties.getProperty("UPLOAD_STORE_PASSWORD")
+                keyAlias = localProperties.getProperty("UPLOAD_KEY_ALIAS")
+                keyPassword = localProperties.getProperty("UPLOAD_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("upload")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         }
