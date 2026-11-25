@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -254,41 +255,90 @@ private fun aspectAbbreviation(aspect: SlopeAspect) = stringResource(
 
 // Fresh snow
 
-/** The fresh snow over 24 hours: solid up to the bulletin's low figure, fading to its high one; the forecast days lighter and labelled. */
+/**
+ * The fresh snow over 24 hours. Observed days are bars, solid up to the
+ * bulletin's low figure and fading to its high one; forecast days are a box
+ * from the low hypothesis to the high one with a figure at each end (one
+ * figure above a box too low for two, one mark when both agree), on a light
+ * ground labelled "Forecast" once. The bulletin has no middle figure, so the
+ * box draws none. The axis is in centimetres since boxes float.
+ */
 @Composable
 private fun FreshSnowChart(freshSnow: FreshSnow, locale: Locale) {
-    val ceiling = (freshSnow.days.maxOf { it.maximum } * 1.35 + 2).toFloat()
+    val largest = max(freshSnow.days.maxOf { it.maximum }, 1)
+    val ceiling = largest * 1.3f + 2
+    val number = java.text.NumberFormat.getIntegerInstance(locale)
+    val secondary = MaterialTheme.colorScheme.onSurfaceVariant
+    val firstForecast = freshSnow.days.indexOfFirst { it.isForecast }
     BulletinCard(stringResource(R.string.fresh_snow_24_hours), stringResource(R.string.fresh_snow_subtitle, metres(freshSnow.altitude, locale))) {
-        Row(Modifier.fillMaxWidth().height(150.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
-            freshSnow.days.forEach { day ->
-                val label = freshSnowLabel(day)
-                val spoken = if (day.isForecast) stringResource(R.string.amount_forecast, label) else label
+        Row(Modifier.fillMaxWidth().height(170.dp)) {
+            // Centimetres on the left: zero, half and the largest amount.
+            BoxWithConstraints(Modifier.width(36.dp).fillMaxHeight().padding(bottom = 16.dp).clearAndSetSemantics {}) {
+                listOf(0, largest / 2, largest).distinct().forEach { cm ->
+                    Text(
+                        stringResource(R.string.depth_figure_cm, number.format(cm)), fontSize = 9.sp, color = secondary,
+                        modifier = Modifier.centredAt(maxWidth / 2, maxHeight * (1 - cm / ceiling)),
+                    )
+                }
+            }
+            freshSnow.days.forEachIndexed { index, day ->
                 val dayName = day.day?.let { "${it.dayOfWeek.getDisplayName(TextStyle.SHORT, locale)} ${it.dayOfMonth}" } ?: day.date
+                val amount = if (day.minimum == day.maximum) freshSnowLabel(day)
+                else stringResource(R.string.between_cm, number.format(day.minimum), number.format(day.maximum))
+                val spoken = stringResource(if (day.isForecast) R.string.amount_forecast else R.string.amount_observed, amount)
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f).fillMaxHeight().clearAndSetSemantics { contentDescription = "$dayName: $spoken" },
-                    verticalArrangement = Arrangement.Bottom,
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(horizontal = 3.dp)
+                        .clearAndSetSemantics { contentDescription = "$dayName: $spoken" },
                 ) {
-                    Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                    if (day.isForecast) {
-                        Text(stringResource(R.string.forecast_short), fontSize = 8.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    val solid = if (day.maximum > 0) day.minimum.toFloat() / day.maximum else 1f
-                    Box(
+                    BoxWithConstraints(
                         Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight((max(day.maximum, 1) / ceiling).coerceIn(0.02f, 0.8f))
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(
-                                Brush.verticalGradient(
-                                    0f to SnowBlue.copy(alpha = 0.15f),
-                                    (1 - solid) to SnowBlue,
-                                    1f to SnowBlue,
-                                ),
-                                alpha = if (day.isForecast) 0.45f else 1f,
-                            ),
-                    )
-                    Text(dayName, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                            .weight(1f)
+                            .background(if (day.isForecast) SnowBlue.copy(alpha = 0.06f) else Color.Transparent),
+                    ) {
+                        fun y(cm: Int) = maxHeight * (1 - cm / ceiling)
+                        val middle = maxWidth / 2
+                        if (index == firstForecast) {
+                            Text(stringResource(R.string.forecast_short), fontSize = 8.sp, color = secondary, maxLines = 1, modifier = Modifier.centredAt(middle, 6.dp))
+                        }
+                        if (!day.isForecast) {
+                            val solid = if (day.maximum > 0) day.minimum.toFloat() / day.maximum else 1f
+                            val top = y(max(day.maximum, 1))
+                            Box(
+                                Modifier
+                                    .padding(top = top)
+                                    .fillMaxWidth()
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    .background(Brush.verticalGradient(0f to SnowBlue.copy(alpha = 0.15f), (1 - solid) to SnowBlue, 1f to SnowBlue)),
+                            )
+                            Text(freshSnowLabel(day), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, modifier = Modifier.centredAt(middle, top - 8.dp))
+                        } else {
+                            val top = y(day.maximum)
+                            val bottom = y(day.minimum)
+                            Canvas(Modifier.fillMaxSize()) {
+                                val left = size.width * 0.15f
+                                val right = size.width * 0.85f
+                                if (day.minimum != day.maximum) {
+                                    drawRect(SnowBlue.copy(alpha = 0.3f), Offset(left, top.toPx()), Size(right - left, (bottom - top).toPx()))
+                                }
+                                listOf(top, bottom).distinct().forEach { mark ->
+                                    drawLine(SnowBlue, Offset(left, mark.toPx()), Offset(right, mark.toPx()), 2.dp.toPx())
+                                }
+                            }
+                            // A figure at each end, or one above a box too low for two.
+                            if (day.minimum == day.maximum || bottom - top < 24.dp) {
+                                Text(freshSnowLabel(day), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, modifier = Modifier.centredAt(middle, top - 8.dp))
+                            } else {
+                                Text(number.format(day.maximum), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, modifier = Modifier.centredAt(middle, top - 8.dp))
+                                Text(number.format(day.minimum), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, modifier = Modifier.centredAt(middle, bottom + 8.dp))
+                            }
+                        }
+                    }
+                    Text(dayName, fontSize = 10.sp, color = secondary, maxLines = 1, modifier = Modifier.align(Alignment.CenterHorizontally).height(16.dp))
                 }
             }
         }
@@ -455,14 +505,16 @@ private fun RainSnowChart(weather: MountainWeather, reading: SnowDepthReading, z
                 )
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clearAndSetSemantics {}) {
+        // Wraps between entries, never inside one.
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), itemVerticalAlignment = Alignment.CenterVertically) {
             if (hasBands) {
                 Swatch(SnowBlue.copy(alpha = 0.3f), stringResource(R.string.legend_snow))
                 Swatch(Rain.copy(alpha = 0.35f), stringResource(R.string.legend_rain))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.width(14.dp).height(2.dp).background(FreezingLevel))
-                Text(stringResource(R.string.legend_freezing_level), style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.legend_freezing_level), style = MaterialTheme.typography.labelSmall, modifier = Modifier.clearAndSetSemantics {})
+                FreezingLevelInfoButton()
             }
         }
         WindRows(weather, periods, locale, ::hourLabel)
@@ -471,7 +523,7 @@ private fun RainSnowChart(weather: MountainWeather, reading: SnowDepthReading, z
 
 @Composable
 private fun Swatch(color: Color, title: String) {
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clearAndSetSemantics {}) {
         Box(Modifier.size(12.dp).clip(RoundedCornerShape(2.dp)).background(color))
         Text(title, style = MaterialTheme.typography.labelSmall)
     }

@@ -135,7 +135,7 @@
     <!-- Legend entries. -->
     <string name="legend_snow">Snow</string>
     <string name="legend_rain">Rain</string>
-    <string name="legend_freezing_level" translatable="false">0 °C</string>
+    <string name="legend_freezing_level" translatable="false">0 °C</string>
     <!-- %1$s is an altitude, "1,300 m": the bulletin's snow line. -->
     <string name="snow_from">Snow from %1$s</string>
     <!-- Read by TalkBack: %1$s is an amount, "38 cm". -->
@@ -143,10 +143,34 @@
     <!-- Read by TalkBack, inside a sentence. -->
     <string name="rain_spoken">rain</string>
     <!-- %1$s is an altitude, "1,700 m". -->
-    <string name="freezing_level_at">0 °C at %1$s</string>
+    <string name="freezing_level_at">0 °C at %1$s</string>
+    <!-- The "i" beside the 0 °C legend, and the sheet it opens. -->
+    <string name="about_freezing_level">About the Freezing Level</string>
+    <string name="freezing_level_title">Freezing Level</string>
+    <string name="freezing_level_intro">The freezing level is the altitude where the air is at 0 °C. The air usually cools by about 0.6 °C every 100 m: above the freezing level it freezes, below it is above 0 °C.</string>
+    <string name="freezing_level_rain_or_snow">Above the freezing level, rain and snow fall as snow. Below it, the flakes melt as they fall, but not at once: snow usually reaches 200 to 300 m below the freezing level. That is the rain-snow limit, which the Météo-France bulletin gives separately.</string>
+    <string name="freezing_level_ground">When the freezing level rises above the slopes, the snow softens and turns heavy. Below it, the snow stays cold.</string>
+    <string name="on_these_charts">On These Charts</string>
+    <string name="freezing_level_charts">In the altitude profile, the orange dashed line is the day\'s average freezing level, from Open-Meteo. In the avalanche bulletin, the orange line is Météo-France\'s freezing level every six hours.</string>
+    <string name="temperature_inversions">Temperature Inversions</string>
+    <string name="freezing_level_inversions">On fine winter days, cold air can stay in the valleys: it freezes in the village and it is milder higher up. A single altitude sums up such days poorly.</string>
 
     <!-- Weather models: the snowfall ranges and the models table -->
     <string name="weather_models">Weather Models</string>
+    <!-- The "i" beside the table's title, and the sheet it opens. -->
+    <string name="about_weather_models">About the Weather Models</string>
+    <string name="weather_models_intro">A weather model simulates the atmosphere on a grid of points. The finer the grid, the better it follows the relief, but the more it costs to compute, so the less far ahead it sees. In the mountains the models often disagree, which is why the app compares them.</string>
+    <string name="agreement_explained">Strong when the models give close amounts: at most 5 cm apart, or half the largest amount apart. Weak otherwise. The figures at the top of the screen are Open-Meteo\'s best match, which picks the most suitable model for each place.</string>
+    <!-- Country of a weather model's provider. -->
+    <string name="origin_france">France</string>
+    <string name="origin_germany">Germany</string>
+    <string name="origin_europe">Europe</string>
+    <string name="origin_united_states">United States</string>
+    <string name="provider_ecmwf">European Centre for Medium-Range Weather Forecasts</string>
+    <string name="model_meteofrance_details">Combines AROME, Météo-France\'s regional model (a 1.5 to 2.5 km grid over France and its neighbours, about 2 days ahead), and ARPEGE (11 km over Europe, up to 4 days). The finest grid over the Alps and the Pyrenees. It stops after about 4 days, hence the dash on the last days.</string>
+    <string name="model_icon_details">Combines ICON-D2 (about 2 km, centred on Germany, Switzerland and Austria), ICON-EU (7 km over Europe) and the global ICON (11 km). About 7 days ahead.</string>
+    <string name="model_ecmwf_details">IFS, the model of the European intergovernmental centre, known for forecasts several days ahead. The open data used here has a 0.25° grid (about 25 km): the relief is heavily smoothed, summits and valleys blend. Up to 15 days ahead.</string>
+    <string name="model_gfs_details">The global model of the United States weather service, with a grid of about 13 km over the whole world. Up to 16 days ahead.</string>
     <string name="models_footnote">Each model\'s snowfall in centimetres. The figures above are Open-Meteo\'s best match.</string>
     <string name="models_unavailable">The models could not be loaded.</string>
     <!-- The last row of the models table: how far the models agree, Strong or Weak. -->
@@ -172,8 +196,10 @@
     <!-- %1$s is an altitude, "1,800 m". -->
     <string name="fresh_snow_subtitle">At %1$s, observed then forecast</string>
     <string name="forecast_short">Forecast</string>
-    <!-- Read by TalkBack: %1$s is an amount, "5 cm". -->
-    <string name="amount_forecast">%1$s, forecast</string>
+    <!-- Read by TalkBack after the date: %1$s is an amount, "5 cm" or "between 10 and 20 cm". -->
+    <string name="amount_forecast">forecast: %1$s</string>
+    <string name="amount_observed">observed: %1$s</string>
+    <string name="between_cm">between %1$s and %2$s cm</string>
     <string name="snow_depth_this_week">Snow Depth This Week</string>
     <!-- %1$s is a change, "+85 cm in 6 days". -->
     <string name="at_the_summit_change">At the summit: %1$s</string>
