@@ -109,7 +109,9 @@ class WebcamWidget : GlanceAppWidget() {
 
     private suspend fun entry(context: Context, configuredWebcamID: String?): Entry {
         val defaultResortID = FavoritesStore(File(context.filesDir, "favorites.json")).defaultResortID()
-        val (resort, webcam) = WidgetWebcamResolver.resolve(configuredWebcamID, defaultResortID, availableRepository(context)) ?: return Entry.NoWebcam
+        val (resort, webcam) = WidgetWebcamResolver.resolve(
+            configuredWebcamID, defaultResortID, availableRepository(context), featuredWebcamStore(context).all.value,
+        ) ?: return Entry.NoWebcam
         // The widget may run without the app: its downloads near 16:00 count as afternoon images too.
         afternoonService(context)
         val store = LastSnapshotStore(File(context.cacheDir, "LastSnapshots"))

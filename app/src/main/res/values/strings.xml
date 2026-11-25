@@ -61,6 +61,11 @@
     <!-- Favourites -->
     <string name="add_to_favourites">Add to Favourites</string>
     <string name="remove_from_favourites">Remove from Favourites</string>
+    <!-- Long press on a webcam of the resort screen: puts it first there and in the widget. -->
+    <string name="show_at_the_top">Show at the Top</string>
+    <string name="remove_from_the_top">Remove from the Top</string>
+    <!-- TalkBack, the star beside the webcam put at the top. -->
+    <string name="shown_at_the_top">Shown at the top</string>
     <string name="favourite">Favourite</string>
     <!-- After a favourite in the list: the resort the widgets will show. -->
     <string name="default_label">Default</string>

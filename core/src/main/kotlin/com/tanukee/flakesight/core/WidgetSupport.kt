@@ -9,13 +9,21 @@ import java.time.Instant
 /** Picks the webcam a widget shows. Port of `WidgetWebcamResolver`. */
 object WidgetWebcamResolver {
     /**
-     * In order: the webcam chosen in the widget's settings, the first webcam of
-     * the default resort, then the first webcam of the first catalogue resort.
-     * Unknown IDs (e.g. a webcam removed from the catalogue) fall through.
+     * In order: the webcam chosen in the widget's settings, the default resort's
+     * featured webcam, else its first, then the first webcam of the first
+     * catalogue resort. Unknown IDs (e.g. a webcam removed from the catalogue)
+     * fall through.
      */
-    fun resolve(configuredWebcamID: String?, defaultResortID: String?, repository: ResortRepository): Pair<Resort, Webcam>? {
+    fun resolve(
+        configuredWebcamID: String?,
+        defaultResortID: String?,
+        repository: ResortRepository,
+        featuredWebcamIDs: Map<String, String> = emptyMap(),
+    ): Pair<Resort, Webcam>? {
         configuredWebcamID?.let(repository::webcam)?.let { return it }
-        defaultResortID?.let(repository::resort)?.let { resort -> resort.webcams.firstOrNull()?.let { return resort to it } }
+        defaultResortID?.let(repository::resort)?.let { resort ->
+            resort.webcams.featuring(featuredWebcamIDs[resort.id]).firstOrNull()?.let { return resort to it }
+        }
         return repository.resorts.firstNotNullOfOrNull { resort -> resort.webcams.firstOrNull()?.let { resort to it } }
     }
 }
