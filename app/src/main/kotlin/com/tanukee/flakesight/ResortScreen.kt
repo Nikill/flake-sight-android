@@ -386,6 +386,12 @@ private fun ResortHeader(
             )
         }
         val uriHandler = LocalUriHandler.current
+        resort.liveVideoURL?.let { url ->
+            // Opens YouTube: the stream has no image the app could show.
+            TextButton(onClick = { uriHandler.openUri(url) }, contentPadding = PaddingValues(0.dp)) {
+                Text("▶ " + stringResource(R.string.live_on_youtube))
+            }
+        }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             TextButton(onClick = { uriHandler.openUri(resort.websiteURL) }, contentPadding = PaddingValues(0.dp)) {
                 Text(stringResource(R.string.website))

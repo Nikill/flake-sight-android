@@ -5,6 +5,7 @@ import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -43,6 +44,16 @@ class DisabledContentTests {
         // A resort whose webcams are all withdrawn stays, for its forecast.
         val emptied = repository.removing(DisabledContent(webcamIDs = resort.webcams.map { it.id }.toSet()))
         assertEquals(true, emptied.resort(resort.id)?.webcams?.isEmpty())
+    }
+
+    @Test
+    fun withdrawingAWebcamKeepsTheRestOfTheResort() {
+        val resort = repository.resorts.first { it.liveVideoURL != null && it.webcams.isNotEmpty() }
+        val webcam = resort.webcams.first()
+        val available = assertNotNull(repository.removing(DisabledContent(webcamIDs = setOf(webcam.id))).resort(resort.id))
+        assertEquals(resort.liveVideoURL, available.liveVideoURL)
+        assertEquals(resort.season, available.season)
+        assertEquals(resort.webcams.size - 1, available.webcams.size)
     }
 
     @Test

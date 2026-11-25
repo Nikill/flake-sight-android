@@ -6,8 +6,6 @@ package com.tanukee.flakesight.core
  * the bundled file; the update is checked against them on the device, and a
  * resort that breaks one is ignored rather than shown with a typo. Port of
  * `CatalogRules`.
- *
- * The iOS live video rule waits for `liveVideoURL`, which Android does not read yet.
  */
 object CatalogRules {
     /**
@@ -89,6 +87,12 @@ object CatalogRules {
             val distance = resort.distanceFrom(parking.latitude, parking.longitude)
             check(distance <= 3000) { "car park is ${distance.toInt()} m from the resort centre" }
             check(parking.name?.isNotEmpty() ?: true) { "car park has an empty name" }
+        }
+
+        resort.liveVideoURL?.let { url ->
+            val uri = runCatching { java.net.URI(url) }.getOrNull()
+            check(uri?.scheme == "https" && uri.host == "www.youtube.com") { "live video $url" }
+            check(uri?.path?.let { it.startsWith("/@") && it.endsWith("/live") } == true) { "live video $url" }
         }
 
         check(resort.webcams.map { it.id }.toSet().size == resort.webcams.size) { "duplicate webcam IDs" }

@@ -307,6 +307,8 @@
 
     <!-- About -->
     <string name="about">About</string>
+    <!-- Resort screen: opens the resort's YouTube live stream in YouTube. -->
+    <string name="live_on_youtube">Live on YouTube</string>
     <!-- About: the launcher icon to use. -->
     <string name="app_icon">App Icon</string>
     <string name="app_icon_mountain">Mountain</string>

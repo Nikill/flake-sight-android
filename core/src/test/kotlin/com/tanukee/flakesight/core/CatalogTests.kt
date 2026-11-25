@@ -69,6 +69,7 @@ class CatalogTests {
         assertEquals("les-saisies", resorts.first().id, "The widget falls back to the first resort")
         assertTrue(resorts.first().webcams.isNotEmpty(), "The first resort must have a webcam for the widget")
         assertTrue(resorts.flatMap { it.webcams }.none { it.hasLiveStream }, "No catalogued webcam exposes a public stream yet")
+        assertTrue(resorts.any { it.liveVideoURL != null })
     }
 
     /**
