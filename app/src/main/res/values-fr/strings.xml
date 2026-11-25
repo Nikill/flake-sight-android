@@ -61,6 +61,13 @@
     <string name="ok">OK</string>
 
     <string name="weather">Météo</string>
+    <string name="opens_advanced_weather">Ouvre la météo avancée</string>
+    <string name="forecast_days">Jours</string>
+    <string name="forecast_hours">Heures</string>
+    <string name="hourly_forecast_failed">Les prévisions heure par heure n\'ont pas pu être chargées.</string>
+    <string name="slot_heading">%1$s, de %2$s à %3$s</string>
+    <string name="snow_amount">%1$s de neige</string>
+    <string name="rain_lowercase">pluie</string>
     <string name="weather_data_by_open_meteo">Données météo par Open-Meteo</string>
     <string name="condition_clear">Dégagé</string>
     <string name="condition_partly_cloudy">Partiellement nuageux</string>
