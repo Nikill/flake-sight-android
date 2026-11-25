@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The goggles of 1.2, chosen in About. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_goggles_background" />
+    <foreground>
+        <inset android:drawable="@drawable/ic_launcher_art_goggles" android:inset="19%" />
+    </foreground>
+</adaptive-icon>

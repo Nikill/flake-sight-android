@@ -40,6 +40,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.PackageInfoCompat
 import com.tanukee.flakesight.core.ForecastService
+import com.tanukee.flakesight.core.AppIconChoice
+import android.content.ComponentName
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import com.tanukee.flakesight.core.ResortRepository
 import com.tanukee.flakesight.core.SnowDepthReport
 import java.net.URLEncoder
@@ -69,6 +75,7 @@ fun AboutScreen(repository: ResortRepository, onClose: () -> Unit) {
         "${info.versionName} (${PackageInfoCompat.getLongVersionCode(info)})"
     }
     val credits = webcamCredits(repository)
+    var appIcon by remember { mutableStateOf(currentAppIcon(context)) }
     if (isShowingPolicy) {
         BackHandler { isShowingPolicy = false }
         PrivacyPolicyScreen(credits, onBack = { isShowingPolicy = false })
@@ -90,7 +97,7 @@ fun AboutScreen(repository: ResortRepository, onClose: () -> Unit) {
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState()).padding(vertical = 16.dp)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Image(
-                    painterResource(R.drawable.ic_launcher_art),
+                    painterResource(appIcon.preview),
                     contentDescription = null,
                     modifier = Modifier.size(120.dp).clip(RoundedCornerShape(27.dp)),
                 )
@@ -98,6 +105,20 @@ fun AboutScreen(repository: ResortRepository, onClose: () -> Unit) {
                 Text(stringResource(R.string.version, version), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text(stringResource(R.string.about_tagline), modifier = Modifier.padding(16.dp))
+            SectionTitle(stringResource(R.string.app_icon))
+            for (choice in AppIconChoice.entries) {
+                val isSelected = choice == appIcon
+                ListItem(
+                    modifier = Modifier.selectable(isSelected, role = Role.RadioButton) {
+                        setAppIcon(context, choice)
+                        appIcon = choice
+                    },
+                    leadingContent = {
+                        Image(painterResource(choice.preview), null, Modifier.size(60.dp).clip(RoundedCornerShape(13.5.dp)))
+                    },
+                    trailingContent = { if (isSelected) Icon(painterResource(R.drawable.ic_check), null, tint = MaterialTheme.colorScheme.primary) },
+                ) { Text(stringResource(choice.label)) }
+            }
             ListItem(modifier = Modifier.clickable { isShowingPolicy = true }) { Text(stringResource(R.string.privacy_policy)) }
             ListItem(
                 modifier = Modifier.clickable {
@@ -107,12 +128,7 @@ fun AboutScreen(repository: ResortRepository, onClose: () -> Unit) {
                 supportingContent = { Text(SUPPORT_EMAIL) },
             ) { Text(stringResource(R.string.support)) }
 
-            Text(
-                stringResource(R.string.credits),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 4.dp),
-            )
+            SectionTitle(stringResource(R.string.credits))
             CreditRow(stringResource(R.string.developer), "Nicolas Balligand")
             CreditRow(stringResource(R.string.webcams_credit), credits)
             Footnote(stringResource(R.string.images_property))
@@ -130,6 +146,59 @@ private fun webcamCredits(repository: ResortRepository): String {
     val names = repository.creditedProviderTypes.mapNotNull { it.brandName } +
         if (repository.hasResortWebsiteWebcams) listOf(stringResource(R.string.resort_websites)) else emptyList()
     return ListFormatter.getInstance(LocalConfiguration.current.locales[0]).format(names)
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 4.dp),
+    )
+}
+
+private val AppIconChoice.preview: Int
+    get() = when (this) {
+        AppIconChoice.MOUNTAIN -> R.drawable.ic_launcher_art_mountain
+        AppIconChoice.GOGGLES -> R.drawable.ic_launcher_art_goggles
+        AppIconChoice.CLASSIC -> R.drawable.ic_launcher_art_classic
+    }
+
+/** "Mountain", "Goggles", "Original". */
+private val AppIconChoice.label: Int
+    get() = when (this) {
+        AppIconChoice.MOUNTAIN -> R.string.app_icon_mountain
+        AppIconChoice.GOGGLES -> R.string.app_icon_goggles
+        AppIconChoice.CLASSIC -> R.string.app_icon_original
+    }
+
+private fun aliasComponent(context: Context, choice: AppIconChoice) = ComponentName(context, "${context.packageName}.${choice.alias}")
+
+/** The icon on the Home Screen: the alias the package manager has enabled, as `alternateIconName` on iOS. */
+private fun currentAppIcon(context: Context): AppIconChoice {
+    val pm = context.packageManager
+    val enabled = AppIconChoice.entries.firstOrNull { choice ->
+        when (pm.getComponentEnabledSetting(aliasComponent(context, choice))) {
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
+            PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> choice == AppIconChoice.DEFAULT
+            else -> false
+        }
+    }
+    return AppIconChoice.fromAlternateIconName(enabled?.alternateIconName)
+}
+
+/** Enables the chosen launcher alias and disables the others; the launcher may take a moment to follow. */
+private fun setAppIcon(context: Context, choice: AppIconChoice) {
+    val pm = context.packageManager
+    // The new one first, so there is never no launcher entry.
+    for (other in listOf(choice) + (AppIconChoice.entries - choice)) {
+        pm.setComponentEnabledSetting(
+            aliasComponent(context, other),
+            if (other == choice) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            PackageManager.DONT_KILL_APP,
+        )
+    }
 }
 
 @Composable
