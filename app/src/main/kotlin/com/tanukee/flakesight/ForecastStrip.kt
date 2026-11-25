@@ -39,7 +39,13 @@ import com.tanukee.flakesight.core.WeatherCondition
 import com.tanukee.flakesight.core.forecastLevels
 import android.content.Context
 import androidx.compose.foundation.clickable
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import com.tanukee.flakesight.core.DetailedForecast
+import com.tanukee.flakesight.core.ForecastGranularity
+import com.tanukee.flakesight.core.ForecastSlot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -68,10 +74,12 @@ import java.util.Locale
 internal val forecastService = ForecastService()
 
 /**
- * Five days of weather at the summit and the village: a pictogram, the snow
- * expected and the day's maximum, then the snow fallen over the last seven
- * days and Open-Meteo's credit. Port of `ForecastStrip`, without the hourly
- * sentences, the models' ranges and the advanced weather screen yet.
+ * The resort screen's weather card. Days: five days at the summit and the
+ * village, a pictogram, the snow expected and the day's maximum. Hours: the
+ * coming four-hour slots in a row that scrolls sideways ([SlotStrip]). The
+ * switch is remembered for every resort. Then the folded sentences, and
+ * Open-Meteo's credit under the card. The title with its chevron, and the
+ * days grid, open the advanced weather. Port of `ForecastStrip`.
  *
  * Greyed out while loading so the cards below do not jump; nothing at all
  * when the forecast cannot be fetched: this is a webcam app.
@@ -82,6 +90,9 @@ fun ForecastStrip(resort: Resort, showModelSnowDepth: Boolean = true, onOpenAdva
     var hasFailed by remember(resort.id) { mutableStateOf(false) }
     // Snow soon and the good days ahead; left out when the hourly forecast cannot be fetched.
     var briefing by remember(resort.id) { mutableStateOf<ForecastBriefing?>(null) }
+    // The hours view's four-hour slots come from the same hourly forecast.
+    var detailed by remember(resort.id) { mutableStateOf<DetailedForecast?>(null) }
+    var detailedFailed by remember(resort.id) { mutableStateOf(false) }
     // The models' amounts give each day its range; optional, so either can arrive first.
     var models by remember(resort.id) { mutableStateOf(forecastService.cachedModelSnowfall(resort)) }
     LaunchedEffect(resort.id) {
@@ -95,10 +106,13 @@ fun ForecastStrip(resort: Resort, showModelSnowDepth: Boolean = true, onOpenAdva
         }
         launch {
             try {
-                briefing = ForecastBriefing(forecastService.detailedForecast(resort), Instant.now(), resort.timeZone)
+                val hourly = forecastService.detailedForecast(resort)
+                detailed = hourly
+                briefing = ForecastBriefing(hourly, Instant.now(), resort.timeZone)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
+                detailedFailed = true
             }
         }
         try {
@@ -112,7 +126,11 @@ fun ForecastStrip(resort: Resort, showModelSnowDepth: Boolean = true, onOpenAdva
 
     val shown = forecast?.let { daily -> models?.let(daily::withRanges) ?: daily }
     when {
-        shown != null -> StripContent(shown, briefing, resort, isPlaceholder = false, showModelSnowDepth, onOpenAdvanced)
+        shown != null -> StripContent(
+            shown, briefing, resort, isPlaceholder = false, showModelSnowDepth, onOpenAdvanced,
+            slots = detailed?.let { ForecastSlot.slots(it, Instant.now(), resort.timeZone) }.orEmpty(),
+            slotsFailed = detailedFailed,
+        )
         !hasFailed -> StripContent(placeholder(resort), null, resort, isPlaceholder = true)
     }
 }
@@ -125,25 +143,66 @@ private fun StripContent(
     isPlaceholder: Boolean,
     showModelSnowDepth: Boolean = true,
     onOpenAdvanced: (() -> Unit)? = null,
+    slots: List<ForecastSlot> = emptyList(),
+    slotsFailed: Boolean = false,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val openAdvanced = onOpenAdvanced?.takeIf { !isPlaceholder }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // "Weather", and the way to the advanced weather on the right.
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.weather), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            if (openAdvanced != null) {
-                OutlinedButton(onClick = openAdvanced, contentPadding = PaddingValues(horizontal = 12.dp)) {
-                    Text("⛰️ " + stringResource(R.string.advanced_weather), style = MaterialTheme.typography.labelMedium)
+    // Days or four-hour slots, remembered for every resort under the iOS key.
+    val settings = LocalContext.current.let { remember { it.getSharedPreferences("settings", Context.MODE_PRIVATE) } }
+    var granularity by remember { mutableStateOf(ForecastGranularity.fromRawValue(settings.getString("forecastGranularity", null))) }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    // A card like the ones that open a screen: its title and chevron open the advanced weather.
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+            .padding(12.dp),
+    ) {
+        val opensAdvanced = stringResource(R.string.opens_advanced_weather)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .then(if (openAdvanced != null) Modifier.clickable(onClickLabel = opensAdvanced, onClick = openAdvanced) else Modifier)
+                .padding(vertical = 2.dp),
+        ) {
+            Text("⛅ " + stringResource(R.string.weather), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.clearAndSetSemantics {})
+        }
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            ForecastGranularity.entries.forEachIndexed { index, choice ->
+                SegmentedButton(
+                    selected = granularity == choice,
+                    onClick = {
+                        granularity = choice
+                        settings.edit().putString("forecastGranularity", choice.rawValue).apply()
+                    },
+                    shape = SegmentedButtonDefaults.itemShape(index, ForecastGranularity.entries.size),
+                    icon = {},
+                ) {
+                    Text(stringResource(if (choice == ForecastGranularity.DAYS) R.string.forecast_days else R.string.forecast_hours))
                 }
             }
         }
+        // The greyed-out placeholder is always the days.
+        if (!isPlaceholder && granularity == ForecastGranularity.HOURS) {
+            when {
+                slots.isNotEmpty() -> SlotStrip(slots, resort)
+                slotsFailed -> Text(
+                    stringResource(R.string.hourly_forecast_failed),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                else -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
+            }
+        } else {
         val description = forecast.days.indices.map { daySentence(forecast, it, resort, locale) }.joinToString("\n")
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier
-                // The whole grid opens the advanced weather, like the button.
-                .then(if (openAdvanced != null) Modifier.clickable(onClick = openAdvanced) else Modifier)
+                // The whole grid opens the advanced weather, like the title.
+                .then(if (openAdvanced != null) Modifier.clickable(onClickLabel = opensAdvanced, onClick = openAdvanced) else Modifier)
                 .alpha(if (isPlaceholder) 0.3f else 1f)
                 // TalkBack reads one sentence per day instead of the cells.
                 .clearAndSetSemantics { if (!isPlaceholder) contentDescription = description },
@@ -162,6 +221,7 @@ private fun StripContent(
             }
             forecast.levels.forEach { LevelRow(it, locale) }
         }
+        }
         if (!isPlaceholder) {
             val sentences = listOfNotNull(
                 briefing?.let { upcomingSnowSentence(it, locale) },
@@ -172,6 +232,8 @@ private fun StripContent(
             )
             if (sentences.isNotEmpty()) ForecastDetails(sentences)
         }
+    }
+        // Outside the card, as on iOS.
         val uriHandler = LocalUriHandler.current
         TextButton(onClick = { uriHandler.openUri(ForecastService.ATTRIBUTION_URL) }, contentPadding = PaddingValues(0.dp)) {
             Text(
@@ -183,7 +245,7 @@ private fun StripContent(
     }
 }
 
-private val LEVEL_COLUMN_WIDTH = 76.dp
+private val LEVEL_COLUMN_WIDTH = 52.dp
 
 /**
  * A day's snow as a small bar whose top is sharp when the weather models
@@ -318,12 +380,13 @@ private fun LevelRow(level: LevelForecast, locale: Locale) {
     val hasSnow = level.days.any { it.snowfallCentimetres != null || it.snowfallRange != null }
     val scale = SnowGaugeScale(level.days)
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            levelSymbol(level.level) + (level.level.altitude?.let { " " + metres(it, locale) } ?: ""),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(LEVEL_COLUMN_WIDTH),
-        )
+        // The mark over the altitude, so "3 300 m" fits the narrower column inside the card.
+        Column(Modifier.width(LEVEL_COLUMN_WIDTH)) {
+            Text(levelSymbol(level.level), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            level.level.altitude?.let {
+                Text(metres(it, locale), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            }
+        }
         level.days.forEach { day ->
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                 Text(conditionSymbol(day.condition), fontSize = 22.sp)

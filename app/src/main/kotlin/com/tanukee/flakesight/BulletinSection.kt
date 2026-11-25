@@ -77,6 +77,8 @@ fun BulletinSection(reading: SnowDepthReading, bulletin: SnowDepthReport.Massif,
             Text(stringResource(R.string.avalanche_bulletin), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(issueLine(bulletin, locale), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        // Moved here from the resort screen, which keeps its depths as a tile.
+        SnowyMountainCard(reading)
         bulletin.avalancheRisk?.let { AvalancheRiskCard(it, bulletin.exposedAspects, reading) }
         bulletin.freshSnow?.takeIf { it.days.isNotEmpty() }?.let { FreshSnowChart(it, locale) }
         bulletin.history?.takeIf { it.size > 1 }?.let { DepthHistoryChart(it, reading, locale) }

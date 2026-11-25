@@ -1,5 +1,10 @@
 package com.tanukee.flakesight
 
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.platform.LocalDensity
+
 import android.icu.text.DateFormat
 import android.icu.text.ListFormatter
 import androidx.compose.foundation.Canvas
@@ -55,8 +60,10 @@ internal val SnowBlue = Color(0xFF5B9BD5)
 /**
  * The snow on the ground from the massif's avalanche bulletin, drawn as a
  * mountain whose snow layer is as thick as the bulletin says at each
- * altitude: north slopes on the left, south on the right, from the snow line
- * up. Port of `SnowyMountainCard`. Opens the advanced weather.
+ * altitude: north slopes on the left, south on the right (both named under
+ * the drawing), from the snow line up. Port of `SnowyMountainCard`, shown in
+ * the advanced weather's bulletin section; the resort screen keeps the depths
+ * as a tile ([ResortConditionTiles]).
  */
 @Composable
 fun SnowyMountainCard(reading: SnowDepthReading, onClick: (() -> Unit)? = null) {
@@ -92,6 +99,13 @@ fun SnowyMountainCard(reading: SnowDepthReading, onClick: (() -> Unit)? = null) 
             }
         }
         SnowyMountain(reading, locale, Modifier.fillMaxWidth().height(132.dp))
+        // The drawing's flanks: north slopes on the left, south on the right.
+        Row(Modifier.fillMaxWidth().padding(top = 0.dp)) {
+            val style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.north), style = style, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.weight(1f))
+            Text(stringResource(R.string.south), style = style, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         Text(source, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -192,36 +206,88 @@ private fun SnowyMountain(reading: SnowDepthReading, locale: Locale, modifier: M
 }
 
 /**
- * The avalanche danger level between the village and the summit, under the
- * snow card: the level's colour and number, and the bulletin's words. Port of
- * `AvalancheRiskBadge`.
+ * Two tiles under the weather card, from the massif's avalanche bulletin: the
+ * danger level alone, in the European scale's colour and word, and the snow
+ * on the ground at the summit and in the village with the week's change. Both
+ * open the advanced weather, which has the detail. Square on a phone; on a
+ * wide window a fixed height, so a square does not push the webcams away; in
+ * large text they stack. Port of `ResortConditionTiles`.
  */
 @Composable
-fun AvalancheRiskBadge(reading: SnowDepthReading, onClick: (() -> Unit)? = null) {
-    val level = reading.avalancheLevel ?: return
-    val summary = reading.avalancheSummary()?.let { avalancheSummaryLabel(it) } ?: return
-    val spoken = stringResource(R.string.avalanche_risk_spoken, summary)
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .background(avalancheColor(level).copy(alpha = 0.14f))
-            .padding(10.dp)
-            .clearAndSetSemantics { contentDescription = spoken },
-    ) {
-        // The level's number on its colour, as on the bulletin's pictogram.
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(34.dp).clip(RoundedCornerShape(7.dp)).background(avalancheColor(level)),
-        ) {
-            Text(level.toString(), fontSize = 19.sp, fontWeight = FontWeight.Bold, color = if (level >= 4) Color.White else Color.Black)
+fun ResortConditionTiles(reading: SnowDepthReading, onClick: (() -> Unit)?) {
+    val locale = LocalConfiguration.current.locales[0]
+    val stacks = LocalDensity.current.fontScale >= 1.5f
+    val hint = stringResource(R.string.opens_advanced_weather)
+    BoxWithConstraints {
+        val tile: Modifier = when {
+            stacks -> Modifier.fillMaxWidth()
+            maxWidth >= 600.dp -> Modifier.height(190.dp)
+            else -> Modifier.aspectRatio(1f)
         }
-        Column {
-            Text(stringResource(R.string.avalanche_risk), style = MaterialTheme.typography.titleSmall)
-            Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        @Composable
+        fun Tile(background: Color, spoken: String, modifier: Modifier, content: @Composable ColumnScope.() -> Unit) = Column(
+            modifier = modifier
+                .then(tile)
+                .clip(RoundedCornerShape(16.dp))
+                .then(if (onClick != null) Modifier.clickable(onClickLabel = hint, onClick = onClick) else Modifier)
+                .background(background)
+                .padding(12.dp)
+                .clearAndSetSemantics { contentDescription = spoken },
+        ) { content() }
+
+        @Composable
+        fun Title(text: String) = Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, modifier = Modifier.weight(1f))
+            if (onClick != null) Text("›", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+
+        @Composable
+        fun Tiles(modifier: Modifier) {
+            val level = reading.avalancheLevel
+            if (level != null) {
+                Tile(avalancheColor(level).copy(alpha = 0.16f), stringResource(R.string.avalanche_risk_spoken, avalancheLevelLabel(level)), modifier) {
+                    Title(stringResource(R.string.avalanche_risk))
+                    Spacer(Modifier.weight(1f))
+                    // The level's number on its colour, as on the bulletin's pictogram.
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.align(Alignment.CenterHorizontally).size(64.dp).clip(RoundedCornerShape(12.dp)).background(avalancheColor(level)),
+                    ) {
+                        Text(level.toString(), fontSize = 34.sp, fontWeight = FontWeight.Bold, color = if (level >= 4) Color.White else Color.Black)
+                    }
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        avalancheLevelName(level), style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    )
+                }
+            }
+            val change = changeLabel(reading, locale)
+            Tile(SnowBlue.copy(alpha = 0.12f), listOfNotNull(spokenSnowDepth(reading, locale), change).joinToString(" "), modifier) {
+                Title(stringResource(R.string.snow_on_the_ground))
+                Spacer(Modifier.weight(1f))
+                reading.levels.forEach { level ->
+                    Text(
+                        levelArrow(level.level) + " " + (level.level.altitude?.let { metres(it, locale) } ?: ""),
+                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+                    )
+                    Text(
+                        depthLabel(level.depth, locale),
+                        style = if (level == reading.top) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold, maxLines = 1, modifier = Modifier.padding(bottom = 4.dp),
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                if (change != null) Text(change, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            }
+            // Keeps the snow tile at half the width.
+            if (level == null && !stacks) Spacer(modifier)
+        }
+
+        if (stacks) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { Tiles(Modifier.fillMaxWidth()) }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { Tiles(Modifier.weight(1f)) }
         }
     }
 }
@@ -237,8 +303,12 @@ internal fun avalancheColor(level: Int) = when (level) {
 
 /** "4/5 High". */
 @Composable
-internal fun avalancheLevelLabel(level: Int): String {
-    val name = stringResource(
+internal fun avalancheLevelLabel(level: Int): String = stringResource(R.string.avalanche_level, level, avalancheLevelName(level))
+
+/** "High", the European scale's word for the level. */
+@Composable
+internal fun avalancheLevelName(level: Int): String {
+    return stringResource(
         when (level) {
             1 -> R.string.avalanche_low
             2 -> R.string.avalanche_moderate
@@ -247,7 +317,6 @@ internal fun avalancheLevelLabel(level: Int): String {
             else -> R.string.avalanche_very_high
         },
     )
-    return stringResource(R.string.avalanche_level, level, name)
 }
 
 /** "4/5 High above 2,200 m, 3/5 Considerable below", or "3/5 Considerable". */

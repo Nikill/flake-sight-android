@@ -58,7 +58,9 @@ class ForecastServiceTests {
                         "wind_gusts_10m": [20.2, 61.0, null],
                         "cloud_cover": [10, 100, null],
                         "visibility": [$visibility],
-                        "snow_depth": [0.93, 0.95, null]}}
+                        "snow_depth": [0.93, 0.95, null],
+                        "weather_code": [0, 73, null],
+                        "temperature_2m": [-4.2, -6, null]}}
         """.trimIndent()
 
         val twoHourlyLocations = "[${hourlyLocation()}, ${hourlyLocation(snow = "0, 0, 0")}]"
@@ -106,7 +108,7 @@ class ForecastServiceTests {
     @Test
     fun theDetailedRequestAsksForWhatTheSentencesReadHourByHour() {
         assertEquals(
-            "$BASE?latitude=45.76,45.76&longitude=6.59,6.59&elevation=2700,1650&hourly=snowfall,rain,freezing_level_height,wind_gusts_10m,cloud_cover,visibility,snow_depth&forecast_days=5&timezone=Europe/Paris",
+            "$BASE?latitude=45.76,45.76&longitude=6.59,6.59&elevation=2700,1650&hourly=snowfall,rain,freezing_level_height,wind_gusts_10m,cloud_cover,visibility,snow_depth,weather_code,temperature_2m&forecast_days=5&timezone=Europe/Paris",
             ForecastService.detailedRequestURL(resort(), BASE),
         )
     }
@@ -186,6 +188,8 @@ class ForecastServiceTests {
         assertEquals(listOf(10, 100, null), summit.map { it.cloudCover })
         assertEquals(listOf(24000.0, 800.0, null), summit.map { it.visibility })
         assertEquals(listOf(93.0, 95.0, null), summit.map { it.snowDepth })
+        assertEquals(listOf(WeatherCondition.CLEAR, WeatherCondition.SNOW, null), summit.map { it.condition })
+        assertEquals(listOf(-4.2, -6.0, null), summit.map { it.temperature })
         assertEquals(listOf(0.0, 0.0, 0.0), forecast.levels[1].hours.map { it.snowfall })
     }
 

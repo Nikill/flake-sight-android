@@ -231,7 +231,7 @@ class ForecastService(
         }
 
         /** The `hourly` series asked for, in the order of [Hourly]. */
-        private const val HOURLY_VARIABLES = "snowfall,rain,freezing_level_height,wind_gusts_10m,cloud_cover,visibility,snow_depth"
+        private const val HOURLY_VARIABLES = "snowfall,rain,freezing_level_height,wind_gusts_10m,cloud_cover,visibility,snow_depth,weather_code,temperature_2m"
 
         private fun levelsURL(
             resort: Resort,
@@ -264,7 +264,10 @@ class ForecastService(
             val forecasts = levels.zip(locations) { level, location ->
                 val hourly = location.hourly
                 val count = hourly.time.size
-                val series = listOf(hourly.snowfall, hourly.rain, hourly.freezingLevel, hourly.windGusts, hourly.cloudCover, hourly.visibility, hourly.snowDepth)
+                val series = listOfNotNull(
+                    hourly.snowfall, hourly.rain, hourly.freezingLevel, hourly.windGusts, hourly.cloudCover, hourly.visibility, hourly.snowDepth,
+                    hourly.weatherCode, hourly.temperature,
+                )
                 if (count == 0 || series.any { it.size != count }) throw ForecastError.MalformedResponse()
                 val hours = List(count) { index ->
                     HourlyForecast(
@@ -278,6 +281,8 @@ class ForecastService(
                         visibility = hourly.visibility[index],
                         // Metres from Open-Meteo, whole centimetres here.
                         snowDepth = hourly.snowDepth[index]?.let { DailyForecast.wholeNumber(it * 100).toDouble() },
+                        condition = hourly.weatherCode?.get(index)?.let(WeatherCondition::fromWmoCode),
+                        temperature = hourly.temperature?.get(index),
                     )
                 }
                 LevelHourlyForecast(level, hours)
@@ -399,6 +404,9 @@ class ForecastService(
         val visibility: List<Double?>,
         /** Metres. */
         @SerialName("snow_depth") val snowDepth: List<Double?>,
+        /** Optional so an answer cached before they were asked for still reads. */
+        @SerialName("weather_code") val weatherCode: List<Int?>? = null,
+        @SerialName("temperature_2m") val temperature: List<Double?>? = null,
     )
 
     @Serializable
