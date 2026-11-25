@@ -408,6 +408,15 @@
           "altitude": 1750,
           "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/megeve/rochebrune", "owner": "Megève" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "megeve.combloux-pertuis",
+          "resortID": "megeve",
+          "name": "Combloux - Pertuis",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/combloux/sommet",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/combloux/sommet", "owner": "Megève" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
         }
       ]
     },
@@ -587,6 +596,28 @@
           "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/vallee-du-haut-giffre_sixt-fer-a-cheval/small_vallee-du-haut-giffre_sixt-fer-a-cheval.jpg?config=704",
           "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/vallee-haut-giffre", "owner": "Samoëns" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "samoens.morillon-les-esserts",
+          "resortID": "samoens",
+          "name": "Morillon - Les Esserts",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/grand-massif/grand-massif_morillon-1100",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/grand-massif_morillon-1100/mega_grand-massif_morillon-1100.jpg?config=152",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/grand-massif_morillon-1100/small_grand-massif_morillon-1100.jpg?config=152",
+          "altitude": 1100,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/grand-massif", "owner": "Samoëns" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "samoens.morillon-lac-bleu",
+          "resortID": "samoens",
+          "name": "Morillon - Lac Bleu",
+          "provider": "directImage",
+          "sourcePageURL": "https://www.haut-giffre.fr/jy-suis/webcams/",
+          "snapshotURL": "https://www.trinum.com/ibox/ftpcam/mega_vallee-du-haut-giffre_morillon-lac-bleu.jpg",
+          "attribution": { "providerName": "Trinum", "providerURL": "https://www.trinum.com", "owner": "Samoëns" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
         }
       ]
     },
@@ -705,6 +736,16 @@
           "sourcePageURL": "https://www.skaping.com/avoriaz/station",
           "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/avoriaz/station", "owner": "Avoriaz" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "avoriaz.montriond-ardent",
+          "resortID": "avoriaz",
+          "name": "Montriond - Ardent",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/montriond/ardent",
+          "providerIdentifier": "MontriondTCArdent",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/montriond/ardent", "owner": "Avoriaz" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
         }
       ]
     },
@@ -724,6 +765,7 @@
       "alternateNames": ["Portes du Soleil", "Mont Chéry", "Les Chavannes"],
       "parking": { "latitude": 46.16288, "longitude": 6.67412, "name": "Parking des P'teaux" },
       "season": { "opening": "2026-12-19", "closing": "2027-04-11", "sourceURL": "https://pass.lesgets.com/ouvertures-horaires-hiver/" },
+      "liveVideoURL": "https://www.youtube.com/@lesgetsTV/live",
       "webcams": [
         {
           "id": "les-gets.mont-chery",
@@ -898,6 +940,24 @@
           "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/otvillage/small_otvillage.jpg?config=416",
           "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/la-clusaz", "owner": "La Clusaz" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "la-clusaz.manigod-croix-fry",
+          "resortID": "la-clusaz",
+          "name": "Manigod - Croix Fry",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/manigod/croix-fry",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/manigod/croix-fry", "owner": "La Clusaz" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "la-clusaz.manigod-merdassier",
+          "resortID": "la-clusaz",
+          "name": "Manigod - Merdassier",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/manigod/merdassier",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/manigod/merdassier", "owner": "La Clusaz" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
         }
       ]
     },
@@ -945,6 +1005,17 @@
           "sourcePageURL": "https://www.skaping.com/valthorens/station",
           "providerIdentifier": "val-thorens/station",
           "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/valthorens/station", "owner": "Val Thorens" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "val-thorens.orelle-plan-bouchet",
+          "resortID": "val-thorens",
+          "name": "Orelle - Plan Bouchet",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/orelle/sommet-orelle",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/orelle_sommet-tc-orelle/mega_orelle_sommet-tc-orelle.jpg?config=555",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/orelle_sommet-tc-orelle/small_orelle_sommet-tc-orelle.jpg?config=555",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/orelle", "owner": "Val Thorens" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
         }
       ]
@@ -1003,6 +1074,26 @@
           "sourcePageURL": "https://www.skaping.com/les-menuires/clocher",
           "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/les-menuires/clocher", "owner": "Les Menuires" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "les-menuires.saint-martin-village",
+          "resortID": "les-menuires",
+          "name": "Saint-Martin-de-Belleville - Village",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/saintmartindebelleville/village",
+          "providerIdentifier": "Les_Menuires_Saint_Martin",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/saintmartindebelleville/village", "owner": "Les Menuires" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "les-menuires.saint-martin-les-enverses",
+          "resortID": "les-menuires",
+          "name": "Saint-Martin-de-Belleville - Les Enverses",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/les-menuires/les-enverses",
+          "providerIdentifier": "menuires/les-enverses",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/les-menuires/les-enverses", "owner": "Les Menuires" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
         }
       ]
     },
@@ -1019,7 +1110,7 @@
       "avalancheMassif": 10,
       "websiteURL": "https://www.meribel.net",
       "webcamsPageURL": "https://www.meribel.net/informations-pratiques/webcams/",
-      "alternateNames": ["Meribel", "Méribel-Mottaret", "Méribel Village", "Les Allues", "Les 3 Vallées"],
+      "alternateNames": ["Meribel", "Méribel-Mottaret", "Méribel Village", "Les Allues", "Les 3 Vallées", "Brides-les-Bains"],
       "parking": { "latitude": 45.39233, "longitude": 6.568, "name": "Rhodos" },
       "season": { "opening": "2026-12-05", "closing": "2027-04-18", "sourceURL": "https://www.meribel.net/nos-offres-de-sejour-ski-tout-compris/ouverture-station/" },
       "webcams": [
@@ -1069,6 +1160,17 @@
           "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/meribel_meribel-chaudanne-1440/small_meribel_meribel-chaudanne-1440.jpg?config=517",
           "altitude": 1450,
           "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/meribel", "owner": "Méribel" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "meribel.brides-les-bains-centre-village",
+          "resortID": "meribel",
+          "name": "Brides-les-Bains - Centre village",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/brides-les-bains/centre-village",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/brides-les-bains_centre-village/mega_brides-les-bains_centre-village.jpg?config=164",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/brides-les-bains_centre-village/small_brides-les-bains_centre-village.jpg?config=164",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/brides-les-bains", "owner": "Méribel" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
         }
       ]
@@ -1261,6 +1363,17 @@
           "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/peisey-vallandry_grizzly/mega_peisey-vallandry_grizzly.jpg?config=185",
           "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/peisey-vallandry_grizzly/small_peisey-vallandry_grizzly.jpg?config=185",
           "altitude": 2287,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/lesarcs", "owner": "Les Arcs" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "les-arcs.peisey-vallandry-vanoise-express",
+          "resortID": "les-arcs",
+          "name": "Peisey-Vallandry - Vanoise Express",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/lesarcs/vanoise-express",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/Peisey-Vallandry_vanoise-expresse/mega_Peisey-Vallandry_vanoise-expresse.jpg?config=186",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/Peisey-Vallandry_vanoise-expresse/small_Peisey-Vallandry_vanoise-expresse.jpg?config=186",
           "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/lesarcs", "owner": "Les Arcs" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
         }
@@ -1910,7 +2023,7 @@
       "avalancheMassif": 12,
       "websiteURL": "https://www.alpedhuez.com",
       "webcamsPageURL": "https://www.alpedhuez.com/fr/webcams-alpe-dhuez/",
-      "alternateNames": ["L'Alpe", "Huez", "Alpe d'Huez Grand Domaine", "Vaujany", "Oz-en-Oisans", "Auris-en-Oisans", "Villard-Reculas"],
+      "alternateNames": ["L'Alpe", "Huez", "Alpe d'Huez Grand Domaine", "Vaujany", "Oz-en-Oisans", "Auris-en-Oisans", "Auris", "Villard-Reculas"],
       "parking": { "latitude": 45.09163, "longitude": 6.07305 },
       "season": { "opening": "2026-12-05", "closing": "2027-04-25", "sourceURL": "https://skipass.alpedhuez.com/hiver/en/season-pass/" },
       "webcams": [
@@ -1956,6 +2069,46 @@
           "providerIdentifier": "alpes-d-huez/le-signal",
           "altitude": 2114,
           "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/alpedhuez/lesignal", "owner": "Alpe d'Huez" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "alpe-d-huez.vaujany-montfrais",
+          "resortID": "alpe-d-huez",
+          "name": "Vaujany - Montfrais",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/alpedhuez/vaujany/montfrais",
+          "providerIdentifier": "vaujany/montfrais/panoramique",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/alpedhuez/vaujany/montfrais", "owner": "Alpe d'Huez" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "alpe-d-huez.vaujany-alpette",
+          "resortID": "alpe-d-huez",
+          "name": "Vaujany - Alpette",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/alpedhuez/vaujany/alpette",
+          "providerIdentifier": "vaujany/alpette",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/alpedhuez/vaujany/alpette", "owner": "Alpe d'Huez" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "alpe-d-huez.auris-station",
+          "resortID": "alpe-d-huez",
+          "name": "Auris - Station",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/alpedhuez/auris-station",
+          "providerIdentifier": "alpedhuez/auris",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/alpedhuez/auris-station", "owner": "Alpe d'Huez" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "alpe-d-huez.auris-domaine",
+          "resortID": "alpe-d-huez",
+          "name": "Auris - Domaine",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/alpedhuez/auris",
+          "providerIdentifier": "alpes-d-huez/auris",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/alpedhuez/auris", "owner": "Alpe d'Huez" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
         }
       ]
@@ -2082,7 +2235,7 @@
       "avalancheMassif": 14,
       "websiteURL": "https://www.villarddelans-correnconenvercors.com",
       "webcamsPageURL": "https://www.villarddelans-correnconenvercors.com/live/webcams-2/",
-      "alternateNames": ["Corrençon-en-Vercors", "Vercors", "Côte 2000", "Villard-Corrençon"],
+      "alternateNames": ["Corrençon-en-Vercors", "Corrençon", "Vercors", "Côte 2000", "Villard-Corrençon"],
       "parking": { "latitude": 45.07075, "longitude": 5.55419, "name": "Croix Margot" },
       "season": { "opening": "2026-12-12", "closing": "2027-03-28", "sourceURL": "https://uk.villarddelans-correnconenvercors.com/offers/espace-alpin-villard-de-lans-correncon-villard-de-lans-en-3314307/" },
       "webcams": [
@@ -2126,6 +2279,28 @@
           "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/villard-de-lans-correncon-en-vercors_colline-des-bains/mega_villard-de-lans-correncon-en-vercors_colline-des-bains.jpg?config=838",
           "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/villard-de-lans-correncon-en-vercors_colline-des-bains/small_villard-de-lans-correncon-en-vercors_colline-des-bains.jpg?config=838",
           "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/villard-de-lans", "owner": "Villard-de-Lans" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "villard-de-lans.correncon-site-nordique",
+          "resortID": "villard-de-lans",
+          "name": "Corrençon - Site nordique",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/correncon-en-vercors/plateau",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/correncon_plateau/mega_correncon_plateau.jpg?config=312",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/correncon_plateau/small_correncon_plateau.jpg?config=312",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/correncon-en-vercors", "owner": "Villard-de-Lans" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "villard-de-lans.correncon-stade-de-biathlon",
+          "resortID": "villard-de-lans",
+          "name": "Corrençon - Stade de biathlon",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/correncon-en-vercors/stand-de-tir",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/correncon-en-vercors_stand-de-tir/mega_correncon-en-vercors_stand-de-tir.jpg?config=8564",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/correncon-en-vercors_stand-de-tir/small_correncon-en-vercors_stand-de-tir.jpg?config=8564",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/correncon-en-vercors", "owner": "Villard-de-Lans" },
           "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
         }
       ]
@@ -3558,7 +3733,44 @@
       "webcamsPageURL": "https://lesangles.com/webcam/",
       "alternateNames": ["Angles", "Les Angles Capcir"],
       "parking": { "latitude": 42.57348, "longitude": 2.0712 },
-      "webcams": []
+      "webcams": [
+        {
+          "id": "les-angles.bas-de-station",
+          "resortID": "les-angles",
+          "name": "Bas de station",
+          "provider": "viewsurf",
+          "sourcePageURL": "https://pv.viewsurf.com/2586/Les-Angles-Bas-de-station?i=ODY5MDo",
+          "attribution": { "providerName": "Viewsurf", "providerURL": "https://pv.viewsurf.com/2586/Les-Angles-Bas-de-station?i=ODY5MDo", "owner": "Les Angles" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        },
+        {
+          "id": "les-angles.roc-d-aude",
+          "resortID": "les-angles",
+          "name": "Roc d'Aude",
+          "provider": "viewsurf",
+          "sourcePageURL": "https://pv.viewsurf.com/668/Les-Angles-Roc-d-Aude?i=Mzg2MDo",
+          "attribution": { "providerName": "Viewsurf", "providerURL": "https://pv.viewsurf.com/668/Les-Angles-Roc-d-Aude?i=Mzg2MDo", "owner": "Les Angles" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        },
+        {
+          "id": "les-angles.plateau-de-bigorre",
+          "resortID": "les-angles",
+          "name": "Plateau de Bigorre",
+          "provider": "viewsurf",
+          "sourcePageURL": "https://pv.viewsurf.com/2590/Les-Angles-Plateau-de-Bigorre?i=ODcxMDo",
+          "attribution": { "providerName": "Viewsurf", "providerURL": "https://pv.viewsurf.com/2590/Les-Angles-Plateau-de-Bigorre?i=ODcxMDo", "owner": "Les Angles" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        },
+        {
+          "id": "les-angles.les-jassettes",
+          "resortID": "les-angles",
+          "name": "Les Jassettes",
+          "provider": "viewsurf",
+          "sourcePageURL": "https://pv.viewsurf.com/1734/Les-Angles-Les-Jassettes?i=Njc0NDo",
+          "attribution": { "providerName": "Viewsurf", "providerURL": "https://pv.viewsurf.com/1734/Les-Angles-Les-Jassettes?i=Njc0NDo", "owner": "Les Angles" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        }
+      ]
     },
     {
       "id": "formigueres",
@@ -5888,6 +6100,1198 @@
       "parking": { "latitude": 44.07134, "longitude": 7.22131 },
       "season": { "opening": "2026-12-05", "sourceURL": "https://www.puremontagne.fr/fr/a-voir/la-colmiane-hiver" },
       "webcams": []
+    },
+    {
+      "id": "lus-la-jarjatte",
+      "name": "Lus-la-Jarjatte",
+      "country": "FR",
+      "region": "Drôme",
+      "latitude": 44.6749,
+      "longitude": 5.7578,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1190,
+      "summitAltitude": 1550,
+      "avalancheMassif": 18,
+      "websiteURL": "https://www.lesstationsdeladrome.fr/stations/lus-la-jarjatte/",
+      "webcamsPageURL": "https://www.lesstationsdeladrome.fr/webcam/",
+      "alternateNames": ["Lus-la-Croix-Haute", "Lus la Croix Haute", "La Jarjatte", "Jarjatte"],
+      "season": { "opening": "2026-12-19", "closing": "2027-03-07", "sourceURL": "https://www.lesstationsdeladrome.fr/stations/lus-la-jarjatte/" },
+      "webcams": [
+        {
+          "id": "lus-la-jarjatte.front-de-neige",
+          "resortID": "lus-la-jarjatte",
+          "name": "Front de neige",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/la-drome/lus-la-jarjatte",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/la-drome_lus-la-jarjatte/mega_la-drome_lus-la-jarjatte.jpg?config=650",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/la-drome_lus-la-jarjatte/small_la-drome_lus-la-jarjatte.jpg?config=650",
+          "altitude": 1180,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/la-drome", "owner": "Lus-la-Jarjatte" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "lus-la-jarjatte.piste-du-lievre-blanc",
+          "resortID": "lus-la-jarjatte",
+          "name": "Piste du Lièvre Blanc",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/la-drome/piste-lievre-blanc",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/la-drome_piste-du-lievre-blanc/mega_la-drome_piste-du-lievre-blanc.jpg?config=647",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/la-drome_piste-du-lievre-blanc/small_la-drome_piste-du-lievre-blanc.jpg?config=647",
+          "altitude": 1290,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/la-drome", "owner": "Lus-la-Jarjatte" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "arvieux",
+      "name": "Arvieux",
+      "country": "FR",
+      "region": "Hautes-Alpes",
+      "latitude": 44.7822,
+      "longitude": 6.7357,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1690,
+      "summitAltitude": 2105,
+      "avalancheMassif": 17,
+      "websiteURL": "https://lequeyras.com/addict-de/ski-alpin-village-station-alpes/domaine-arvieux/",
+      "webcamsPageURL": "https://lequeyras.com/webcams/",
+      "alternateNames": ["Arvieux en Queyras", "Arvieux Queyras"],
+      "season": { "opening": "2026-12-18", "closing": "2027-03-21", "sourceURL": "https://lequeyras.com/addict-de/ski-alpin-village-station-alpes/domaine-arvieux/" },
+      "webcams": [
+        {
+          "id": "arvieux.sommet-2105",
+          "resortID": "arvieux",
+          "name": "Sommet 2105",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/queyras/arvieux/2105",
+          "providerIdentifier": "queyras/arvieux/panoramique",
+          "altitude": 2105,
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/queyras/arvieux/2105", "owner": "Arvieux" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "arvieux.domaine-skiable-d-arvieux",
+          "resortID": "arvieux",
+          "name": "Domaine skiable d'Arvieux",
+          "provider": "directImage",
+          "sourcePageURL": "https://lequeyras.com/webcams/",
+          "snapshotURL": "https://live.neos360.com/queyras/fixes/arvieux.jpg",
+          "attribution": { "providerName": "Office de tourisme du Guillestrois et du Queyras", "providerURL": "https://lequeyras.com/webcams/", "owner": "Arvieux" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        }
+      ]
+    },
+    {
+      "id": "aiguilles",
+      "name": "Aiguilles",
+      "country": "FR",
+      "region": "Hautes-Alpes",
+      "latitude": 44.7772,
+      "longitude": 6.8640,
+      "timeZoneIdentifier": "Europe/Paris",
+      "avalancheMassif": 17,
+      "websiteURL": "https://lequeyras.com/addict-de/ski-alpin-village-station-alpes/domaine-aiguilles/",
+      "webcamsPageURL": "https://lequeyras.com/webcams/",
+      "alternateNames": ["Aiguilles-en-Queyras", "Aiguilles en Queyras"],
+      "parking": { "latitude": 44.7781, "longitude": 6.8644 },
+      "webcams": [
+        {
+          "id": "aiguilles.espace-ludique-d-aiguilles",
+          "resortID": "aiguilles",
+          "name": "Espace ludique d'Aiguilles",
+          "provider": "directImage",
+          "sourcePageURL": "https://lequeyras.com/webcams/",
+          "snapshotURL": "https://live.neos360.com/queyras/fixes/aiguilles.jpg",
+          "attribution": { "providerName": "Office de tourisme du Guillestrois et du Queyras", "providerURL": "https://lequeyras.com/webcams/", "owner": "Aiguilles" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        }
+      ]
+    },
+    {
+      "id": "plateau-de-beille",
+      "name": "Plateau de Beille",
+      "country": "FR",
+      "region": "Ariège",
+      "latitude": 42.7248,
+      "longitude": 1.6912,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1800,
+      "summitAltitude": 2000,
+      "avalancheMassif": 70,
+      "websiteURL": "https://www.beille.fr/",
+      "webcamsPageURL": "https://www.beille.fr/webcams.html",
+      "alternateNames": ["Beille", "Les Cabannes"],
+      "parking": { "latitude": 42.7267, "longitude": 1.6909, "name": "Plateau de Beille" },
+      "season": { "opening": "2026-12-05", "closing": "2027-03-29", "sourceURL": "https://www.beille.fr/" },
+      "webcams": [
+        {
+          "id": "plateau-de-beille.panoramique",
+          "resortID": "plateau-de-beille",
+          "name": "Panoramique",
+          "provider": "viewsurf",
+          "sourcePageURL": "https://pv.viewsurf.com/1698/Vallees-d-Ax-Plateau-de-Beille?i=NjU2ODo",
+          "attribution": { "providerName": "Viewsurf", "providerURL": "https://pv.viewsurf.com/1698/Vallees-d-Ax-Plateau-de-Beille?i=NjU2ODo", "owner": "Plateau de Beille" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        },
+        {
+          "id": "plateau-de-beille.teleski",
+          "resortID": "plateau-de-beille",
+          "name": "Téléski",
+          "provider": "viewsurf",
+          "sourcePageURL": "https://pv.viewsurf.com/1698/Vallees-d-Ax-Plateau-de-Beille?i=NjU3ODo",
+          "attribution": { "providerName": "Viewsurf", "providerURL": "https://pv.viewsurf.com/1698/Vallees-d-Ax-Plateau-de-Beille?i=NjU3ODo", "owner": "Plateau de Beille" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        },
+        {
+          "id": "plateau-de-beille.jardin-des-neiges",
+          "resortID": "plateau-de-beille",
+          "name": "Jardin des neiges",
+          "provider": "viewsurf",
+          "sourcePageURL": "https://pv.viewsurf.com/1698/Vallees-d-Ax-Plateau-de-Beille?i=NjU2Njo",
+          "attribution": { "providerName": "Viewsurf", "providerURL": "https://pv.viewsurf.com/1698/Vallees-d-Ax-Plateau-de-Beille?i=NjU2Njo", "owner": "Plateau de Beille" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        },
+        {
+          "id": "plateau-de-beille.pic-de-serrere",
+          "resortID": "plateau-de-beille",
+          "name": "Pic de Serrère",
+          "provider": "viewsurf",
+          "sourcePageURL": "https://pv.viewsurf.com/1698/Vallees-d-Ax-Plateau-de-Beille?i=NjU3Mjo",
+          "attribution": { "providerName": "Viewsurf", "providerURL": "https://pv.viewsurf.com/1698/Vallees-d-Ax-Plateau-de-Beille?i=NjU3Mjo", "owner": "Plateau de Beille" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        }
+      ]
+    },
+    {
+      "id": "les-aillons-margeriaz",
+      "name": "Aillons-Margériaz",
+      "country": "FR",
+      "region": "Savoie",
+      "latitude": 45.6434,
+      "longitude": 6.0614,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1400,
+      "summitAltitude": 1820,
+      "avalancheMassif": 4,
+      "websiteURL": "https://www.chamberymontagnes.com/aillonsmargeriaz/",
+      "webcamsPageURL": "https://www.chamberymontagnes.com/aillonsmargeriaz/webcams/",
+      "alternateNames": ["Les Aillons-Margériaz", "Les Aillons", "Margériaz", "Aillon-le-Jeune"],
+      "season": { "opening": "2026-12-19", "closing": "2027-03-29", "sourceURL": "https://www.chamberymontagnes.com/en/offers/aillons-margeriaz-1400-aillon-le-jeune-en-5784319/" },
+      "webcams": [
+        {
+          "id": "les-aillons-margeriaz.front-de-neige",
+          "resortID": "les-aillons-margeriaz",
+          "name": "Front de neige",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/les-aillons/margeriaz",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/les-aillons/margeriaz", "owner": "Aillons-Margériaz" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "les-aillons-margeriaz.val-d-aillon",
+          "resortID": "les-aillons-margeriaz",
+          "name": "Val d'Aillon",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/aillons-margeriaz/1000",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/aillons-margeriaz/1000", "owner": "Aillons-Margériaz" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "savoie-grand-revard",
+      "name": "Savoie Grand Revard",
+      "country": "FR",
+      "region": "Savoie",
+      "latitude": 45.6455,
+      "longitude": 5.9822,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1350,
+      "summitAltitude": 1562,
+      "avalancheMassif": 4,
+      "websiteURL": "https://www.chamberymontagnes.com/savoiegrandrevard/",
+      "webcamsPageURL": "https://www.chamberymontagnes.com/savoiegrandrevard/webcams/",
+      "alternateNames": ["Grand Revard", "Le Revard", "La Féclaz", "Les Déserts"],
+      "season": { "opening": "2026-12-19", "closing": "2027-03-21", "sourceURL": "https://explore.chamberymontagnes.com/en/activities/savoie-grand-revard-alpine-ski-area" },
+      "webcams": [
+        {
+          "id": "savoie-grand-revard.feclaz-orionde",
+          "resortID": "savoie-grand-revard",
+          "name": "La Féclaz - Télésiège de l'Orionde",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/la-feclaz/orionde",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/la-feclaz/orionde", "owner": "Savoie Grand Revard" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "savoie-grand-revard.le-revard",
+          "resortID": "savoie-grand-revard",
+          "name": "Le Revard",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/grandlac/revard",
+          "providerIdentifier": "grand-lac/revard",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/grandlac/revard", "owner": "Savoie Grand Revard" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "savoie-grand-revard.feclaz-stade-de-biathlon",
+          "resortID": "savoie-grand-revard",
+          "name": "La Féclaz - Stade de biathlon",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/la-feclaz/stade-de-biathlon",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/la-feclaz/stade-de-biathlon", "owner": "Savoie Grand Revard" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "savoie-grand-revard.revard-info-neige",
+          "resortID": "savoie-grand-revard",
+          "name": "Le Revard - Info neige",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/grandlac/revardinfoneige",
+          "providerIdentifier": "grand-lac/revard-info-neige",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/grandlac/revardinfoneige", "owner": "Savoie Grand Revard" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "bernex",
+      "name": "Bernex",
+      "country": "FR",
+      "region": "Haute-Savoie",
+      "latitude": 46.3561,
+      "longitude": 6.6895,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1000,
+      "summitAltitude": 1908,
+      "avalancheMassif": 1,
+      "websiteURL": "https://www.bernexstation.fr/fr/",
+      "webcamsPageURL": "https://www.bernexstation.fr/fr/webcam",
+      "alternateNames": ["Bernex Dent d'Oche", "Dent d'Oche"],
+      "parking": { "latitude": 46.3567, "longitude": 6.6884, "name": "Parking de la Pallud d'en Bas" },
+      "season": { "opening": "2026-12-19", "closing": "2027-03-28", "sourceURL": "https://www.leman-mountains-explore.com/decouvrir/les-stations/station-de-bernex/" },
+      "webcams": [
+        {
+          "id": "bernex.front-de-neige",
+          "resortID": "bernex",
+          "name": "Front de neige",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/bernex/front-de-neige",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/bernex_front-de-neige/mega_bernex_front-de-neige.jpg?config=273",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/bernex_front-de-neige/small_bernex_front-de-neige.jpg?config=273",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/bernex", "owner": "Bernex" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "thollon-les-memises",
+      "name": "Thollon-les-Mémises",
+      "country": "FR",
+      "region": "Haute-Savoie",
+      "latitude": 46.3904,
+      "longitude": 6.7172,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1034,
+      "summitAltitude": 1874,
+      "avalancheMassif": 1,
+      "websiteURL": "https://www.leman-mountains-explore.com/decouvrir/les-stations/station-de-thollon-les-memises/",
+      "webcamsPageURL": "https://www.leman-mountains-explore.com/en-direct-infos-stations/webcams/",
+      "alternateNames": ["Thollon", "Les Mémises"],
+      "parking": { "latitude": 46.3904, "longitude": 6.7141, "name": "Place de la Station" },
+      "season": { "opening": "2026-12-19", "closing": "2027-03-29", "sourceURL": "https://www.leman-mountains-explore.com/decouvrir/les-stations/station-de-thollon-les-memises/" },
+      "webcams": [
+        {
+          "id": "thollon-les-memises.front-de-neige",
+          "resortID": "thollon-les-memises",
+          "name": "Front de neige",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/thollon-les-memises/front-de-neige",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/thollon-les-memises_front-de-neige/mega_thollon-les-memises_front-de-neige.jpg?config=660",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/thollon-les-memises_front-de-neige/small_thollon-les-memises_front-de-neige.jpg?config=660",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/thollon-les-memises", "owner": "Thollon-les-Mémises" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "thollon-les-memises.sommet-parchet",
+          "resortID": "thollon-les-memises",
+          "name": "Sommet du Parchet",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/thollon-les-memises/sommet-parchet",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/thollon-les-memises_sommet-parchet/mega_thollon-les-memises_sommet-parchet.jpg?config=661",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/thollon-les-memises_sommet-parchet/small_thollon-les-memises_sommet-parchet.jpg?config=661",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/thollon-les-memises", "owner": "Thollon-les-Mémises" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "hirmentaz-les-haberes",
+      "name": "Hirmentaz - Les Habères",
+      "country": "FR",
+      "region": "Haute-Savoie",
+      "latitude": 46.2444,
+      "longitude": 6.5069,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1100,
+      "summitAltitude": 1610,
+      "avalancheMassif": 1,
+      "websiteURL": "https://hirmentaz-bellevaux.com/",
+      "webcamsPageURL": "https://hirmentaz-bellevaux.com/webcams/contenu_4085.html",
+      "alternateNames": ["Hirmentaz", "Les Habères", "Bellevaux", "Habère-Poche"],
+      "season": { "opening": "2026-12-19", "closing": "2027-03-21", "sourceURL": "https://hirmentaz-bellevaux.com/" },
+      "webcams": [
+        {
+          "id": "hirmentaz-les-haberes.cur-de-station",
+          "resortID": "hirmentaz-les-haberes",
+          "name": "Cœur de station",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/hirmentaz/coeur-de-station",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/hirmentaz_coeur-de-station/mega_hirmentaz_coeur-de-station.jpg?config=392",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/hirmentaz_coeur-de-station/small_hirmentaz_coeur-de-station.jpg?config=392",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/hirmentaz", "owner": "Hirmentaz - Les Habères" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "hirmentaz-les-haberes.grand-site",
+          "resortID": "hirmentaz-les-haberes",
+          "name": "Grand Site",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/hirmentaz/grand-site",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/hirmentaz_grand-site/mega_hirmentaz_grand-site.jpg?config=393",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/hirmentaz_grand-site/small_hirmentaz_grand-site.jpg?config=393",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/hirmentaz", "owner": "Hirmentaz - Les Habères" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "hirmentaz-les-haberes.haberes-centre-station",
+          "resortID": "hirmentaz-les-haberes",
+          "name": "Les Habères - Centre station",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/les-haberes/centre-station",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/les-haberes_centre-station/mega_les-haberes_centre-station.jpg?config=828",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/les-haberes_centre-station/small_les-haberes_centre-station.jpg?config=828",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/les-haberes", "owner": "Hirmentaz - Les Habères" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "la-chapelle-d-abondance",
+      "name": "La Chapelle-d'Abondance",
+      "country": "FR",
+      "region": "Haute-Savoie",
+      "latitude": 46.2922,
+      "longitude": 6.7811,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 993,
+      "summitAltitude": 1800,
+      "avalancheMassif": 1,
+      "websiteURL": "https://www.leman-mountains-explore.com/decouvrir/les-stations/station-la-chapelle-dabondance/",
+      "webcamsPageURL": "https://www.leman-mountains-explore.com/en-direct-infos-stations/webcams/",
+      "alternateNames": ["La Chapelle d'Abondance", "Chapelle d'Abondance", "Crêt Béni", "Braitaz"],
+      "season": { "opening": "2026-12-19", "closing": "2027-03-21", "sourceURL": "https://www.leman-mountains-explore.com/decouvrir/les-stations/station-la-chapelle-dabondance/" },
+      "webcams": [
+        {
+          "id": "la-chapelle-d-abondance.braitaz",
+          "resortID": "la-chapelle-d-abondance",
+          "name": "Braitaz",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/la-chapelle/braitaz",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/la-chapelle_braitaz/mega_la-chapelle_braitaz.jpg?config=414",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/la-chapelle_braitaz/small_la-chapelle_braitaz.jpg?config=414",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/la-chapelle", "owner": "La Chapelle-d'Abondance" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "la-chapelle-d-abondance.cret-beni",
+          "resortID": "la-chapelle-d-abondance",
+          "name": "Télésiège du Crêt Béni",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/ot-peva/tsd-cret-beni",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/ot-peva_la-chapelle-d-abondance-tsd-cret-beni/mega_ot-peva_la-chapelle-d-abondance-tsd-cret-beni.jpg?config=557",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/ot-peva_la-chapelle-d-abondance-tsd-cret-beni/small_ot-peva_la-chapelle-d-abondance-tsd-cret-beni.jpg?config=557",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/ot-peva", "owner": "La Chapelle-d'Abondance" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "le-semnoz",
+      "name": "Le Semnoz",
+      "country": "FR",
+      "region": "Haute-Savoie",
+      "latitude": 45.8036,
+      "longitude": 6.0976,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1450,
+      "summitAltitude": 1704,
+      "avalancheMassif": 4,
+      "websiteURL": "https://www.semnoz.fr/",
+      "webcamsPageURL": "https://app.webcam-hd.com/semnoz",
+      "alternateNames": ["Semnoz", "Crêt de Châtillon"],
+      "webcams": [
+        {
+          "id": "le-semnoz.arrivee-telemix",
+          "resortID": "le-semnoz",
+          "name": "Arrivée Télémix",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/semnoz/sommet_tmx",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/semnoz_somnoz-sommet-tmx/mega_semnoz_somnoz-sommet-tmx.jpg?config=778",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/semnoz_somnoz-sommet-tmx/small_semnoz_somnoz-sommet-tmx.jpg?config=778",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/semnoz", "owner": "Le Semnoz" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "le-semnoz.versant-bauges",
+          "resortID": "le-semnoz",
+          "name": "Versant Bauges",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/semnoz/sud_bauges",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/semnoz_parking-sud-versant-bauges/mega_semnoz_parking-sud-versant-bauges.jpg?config=767",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/semnoz_parking-sud-versant-bauges/small_semnoz_parking-sud-versant-bauges.jpg?config=767",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/semnoz", "owner": "Le Semnoz" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "plateau-de-solaison",
+      "name": "Plateau de Solaison",
+      "country": "FR",
+      "region": "Haute-Savoie",
+      "latitude": 46.0328,
+      "longitude": 6.4272,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1500,
+      "avalancheMassif": 2,
+      "websiteURL": "https://domainenordiquesolaison.fr/",
+      "webcamsPageURL": "https://domainenordiquesolaison.fr/webcam/",
+      "alternateNames": ["Solaison", "Col de Solaison", "Brizon"],
+      "webcams": [
+        {
+          "id": "plateau-de-solaison.la-fruitiere",
+          "resortID": "plateau-de-solaison",
+          "name": "La Fruitière",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/plateau-de-solaison/la-fruitiere",
+          "providerIdentifier": "solaison/la-fruitiere/panoramique",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/plateau-de-solaison/la-fruitiere", "owner": "Plateau de Solaison" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "passy-plaine-joux",
+      "name": "Passy Plaine-Joux",
+      "country": "FR",
+      "region": "Haute-Savoie",
+      "latitude": 45.9508,
+      "longitude": 6.7395,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1340,
+      "summitAltitude": 1740,
+      "avalancheMassif": 1,
+      "websiteURL": "https://www.passy-mont-blanc.com/decouvrir-passy/passy-plaine-joux/domaine-skiable-passy-plaine-joux/",
+      "webcamsPageURL": "https://www.passy-mont-blanc.com/webcams/",
+      "alternateNames": ["Plaine-Joux", "Passy"],
+      "parking": { "latitude": 45.9508, "longitude": 6.7388, "name": "Parking de Plaine-Joux" },
+      "season": { "opening": "2026-12-19", "closing": "2027-03-28", "sourceURL": "https://www.passy-mont-blanc.com/decouvrir-passy/passy-plaine-joux/domaine-skiable-passy-plaine-joux/" },
+      "webcams": [
+        {
+          "id": "passy-plaine-joux.barmus",
+          "resortID": "passy-plaine-joux",
+          "name": "Barmus",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/passy-plaine-joux/barmus",
+          "providerIdentifier": "passy-plaine-joux/photo",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/passy-plaine-joux/barmus", "owner": "Passy Plaine-Joux" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "la-giettaz",
+      "name": "La Giettaz",
+      "country": "FR",
+      "region": "Savoie",
+      "latitude": 45.8787,
+      "longitude": 6.5260,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1200,
+      "summitAltitude": 1930,
+      "avalancheMassif": 2,
+      "websiteURL": "https://www.valdarly-montblanc.com/villages-stations/la-giettaz-en-aravis/",
+      "webcamsPageURL": "https://www.valdarly-montblanc.com/webcams/",
+      "alternateNames": ["La Giettaz en Aravis", "Giettaz"],
+      "parking": { "latitude": 45.8785, "longitude": 6.5253, "name": "Place du Croisse Baulet" },
+      "season": { "opening": "2026-12-19", "closing": "2027-03-21", "sourceURL": "https://www.valdarly-montblanc.com/villages-stations/nos-domaines-skiables/les-portes-du-mont-blanc/" },
+      "webcams": [
+        {
+          "id": "la-giettaz.tete-du-torraz",
+          "resortID": "la-giettaz",
+          "name": "Tête du Torraz",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/la-giettaz/sommet",
+          "providerIdentifier": "les-portes-du-mont-blanc/torraz/la-giettaz",
+          "altitude": 1930,
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/la-giettaz/sommet", "owner": "La Giettaz" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "saint-pierre-de-chartreuse",
+      "name": "Saint-Pierre-de-Chartreuse",
+      "country": "FR",
+      "region": "Isère",
+      "latitude": 45.3688,
+      "longitude": 5.8378,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1080,
+      "avalancheMassif": 7,
+      "websiteURL": "https://ski-planolet.fr/",
+      "webcamsPageURL": "https://www.chartreuse-tourisme.com/toutes-les-webcams/",
+      "alternateNames": ["Le Planolet", "Planolet", "Les Essarts", "Saint-Pierre-d'Entremont"],
+      "season": { "opening": "2026-12-19", "closing": "2027-03-07", "sourceURL": "https://www.chartreuse-tourisme.com/en/offers/planolet-saint-pierre-dentremont-en-2715434/" },
+      "webcams": [
+        {
+          "id": "saint-pierre-de-chartreuse.le-planolet",
+          "resortID": "saint-pierre-de-chartreuse",
+          "name": "Le Planolet",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/st-pierre-de-chartreuse/le-planolet",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/st-pierre-de-chartreuse_le-planolet/mega_st-pierre-de-chartreuse_le-planolet.jpg?config=641",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/st-pierre-de-chartreuse_le-planolet/small_st-pierre-de-chartreuse_le-planolet.jpg?config=641",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/st-pierre-de-chartreuse", "owner": "Saint-Pierre-de-Chartreuse" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "saint-pierre-de-chartreuse.cucheron",
+          "resortID": "saint-pierre-de-chartreuse",
+          "name": "Col du Cucheron",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/st-pierre-de-chartreuse/cucheron",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/st-pierre-de-chartreuse_cucheron/mega_st-pierre-de-chartreuse_cucheron.jpg?config=8770",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/st-pierre-de-chartreuse_cucheron/small_st-pierre-de-chartreuse_cucheron.jpg?config=8770",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/st-pierre-de-chartreuse", "owner": "Saint-Pierre-de-Chartreuse" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "col-de-marcieu",
+      "name": "Col de Marcieu",
+      "country": "FR",
+      "region": "Isère",
+      "latitude": 45.3562,
+      "longitude": 5.9190,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1066,
+      "avalancheMassif": 7,
+      "websiteURL": "https://col-marcieu.com/",
+      "webcamsPageURL": "https://col-marcieu.com/webcam/",
+      "alternateNames": ["Marcieu", "Saint-Bernard-du-Touvet", "Plateau des Petites Roches"],
+      "webcams": [
+        {
+          "id": "col-de-marcieu.front-de-neige",
+          "resortID": "col-de-marcieu",
+          "name": "Front de neige",
+          "provider": "directImage",
+          "sourcePageURL": "https://col-marcieu.com/webcam/",
+          "snapshotURL": "https://webcams.les7laux.com/col-de-marcieu/webcam1.jpg",
+          "attribution": { "providerName": "Col de Marcieu", "providerURL": "https://col-marcieu.com/webcam/", "owner": "Col de Marcieu" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot"]
+        }
+      ]
+    },
+    {
+      "id": "metabief",
+      "name": "Métabief",
+      "country": "FR",
+      "region": "Doubs",
+      "latitude": 46.7676,
+      "longitude": 6.3566,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1000,
+      "summitAltitude": 1463,
+      "websiteURL": "https://www.station-metabief.com/fr",
+      "webcamsPageURL": "https://www.station-metabief.com/fr/webcams",
+      "alternateNames": ["Métabief Mont d'Or", "Mont d'Or", "Super Longevilles", "Les Longevilles"],
+      "parking": { "latitude": 46.7693, "longitude": 6.3575, "name": "Place Xavier Authier (P1)" },
+      "webcams": [
+        {
+          "id": "metabief.front-de-neige",
+          "resortID": "metabief",
+          "name": "Front de neige",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/orex_metabief/front-de-neige",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/orex_metabief_front-de-neige/mega_orex_metabief_front-de-neige.jpg?config=521",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/orex_metabief_front-de-neige/small_orex_metabief_front-de-neige.jpg?config=521",
+          "altitude": 1015,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/orex_metabief", "owner": "Métabief" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "metabief.sommet-morond",
+          "resortID": "metabief",
+          "name": "Sommet du Morond",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/orex_metabief/morond",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/monrond/mega_monrond.jpg?config=520",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/monrond/small_monrond.jpg?config=520",
+          "altitude": 1420,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/orex_metabief", "owner": "Métabief" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "metabief.super-longevilles",
+          "resortID": "metabief",
+          "name": "Super Longevilles",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/orex_metabief/super_longevilles",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/orex_metabief_super-longeville/mega_orex_metabief_super-longeville.jpg?config=846",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/orex_metabief_super-longeville/small_orex_metabief_super-longeville.jpg?config=846",
+          "altitude": 1200,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/orex_metabief", "owner": "Métabief" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "metabief.usine-a-neige",
+          "resortID": "metabief",
+          "name": "Usine à neige",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/orex_metabief/usine_neige",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/orex_metabief_piquemiette/mega_orex_metabief_piquemiette.jpg?config=752",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/orex_metabief_piquemiette/small_orex_metabief_piquemiette.jpg?config=752",
+          "altitude": 1350,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/orex_metabief", "owner": "Métabief" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "les-rousses",
+      "name": "Les Rousses",
+      "country": "FR",
+      "region": "Jura",
+      "latitude": 46.4553,
+      "longitude": 6.0540,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1120,
+      "summitAltitude": 1677,
+      "websiteURL": "https://www.lesrousses.com/",
+      "webcamsPageURL": "https://www.lesrousses.com/sejourner/informations-pratique/infos-pistes-station-des-rousses/webcams-de-la-station-des-rousses/",
+      "alternateNames": ["Station des Rousses", "Jura sur Léman", "Prémanon", "Lamoura", "Bois-d'Amont", "Les Tuffes"],
+      "season": { "opening": "2026-12-05", "closing": "2027-03-21", "sourceURL": "https://www.lesrousses.com/sejourner/informations-pratique/infos-pistes-station-des-rousses/infos-pistes-ski-alpin/" },
+      "webcams": [
+        {
+          "id": "les-rousses.sommet-des-tuffes",
+          "resortID": "les-rousses",
+          "name": "Sommet des Tuffes",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/les-rousses/les-tuffes",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/les_rousses_les-tuffes/mega_les_rousses_les-tuffes.jpg?config=482",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/les_rousses_les-tuffes/small_les_rousses_les-tuffes.jpg?config=482",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/les-rousses", "owner": "Les Rousses" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "les-rousses.la-serra",
+          "resortID": "les-rousses",
+          "name": "La Serra",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/les-rousses/la-serra",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/les-rousses_la-serra/mega_les-rousses_la-serra.jpg?config=481",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/les-rousses_la-serra/small_les-rousses_la-serra.jpg?config=481",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/les-rousses", "owner": "Les Rousses" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "les-rousses.les-jouvencelles",
+          "resortID": "les-rousses",
+          "name": "Les Jouvencelles",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/les-rousses/jouvencelles-ts",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/les-rousses_jouvencelles-ts/mega_les-rousses_jouvencelles-ts.jpg?config=485",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/les-rousses_jouvencelles-ts/small_les-rousses_jouvencelles-ts.jpg?config=485",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/les-rousses", "owner": "Les Rousses" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "les-rousses.darbella",
+          "resortID": "les-rousses",
+          "name": "Darbella, domaine nordique",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/les-rousses/darbella",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lesroussesdarbella/mega_lesroussesdarbella.jpg?config=479",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lesroussesdarbella/small_lesroussesdarbella.jpg?config=479",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/les-rousses", "owner": "Les Rousses" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "la-bresse-hohneck",
+      "name": "La Bresse-Hohneck",
+      "country": "FR",
+      "region": "Vosges",
+      "latitude": 48.0376,
+      "longitude": 6.9726,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 900,
+      "summitAltitude": 1350,
+      "websiteURL": "https://labresse.labellemontagne.com/fr/",
+      "webcamsPageURL": "https://labresse.labellemontagne.com/fr/hiver/infos-station/webcams/",
+      "alternateNames": ["La Bresse", "Hohneck", "Vologne", "Belle Hutte"],
+      "season": { "opening": "2026-12-19", "closing": "2027-03-21", "sourceURL": "https://labresse.labellemontagne.com/fr/hiver/ski-snowboard/domaine-skiable/" },
+      "webcams": [
+        {
+          "id": "la-bresse-hohneck.front-de-neige",
+          "resortID": "la-bresse-hohneck",
+          "name": "Front de neige",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/labresse/front-de-neige",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/labresse/front-de-neige", "owner": "La Bresse-Hohneck" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "la-bresse-hohneck.hohneck",
+          "resortID": "la-bresse-hohneck",
+          "name": "Hohneck",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/la-bresse/hohneck",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/la-bresse/hohneck", "owner": "La Bresse-Hohneck" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "la-bresse-hohneck.sommet-petit-artimont",
+          "resortID": "la-bresse-hohneck",
+          "name": "Sommet du Petit Artimont",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/la-bresse/sommet-petit-artimont",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/la-bresse/sommet-petit-artimont", "owner": "La Bresse-Hohneck" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "le-markstein",
+      "name": "Le Markstein",
+      "country": "FR",
+      "region": "Haut-Rhin",
+      "latitude": 47.9262,
+      "longitude": 7.0340,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1040,
+      "summitAltitude": 1265,
+      "websiteURL": "https://www.lemarkstein.net/fr/",
+      "webcamsPageURL": "https://www.lemarkstein.net/fr/webcams/",
+      "alternateNames": ["Markstein", "Markstein Grand Ballon"],
+      "liveVideoURL": "https://www.youtube.com/@marksteingrandballon/live",
+      "webcams": [
+        {
+          "id": "le-markstein.grenouillere",
+          "resortID": "le-markstein",
+          "name": "La Grenouillère",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/markstein/grenouillere",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/markstein_front-de-neige/mega_markstein_front-de-neige.jpg?config=844",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/markstein_front-de-neige/small_markstein_front-de-neige.jpg?config=844",
+          "altitude": 1183,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/markstein", "owner": "Le Markstein" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "le-markstein.la-federale",
+          "resortID": "le-markstein",
+          "name": "La Fédérale",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/markstein/la-federale",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/markstein_la-federale/mega_markstein_la-federale.jpg?config=503",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/markstein_la-federale/small_markstein_la-federale.jpg?config=503",
+          "altitude": 1090,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/markstein", "owner": "Le Markstein" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "le-markstein.luge",
+          "resortID": "le-markstein",
+          "name": "Luge sur rail",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/markstein/luge",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/markstein_luge/mega_markstein_luge.jpg?config=504",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/markstein_luge/small_markstein_luge.jpg?config=504",
+          "altitude": 1190,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/markstein", "owner": "Le Markstein" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "ballon-d-alsace",
+      "name": "Ballon d'Alsace",
+      "country": "FR",
+      "region": "Haut-Rhin",
+      "latitude": 47.8010,
+      "longitude": 6.8495,
+      "timeZoneIdentifier": "Europe/Paris",
+      "websiteURL": "https://www.ballondalsace.fr/",
+      "webcamsPageURL": "https://www.ballondalsace.fr/webcams/",
+      "alternateNames": ["Gentiane", "Langenberg", "Sewen", "Lepuix"],
+      "parking": { "latitude": 47.8011, "longitude": 6.8481, "name": "Parking de la Gentiane" },
+      "season": { "opening": "2026-12-19", "closing": "2027-03-07", "sourceURL": "https://www.ballondalsace.fr/" },
+      "webcams": [
+        {
+          "id": "ballon-d-alsace.sommet-du-teleski",
+          "resortID": "ballon-d-alsace",
+          "name": "Sommet du téléski",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/ballon-d-alsace/sommet-teleski",
+          "providerIdentifier": "smiba-ballon-d-alsace/sommet-teleski",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/ballon-d-alsace/sommet-teleski", "owner": "Ballon d'Alsace" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "ballon-d-alsace.les-demineurs",
+          "resortID": "ballon-d-alsace",
+          "name": "Les Démineurs",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/ballon-d-alsace/les-demineurs",
+          "providerIdentifier": "ballon-d-alsace/les-demineurs/panoramique",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/ballon-d-alsace/les-demineurs", "owner": "Ballon d'Alsace" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "le-lac-blanc",
+      "name": "Lac Blanc",
+      "country": "FR",
+      "region": "Haut-Rhin",
+      "latitude": 48.1369,
+      "longitude": 7.0840,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 900,
+      "summitAltitude": 1200,
+      "websiteURL": "https://www.lac-blanc.com/",
+      "webcamsPageURL": "https://www.lac-blanc.com/hiver/ski-et-snowboard/webcams-pistes-ski-vosges/",
+      "alternateNames": ["Le Lac Blanc", "Station du Lac Blanc", "Col du Calvaire", "Le Bonhomme"],
+      "webcams": [
+        {
+          "id": "le-lac-blanc.batiment-d-accueil",
+          "resortID": "le-lac-blanc",
+          "name": "Bâtiment d'accueil",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/lac-blanc/lac-blanc-1200",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lac-blanc_espace-debutant/mega_lac-blanc_espace-debutant.jpg?config=432",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lac-blanc_espace-debutant/small_lac-blanc_espace-debutant.jpg?config=432",
+          "altitude": 1200,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/lac-blanc", "owner": "Lac Blanc" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "le-champ-du-feu",
+      "name": "Le Champ du Feu",
+      "country": "FR",
+      "region": "Bas-Rhin",
+      "latitude": 48.4069,
+      "longitude": 7.2589,
+      "timeZoneIdentifier": "Europe/Paris",
+      "websiteURL": "https://destination.montchampdufeu.com/fr/",
+      "webcamsPageURL": "https://www.lechampdufeu.com/webcams/",
+      "alternateNames": ["Champ du Feu", "Mont Champ du Feu", "Belmont"],
+      "parking": { "latitude": 48.4074, "longitude": 7.2563, "name": "Parking du Chalet" },
+      "webcams": [
+        {
+          "id": "le-champ-du-feu.pistes",
+          "resortID": "le-champ-du-feu",
+          "name": "Pistes",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/le-champ-du-feu/pistes",
+          "providerIdentifier": "le-champ-du-feu/vue-piste",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/le-champ-du-feu/pistes", "owner": "Le Champ du Feu" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "le-champ-du-feu.chalet",
+          "resortID": "le-champ-du-feu",
+          "name": "Chalet",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/le-champ-du-feu/chalet",
+          "providerIdentifier": "le-champ-du-feu/vue-chalet",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/le-champ-du-feu/chalet", "owner": "Le Champ du Feu" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "gerardmer",
+      "name": "Gérardmer",
+      "country": "FR",
+      "region": "Vosges",
+      "latitude": 48.0588,
+      "longitude": 6.8922,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 870,
+      "summitAltitude": 1140,
+      "websiteURL": "https://www.gerardmer-ski.com/fr/",
+      "webcamsPageURL": "https://www.gerardmer-ski.com/fr/webcams",
+      "alternateNames": ["La Mauselaine", "Gérardmer Ski", "Grouvelin"],
+      "parking": { "latitude": 48.0592, "longitude": 6.8910, "name": "Parking de la Mauselaine" },
+      "season": { "opening": "2026-12-19", "sourceURL": "https://www.gerardmer-ski.com/fr/" },
+      "webcams": [
+        {
+          "id": "gerardmer.front-de-neige",
+          "resortID": "gerardmer",
+          "name": "Front de neige",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/gerardmer/front-de-neige",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/gerardmer_front-de-neige/mega_gerardmer_front-de-neige.jpg?config=370",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/gerardmer_front-de-neige/small_gerardmer_front-de-neige.jpg?config=370",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/gerardmer", "owner": "Gérardmer" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "gerardmer.tetras",
+          "resortID": "gerardmer",
+          "name": "Tétras",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/gerardmer/tetras",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/gerardmer_tetras/mega_gerardmer_tetras.jpg?config=368",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/gerardmer_tetras/small_gerardmer_tetras.jpg?config=368",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/gerardmer", "owner": "Gérardmer" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "gerardmer.xettes",
+          "resortID": "gerardmer",
+          "name": "Les Xettes",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/gerardmer/xettes",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/gerardmer_xettes/mega_gerardmer_xettes.jpg?config=369",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/gerardmer_xettes/small_gerardmer_xettes.jpg?config=369",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/gerardmer", "owner": "Gérardmer" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "la-schlucht",
+      "name": "La Schlucht",
+      "country": "FR",
+      "region": "Vosges",
+      "latitude": 48.0625,
+      "longitude": 7.0205,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1139,
+      "websiteURL": "https://laschlucht.labellemontagne.com/fr/",
+      "webcamsPageURL": "https://laschlucht.labellemontagne.com/fr/hiver/infos-station/webcams/",
+      "alternateNames": ["Schlucht", "Col de la Schlucht", "Le Valtin"],
+      "parking": { "latitude": 48.0647, "longitude": 7.0222, "name": "Col de la Schlucht" },
+      "season": { "opening": "2026-12-19", "closing": "2027-03-09", "sourceURL": "https://laschlucht.labellemontagne.com/fr/hiver/ski-snowboard/domaine-skiable/" },
+      "webcams": [
+        {
+          "id": "la-schlucht.front-de-neige",
+          "resortID": "la-schlucht",
+          "name": "Front de neige",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/la-schlucht/front-de-neige",
+          "providerIdentifier": "la-schlucht/panoramique",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/la-schlucht/front-de-neige", "owner": "La Schlucht" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "super-besse",
+      "name": "Super-Besse",
+      "country": "FR",
+      "region": "Puy-de-Dôme",
+      "latitude": 45.5088,
+      "longitude": 2.8528,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1350,
+      "summitAltitude": 1850,
+      "websiteURL": "https://superbesse.com/",
+      "webcamsPageURL": "https://www.sancy.com/decouvrir/toutes-les-communes/super-besse/webcams/",
+      "alternateNames": ["Superbesse", "Besse-et-Saint-Anastaise", "Lac des Hermines"],
+      "parking": { "latitude": 45.5107, "longitude": 2.8558, "name": "Parking P1" },
+      "season": { "opening": "2026-12-19", "closing": "2027-03-21", "sourceURL": "https://www.sancy.com/decouvrir/toutes-les-communes/super-besse/superbesse-station-de-ski-et-sports-hiver/" },
+      "webcams": [
+        {
+          "id": "super-besse.sommet-station",
+          "resortID": "super-besse",
+          "name": "Sommet de la station",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/sancy/superbesse-haut",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_superbesse-haut/mega_sancy_superbesse-haut.jpg?config=8600",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_superbesse-haut/small_sancy_superbesse-haut.jpg?config=8600",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/sancy", "owner": "Super-Besse" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "super-besse.bas-station",
+          "resortID": "super-besse",
+          "name": "Bas de la station",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/sancy/superbesse-ecole",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_superbesse-ecole/mega_sancy_superbesse-ecole.jpg?config=8599",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_superbesse-ecole/small_sancy_superbesse-ecole.jpg?config=8599",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/sancy", "owner": "Super-Besse" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "le-mont-dore",
+      "name": "Le Mont-Dore",
+      "country": "FR",
+      "region": "Puy-de-Dôme",
+      "latitude": 45.5416,
+      "longitude": 2.8143,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1200,
+      "summitAltitude": 1850,
+      "websiteURL": "https://lemontdore.fr/",
+      "webcamsPageURL": "https://www.sancy.com/decouvrir/toutes-les-communes/le-mont-dore/webcams/",
+      "alternateNames": ["Mont-Dore", "Puy de Sancy"],
+      "season": { "opening": "2026-12-19", "closing": "2027-03-21", "sourceURL": "https://www.sancy.com/decouvrir/toutes-les-communes/le-mont-dore/mont-dore-station-ski-et-sports-hiver/" },
+      "webcams": [
+        {
+          "id": "le-mont-dore.sommet-station",
+          "resortID": "le-mont-dore",
+          "name": "Sommet de la station",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/sancy/mont-dore-sommet-station",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_sommet-station/mega_sancy_sommet-station.jpg?config=8579",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_sommet-station/small_sancy_sommet-station.jpg?config=8579",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/sancy", "owner": "Le Mont-Dore" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "le-mont-dore.bas-station",
+          "resortID": "le-mont-dore",
+          "name": "Bas de la station",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/sancy/mont-dore-bas-station",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_bas-station/mega_sancy_bas-station.jpg?config=8578",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_bas-station/small_sancy_bas-station.jpg?config=8578",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/sancy", "owner": "Le Mont-Dore" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "chastreix-sancy",
+      "name": "Chastreix-Sancy",
+      "country": "FR",
+      "region": "Puy-de-Dôme",
+      "latitude": 45.5338,
+      "longitude": 2.7755,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1350,
+      "summitAltitude": 1730,
+      "websiteURL": "https://www.chastreix.fr/la-station-chastreix-sancy/",
+      "webcamsPageURL": "https://www.sancy.com/decouvrir/toutes-les-communes/chastreix/webcam/",
+      "alternateNames": ["Chastreix"],
+      "season": { "opening": "2026-12-19", "closing": "2027-03-21", "sourceURL": "https://www.sancy.com/fr/fiche/domaine-skiable/station-de-ski-de-chastreix-sancy-chastreix_TFO4794024/" },
+      "webcams": [
+        {
+          "id": "chastreix-sancy.station",
+          "resortID": "chastreix-sancy",
+          "name": "Station",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/sancy/chastreix-sancy-station",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_chastreix-sancy-station/mega_sancy_chastreix-sancy-station.jpg?config=8601",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/sancy_chastreix-sancy-station/small_sancy_chastreix-sancy-station.jpg?config=8601",
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/sancy", "owner": "Chastreix-Sancy" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "le-lioran",
+      "name": "Le Lioran",
+      "country": "FR",
+      "region": "Cantal",
+      "latitude": 45.0827,
+      "longitude": 2.7504,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1160,
+      "summitAltitude": 1855,
+      "websiteURL": "https://www.lelioran.com/",
+      "webcamsPageURL": "https://www.lelioran.com/hiver/webcam/",
+      "alternateNames": ["Lioran", "Super Lioran", "Laveissière", "Plomb du Cantal"],
+      "parking": { "latitude": 45.0834, "longitude": 2.7488, "name": "P1" },
+      "season": { "opening": "2026-12-19", "closing": "2027-03-21", "sourceURL": "https://www.lelioran.com/" },
+      "webcams": [
+        {
+          "id": "le-lioran.centre-station",
+          "resortID": "le-lioran",
+          "name": "Centre station",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/lioran/lioran_station",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lioran_station/mega_lioran_station.jpg?config=445",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lioran_station/small_lioran_station.jpg?config=445",
+          "altitude": 1250,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/lioran", "owner": "Le Lioran" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "le-lioran.sommet-combe",
+          "resortID": "le-lioran",
+          "name": "Sommet de la Combe",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/lioran/lioran_combe",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lioran_combe/mega_lioran_combe.jpg?config=446",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lioran_combe/small_lioran_combe.jpg?config=446",
+          "altitude": 1760,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/lioran", "owner": "Le Lioran" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        },
+        {
+          "id": "le-lioran.font-d-alagnon",
+          "resortID": "le-lioran",
+          "name": "Font d'Alagnon",
+          "provider": "webcamHD",
+          "sourcePageURL": "https://app.webcam-hd.com/lioran/lioran_font-d-alagnon",
+          "snapshotURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lioran_font-d-alagnon/mega_lioran_font-d-alagnon.jpg?config=443",
+          "thumbnailURL": "https://app.webcam-hd.com/api/webcam-image/panorama/lioran_font-d-alagnon/small_lioran_font-d-alagnon.jpg?config=443",
+          "altitude": 1195,
+          "attribution": { "providerName": "Webcam HD", "providerURL": "https://app.webcam-hd.com/lioran", "owner": "Le Lioran" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
+    },
+    {
+      "id": "les-estables",
+      "name": "Les Estables",
+      "country": "FR",
+      "region": "Haute-Loire",
+      "latitude": 44.9058,
+      "longitude": 4.1566,
+      "timeZoneIdentifier": "Europe/Paris",
+      "villageAltitude": 1350,
+      "summitAltitude": 1690,
+      "websiteURL": "https://www.mezencloiremeygal.fr/decouvrir-et-se-divertir/station-de-ski-du-mezenc/",
+      "webcamsPageURL": "https://www.mezencloiremeygal.fr/decouvrir-et-se-divertir/station-de-ski-du-mezenc/webcams-de-la-station/",
+      "alternateNames": ["Estables", "Station du Mézenc", "Mézenc", "Mont d'Alambre"],
+      "webcams": [
+        {
+          "id": "les-estables.domaine-nordique",
+          "resortID": "les-estables",
+          "name": "Domaine nordique",
+          "provider": "skaping",
+          "sourcePageURL": "https://www.skaping.com/les-estables/ski-nordique",
+          "providerIdentifier": "les-estables/ski-alpin",
+          "attribution": { "providerName": "Skaping", "providerURL": "https://www.skaping.com/les-estables/ski-nordique", "owner": "Les Estables" },
+          "capabilities": ["staticSnapshot", "periodicallyUpdatedSnapshot", "panorama"]
+        }
+      ]
     }
   ]
 }

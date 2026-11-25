@@ -6,12 +6,12 @@ The iOS app ([Nikill/ski-patrol](https://github.com/Nikill/ski-patrol)) is the r
 
 | Field | Value |
 |---|---|
-| iOS commit last synced | `e5618e699c65f1f6391f2f711201acb04f29c59d` (main, "Merge pull request #69 from Nikill/dev") |
-| Synced on | 2026-11-24 |
+| iOS commit last synced | `b3226ae` (dev, "Merge pull request #83 from Nikill/feature/catalog-updates"), version 1.4 |
+| Synced on | 2026-11-25 |
 
 Each sync reads the iOS commits after this one, ports what applies to Android, then updates this table in the same pull request.
 
-Ported ahead of `main`: catalogue updates (decision D20, `dev` commits `307e88d` and `3aaefca`), at the developer's request. The bundled catalogue is still the one of the commit above.
+This sync followed `dev` ahead of `main`, at the developer's request: 1.3 (merged into `main`) and 1.4 (not yet). The next sync reads `dev` again, or `main` once it has caught up.
 
 ## Rules
 
@@ -30,14 +30,15 @@ Ported ahead of `main`: catalogue updates (decision D20, `dev` commits `307e88d`
 | `DisabledContent`, `DisabledContentLoader`, `ResortRepository.removing` | Ported | `core/.../DisabledContent.kt`: `DisabledContentStore` keeps the last list in the app's files instead of the App Group; the app refreshes it each time it comes to the foreground and redraws the widget when it changed. The list, the widget, its settings and the background capture start from it |
 | `DisabledContentTests` | Ported | `sharedStateStoresTheList` becomes a file round trip; `watchPayloadCarriesTheList` with Wear OS |
 | `CatalogUpdate`, `CatalogUpdateLoader`, `ResortRepository.applying`, `available()` | Ported | `core/.../CatalogUpdate.kt`: `CatalogUpdateStore` keeps the last update in the app's files; refreshed with the withdrawal list each time the app comes to the foreground, the widget redrawn when either changed. `available(update, disabled)` applies the update then the withdrawals. Versions compared with `BUNDLED_CATALOG_VERSION` (see Rules) |
-| `CatalogRules` | Partly | `core/.../CatalogRules.kt`, every rule but the live video one, which comes with `liveVideoURL` |
+| `CatalogRules` | Ported | `core/.../CatalogRules.kt` |
 | `CatalogUpdateTests` | Ported | `decodesTheFileAndStoresIt` becomes a file round trip, plus `failedRefreshKeepsTheStoredUpdate`; `travelsToTheWatch` with Wear OS |
 | `Resort.distance`, `nearest` | Ported | `distanceFrom`, `Iterable<Resort>.nearest` |
 | `DistanceSortingTests` | Ported | read `sortedResorts` instead of `resortsByFavorites` until CarPlay and the Watch are ported |
 | `LocationProvider` | Ported | in the app (`LocationProvider.kt`): one fix on demand, approximate position only |
 | `SnowTotals`, `ResortSortOrder`, `Resort.snowRankingLevel`, `ForecastService.snowTotals` | Partly | totals, batching, cache and every `ResortSortOrder`. The map's sentences are built in the app |
 | `SnowTotalsTests` | Ported | `labelsSkipLessThanACentimetre` checks the centimetres the app formats |
-| `CatalogTests` | Partly | the per-resort checks run through `CatalogRules`; the four new search cases (Vaujany, Combloux, Doucy, Hohneck) and the live video check come with the `dev` catalogue |
+| `CatalogTests` | Ported | the per-resort checks run through `CatalogRules`; `liveVideosAreYouTubeChannelStreams` is the rules' live video check plus the coverage test's "some resort has one" |
+| `Resort.liveVideoURL` (decision D19) | Ported | a "Live on YouTube" link under the season, opened in YouTube; `DisabledContentTests.withdrawingAWebcamKeepsTheRestOfTheResort` ported |
 | `ResortRepository+Credits` (`creditedProviderTypes`, `hasResortWebsiteWebcams`) | Ported | in `ResortRepository.kt`; the platforms' names are `WebcamProviderType.brandName` |
 | `ResortSeason` phase and wording | Ported | `phase` in `core`; the summary sentences are the app's strings (`seasonSummary` in `ResortScreen.kt`) |
 | `ResortSeasonTests` | Ported | the summary tests check the phase and day each sentence reads |

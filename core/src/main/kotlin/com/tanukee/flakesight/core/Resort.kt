@@ -43,6 +43,13 @@ data class Resort(
     val parking: Parking? = null,
     /** The season dates the resort announced; absent when none is published. */
     val season: ResortSeason? = null,
+    /**
+     * The resort's YouTube live stream, as its channel's `/live` address
+     * (`https://www.youtube.com/@lesgetsTV/live`), which always leads to the
+     * stream under way. Only ever opened in YouTube: it has no image or capture
+     * time the app could show (decision D19). Absent for most resorts.
+     */
+    val liveVideoURL: String? = null,
     val webcams: List<Webcam>,
 ) {
     val timeZone: ZoneId
