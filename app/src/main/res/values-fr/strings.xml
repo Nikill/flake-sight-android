@@ -223,6 +223,10 @@
     <string name="widget_follow_default">Suit la station par défaut choisie dans l\'app</string>
 
     <string name="about">À propos</string>
+    <string name="app_icon">Icône de l\'app</string>
+    <string name="app_icon_mountain">Montagne</string>
+    <string name="app_icon_goggles">Masque</string>
+    <string name="app_icon_original">Originale</string>
     <string name="about_tagline">Les webcams des stations de ski en direct, pour vérifier la neige et la météo avant de monter.</string>
     <string name="version">Version %1$s</string>
     <string name="privacy_policy">Politique de confidentialité</string>
