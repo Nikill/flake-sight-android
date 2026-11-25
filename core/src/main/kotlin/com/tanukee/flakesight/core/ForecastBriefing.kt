@@ -26,6 +26,10 @@ data class HourlyForecast(
     val visibility: Double?,
     /** Snow on the ground in centimetres, as the model estimates it. */
     val snowDepth: Double? = null,
+    /** The sky for the hour, from its WMO code. */
+    val condition: WeatherCondition? = null,
+    /** °C at 2 m, at the level's altitude. */
+    val temperature: Double? = null,
 ) {
     val end: Instant get() = start + ONE_HOUR
 
