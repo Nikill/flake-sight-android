@@ -285,11 +285,11 @@
     <string name="privacy_webcams">Webcam images are downloaded directly from the companies and resorts that operate the cameras (%1$s). Like any website you visit, they can see your IP address and the time of your request. Flake Sight sends them nothing else, and their own privacy policies apply to that data.</string>
     <string name="privacy_weather">Weather forecasts come from Open-Meteo (open-meteo.com). The app sends it the coordinates and altitudes of the resort you are viewing, never your own location. Like the webcam providers, Open-Meteo can see your IP address and the time of your request, and its own privacy policy applies to that data.</string>
     <string name="privacy_map">The map is drawn by Google Maps. When you open it, Google receives the area shown, your IP address and information about your device and, if you allow it, uses your location to show your position. Google\'s privacy policy applies to that data.</string>
-    <string name="privacy_tanukee">Each time it opens, the app downloads two short files from tanukee.com, the developer\'s website: a list naming any webcams that are no longer shown, and the snow depths of Météo-France\'s avalanche bulletins. The requests carry nothing about you. Like any website, tanukee.com\'s host can see your IP address and the time of your request, and the developer does not use them.</string>
+    <string name="privacy_tanukee">Each time it opens, the app downloads three short files from tanukee.com, the developer\'s website: the resorts added since this version was released, a list naming any webcams that are no longer shown, and the snow depths of Météo-France\'s avalanche bulletins. The requests carry nothing about you. Like any website, tanukee.com\'s host can see your IP address and the time of your request, and the developer does not use them.</string>
     <string name="privacy_storage">Downloaded images are cached on your device to limit network traffic. The last image shown by the widget, and the images of your favourite resorts\' webcams taken around 16:00, are kept in the app\'s storage so they can still be shown later. All are removed when you delete the app.</string>
     <!-- %1$s is the support email address. -->
     <string name="privacy_questions">Questions about this policy can be sent to %1$s.</string>
-    <string name="privacy_last_updated">Last updated: 24 November 2026</string>
+    <string name="privacy_last_updated">Last updated: 25 November 2026</string>
     <!-- Opens the same policy on tanukee.com. -->
     <string name="privacy_online">Read it on tanukee.com</string>
 
