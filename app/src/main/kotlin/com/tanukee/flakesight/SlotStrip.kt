@@ -153,7 +153,7 @@ private fun spotSymbol(spot: ForecastSlot.Spot) = when (spot.precipitation) {
 
 /** "Friday, 20:00 to 00:00: Summit, 2,700 m: 3 cm of snow, max -9°. Village, 1,650 m: rain, max 2°." */
 @Composable
-private fun slotSentence(slot: ForecastSlot, resort: Resort, locale: Locale): String {
+internal fun slotSentence(slot: ForecastSlot, resort: Resort, locale: Locale): String {
     val hour = DateTimeFormatter.ofPattern("HH:mm", locale)
     val start = slot.start.atZone(resort.timeZone)
     val day = start.dayOfWeek.getDisplayName(TextStyle.FULL, locale).replaceFirstChar { it.titlecase(locale) }
