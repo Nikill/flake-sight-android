@@ -1,5 +1,10 @@
 package com.tanukee.flakesight
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+
 import android.graphics.Bitmap
 import android.icu.text.DateFormat
 import androidx.compose.ui.platform.LocalConfiguration
@@ -183,14 +188,21 @@ fun ResortScreen(
         topBar = {
             if (hero != null) {
                 val onImage = !isHeroGone
+                // Fades between the clear bar and the page's, as the iOS navigation bar does.
+                val container by animateColorAsState(if (onImage) Color.Transparent else MaterialTheme.colorScheme.surface, label = "bar")
+                val content by animateColorAsState(if (onImage) Color.White else MaterialTheme.colorScheme.onSurface, label = "barContent")
                 TopAppBar(
-                    title = { if (!onImage) Text(resort.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    title = {
+                        AnimatedVisibility(!onImage, enter = fadeIn(), exit = fadeOut()) {
+                            Text(resort.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    },
                     navigationIcon = navigationIcon,
                     actions = actions,
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = if (onImage) Color.Transparent else MaterialTheme.colorScheme.surface,
-                        navigationIconContentColor = if (onImage) Color.White else MaterialTheme.colorScheme.onSurface,
-                        actionIconContentColor = if (onImage) Color.White else MaterialTheme.colorScheme.onSurface,
+                        containerColor = container,
+                        navigationIconContentColor = content,
+                        actionIconContentColor = content,
                     ),
                 )
             } else LargeTopAppBar(
