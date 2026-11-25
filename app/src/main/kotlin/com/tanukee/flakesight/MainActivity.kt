@@ -74,6 +74,8 @@ import androidx.compose.ui.res.painterResource
 import android.content.Intent
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import androidx.glance.appwidget.updateAll
 import com.tanukee.flakesight.core.DeepLink
 import android.net.Uri
@@ -116,11 +118,13 @@ class MainActivity : ComponentActivity() {
     /** The webcam a tapped widget asks to open (`skipatrol://webcam/<id>`), until the browser shows it. */
     private var deepLinkWebcamID by mutableStateOf<String?>(null)
 
-    /** Each time the app comes to the foreground: withdrawn content disappears within minutes of being listed. */
+    /** Each time the app comes to the foreground: published resorts appear and withdrawn content disappears within minutes. */
     override fun onStart() {
         super.onStart()
         lifecycleScope.launch {
-            if (disabledContentStore(this@MainActivity).refresh()) WebcamWidget().updateAll(applicationContext)
+            val updated = async { catalogUpdateStore(this@MainActivity).refresh() }
+            val disabled = async { disabledContentStore(this@MainActivity).refresh() }
+            if (awaitAll(updated, disabled).any { it }) WebcamWidget().updateAll(applicationContext)
         }
     }
 
@@ -146,9 +150,10 @@ class MainActivity : ComponentActivity() {
         val windowLayoutInfo = WindowInfoTracker.getOrCreate(this).windowLayoutInfo(this)
         setContent {
             FlakeSightTheme {
-                // Rebuilt when a newer list of withdrawn content arrives.
+                // Rebuilt when a newer update or list of withdrawn content arrives.
+                val update by catalogUpdateStore(this).update.collectAsState()
                 val disabled by disabledContentStore(this).content.collectAsState()
-                val repository = remember(disabled) { availableRepository(this) }
+                val repository = remember(update, disabled) { availableRepository(this) }
                 val layoutInfo by windowLayoutInfo.collectAsState(initial = null)
                 ResortBrowser(repository, favoritesStore, snowDepthStore, layoutInfo, deepLinkWebcamID) { deepLinkWebcamID = null }
             }

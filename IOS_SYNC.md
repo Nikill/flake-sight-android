@@ -11,9 +11,12 @@ The iOS app ([Nikill/ski-patrol](https://github.com/Nikill/ski-patrol)) is the r
 
 Each sync reads the iOS commits after this one, ports what applies to Android, then updates this table in the same pull request.
 
+Ported ahead of `main`: catalogue updates (decision D20, `dev` commits `307e88d` and `3aaefca`), at the developer's request. The bundled catalogue is still the one of the commit above.
+
 ## Rules
 
 - `core/src/main/resources/ResortCatalog.json` is a verbatim copy of `SkiPatrolKit/Sources/SkiPatrolKit/Resources/ResortCatalog.json`. Never edit it here: catalogue changes are made in the iOS repository and copied over.
+- When copying the catalogue, set `CatalogUpdate.BUNDLED_CATALOG_VERSION` to the iOS `MARKETING_VERSION` of the commit it comes from: `catalog-updates.json` names iOS versions in `appliesBefore`, and Android compares them with that constant, not with its own version.
 - A change to a SkiPatrolKit test is mirrored in the Kotlin test of the same name in the same pull request. The Swift tests are the specification of `core`.
 - Apple-only changes are skipped: CarPlay, `PrivacyInfo.xcprivacy`, the Xcode project, App Store material under `marketing/`.
 - Every new user-visible string is added to `app/src/main/res/values/strings.xml` (British English) and `values-fr/strings.xml` (French).
@@ -26,12 +29,15 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | `ResortRepository` (bundled, lookup, search, `sortedResorts`) | Partly | `sortedResorts` for every order with "Favourites on Top", the position as a `Coordinate` instead of `CLLocation`; `available()` is the app's `availableRepository` (the bundled catalogue `removing` the stored list); `resortsByFavorites` (CarPlay, Watch) not yet |
 | `DisabledContent`, `DisabledContentLoader`, `ResortRepository.removing` | Ported | `core/.../DisabledContent.kt`: `DisabledContentStore` keeps the last list in the app's files instead of the App Group; the app refreshes it each time it comes to the foreground and redraws the widget when it changed. The list, the widget, its settings and the background capture start from it |
 | `DisabledContentTests` | Ported | `sharedStateStoresTheList` becomes a file round trip; `watchPayloadCarriesTheList` with Wear OS |
+| `CatalogUpdate`, `CatalogUpdateLoader`, `ResortRepository.applying`, `available()` | Ported | `core/.../CatalogUpdate.kt`: `CatalogUpdateStore` keeps the last update in the app's files; refreshed with the withdrawal list each time the app comes to the foreground, the widget redrawn when either changed. `available(update, disabled)` applies the update then the withdrawals. Versions compared with `BUNDLED_CATALOG_VERSION` (see Rules) |
+| `CatalogRules` | Partly | `core/.../CatalogRules.kt`, every rule but the live video one, which comes with `liveVideoURL` |
+| `CatalogUpdateTests` | Ported | `decodesTheFileAndStoresIt` becomes a file round trip, plus `failedRefreshKeepsTheStoredUpdate`; `travelsToTheWatch` with Wear OS |
 | `Resort.distance`, `nearest` | Ported | `distanceFrom`, `Iterable<Resort>.nearest` |
 | `DistanceSortingTests` | Ported | read `sortedResorts` instead of `resortsByFavorites` until CarPlay and the Watch are ported |
 | `LocationProvider` | Ported | in the app (`LocationProvider.kt`): one fix on demand, approximate position only |
 | `SnowTotals`, `ResortSortOrder`, `Resort.snowRankingLevel`, `ForecastService.snowTotals` | Partly | totals, batching, cache and every `ResortSortOrder`. The map's sentences are built in the app |
 | `SnowTotalsTests` | Ported | `labelsSkipLessThanACentimetre` checks the centimetres the app formats |
-| `CatalogTests` | Ported | |
+| `CatalogTests` | Partly | the per-resort checks run through `CatalogRules`; the four new search cases (Vaujany, Combloux, Doucy, Hohneck) and the live video check come with the `dev` catalogue |
 | `ResortRepository+Credits` (`creditedProviderTypes`, `hasResortWebsiteWebcams`) | Ported | in `ResortRepository.kt`; the platforms' names are `WebcamProviderType.brandName` |
 | `ResortSeason` phase and wording | Ported | `phase` in `core`; the summary sentences are the app's strings (`seasonSummary` in `ResortScreen.kt`) |
 | `ResortSeasonTests` | Ported | the summary tests check the phase and day each sentence reads |
@@ -70,7 +76,7 @@ Each sync reads the iOS commits after this one, ports what applies to Android, t
 | App icon | Ported | adaptive icon from `AppIcon.png` on its corner colour |
 | `ResortBrowserView` | Partly | stack below 600 dp; list beside the resort from 600 dp (unfolded foldable, tablet), split at the hinge in book posture; folding keeps the resort and webcam on screen; the map in the detail pane until a resort is chosen, and pushed from the list on a phone. The sidebar follows the iPad and iPhone Duo one: rows without separators, the selected resort as a rounded card, the map button off while the map shows. No widget deep links |
 | `ResortListView` | Ported | alphabetical, favourites first with their star and "Default"; search on names, regions and webcams; Sort menu with Name, Distance, Snow Forecast and Recent Snow and the "Favourites on Top" toggle, both remembered under the iOS keys; distance refused goes back to names with the "Location Access Off" alert; each row's recent snow and bulletin snow depth, and the sorted figure on the right (road distance in km, or miles where the locale uses them). Map button in the top bar. Android only: rows as rounded cards without separators and the favourites on top in a rounded group of their own. About from an info button in the top bar. Swiping a row to the right adds it to the favourites or removes it, on release past the threshold, with the same change as a TalkBack action on the row |
-| `AboutView`, `PrivacyPolicyView` | Ported | over both panes; no Licence link (Apple's agreement has no Android counterpart); the policy is the iOS text adapted to Android: the widget is part of the app, the map is Google Maps (a new paragraph), the afternoon images are named |
+| `AboutView`, `PrivacyPolicyView` | Ported | over both panes; no Licence link (Apple's agreement has no Android counterpart); the policy is the iOS text adapted to Android: the widget is part of the app, the map is Google Maps (a new paragraph), the afternoon images are named; three files from tanukee.com since D20 |
 | `ResortMapView` | Partly | Google Maps (Maps Compose) instead of MapKit, its key from `local.properties`; a pin per resort, the snow layer with its legend and kind remembered under the iOS keys, snow pins on the `SnowBand` colours, the card with View Resort and Google Maps directions; the user's position and button once located, the map opening framed on them and the 15 nearest resorts |
 | `ResortDetailView`, `WebcamCard` | Partly | large title collapsing on scroll, header, website and directions links, favourite star, Set as Default, snow card, avalanche badge, forecast strip, webcam cards ordered by freshness; save failures shown as on iOS, the season line ("Opening planned on 12 December") |
 | `SnowyMountainCard`, `AvalancheRiskBadge`, `AvalancheColor` | Ported | both open the advanced weather screen |
