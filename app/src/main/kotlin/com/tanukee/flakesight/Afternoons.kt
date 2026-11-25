@@ -52,6 +52,10 @@ internal fun recordAfternoon(snapshot: WebcamSnapshot, webcam: Webcam, zone: Zon
 
 internal fun favoritesStore(context: Context) = FavoritesStore(File(context.applicationContext.filesDir, "favorites.json"))
 
+/** The webcam put at the top of each resort's screen, beside the favourites. */
+internal fun featuredWebcamStore(context: Context) =
+    com.tanukee.flakesight.core.FeaturedWebcamStore(File(context.applicationContext.filesDir, "featured-webcams.json"))
+
 /** Longest side kept on disk: enough for the full-screen panorama, a tenth of the weight of the largest provider images. */
 private const val AFTERNOON_PIXEL_SIZE = 4000
 

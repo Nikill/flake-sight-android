@@ -13,7 +13,6 @@ import java.util.Date
 import android.graphics.ImageDecoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -68,6 +67,14 @@ import com.tanukee.flakesight.core.WebcamError
 import com.tanukee.flakesight.core.WebcamService
 import com.tanukee.flakesight.core.WebcamSnapshot
 import com.tanukee.flakesight.core.sortedByFreshness
+import com.tanukee.flakesight.core.featuring
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -108,6 +115,10 @@ fun ResortScreen(
     snowDepth: SnowDepthReading? = null,
     /** Opens the advanced weather: from the forecast strip, the snow card and the avalanche badge. */
     onOpenForecast: (() -> Unit)? = null,
+    /** The webcam the user put at the top, shown first with a star. */
+    featuredWebcamID: String? = null,
+    /** Puts a webcam at the top, or with `null` brings back the screen's own order. */
+    onFeatureWebcam: (String?) -> Unit = {},
 ) {
     val cards = remember(resort.id) { mutableStateMapOf<String, ImageState>() }
     // Reordered only once every card has settled, so cards do not shuffle while the screen fills up.
@@ -169,11 +180,30 @@ fun ResortScreen(
             if (resort.webcams.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) { NoWebcams() }
             }
-            items(orderedWebcams, key = { it.id }) { webcam ->
-                WebcamCard(
-                    webcam, resort, cards[webcam.id] ?: ImageState(),
-                    Modifier.animateItem().clickable { onSelectWebcam(webcam) },
-                )
+            items(orderedWebcams.featuring(featuredWebcamID), key = { it.id }) { webcam ->
+                // A long press, or a TalkBack action, puts the webcam at the top or takes it back down.
+                val isFeatured = webcam.id == featuredWebcamID
+                var isShowingMenu by remember { mutableStateOf(false) }
+                val featureLabel = stringResource(if (isFeatured) R.string.remove_from_the_top else R.string.show_at_the_top)
+                val toggleFeatured = { onFeatureWebcam(if (isFeatured) null else webcam.id) }
+                Box(Modifier.animateItem()) {
+                    WebcamCard(
+                        webcam, resort, cards[webcam.id] ?: ImageState(), isFeatured,
+                        Modifier
+                            .combinedClickable(onLongClick = { isShowingMenu = true }) { onSelectWebcam(webcam) }
+                            .semantics { customActions = listOf(CustomAccessibilityAction(featureLabel) { toggleFeatured(); true }) },
+                    )
+                    DropdownMenu(expanded = isShowingMenu, onDismissRequest = { isShowingMenu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(featureLabel) },
+                            leadingIcon = { Icon(painterResource(if (isFeatured) R.drawable.ic_star_border else R.drawable.ic_star), null) },
+                            onClick = {
+                                isShowingMenu = false
+                                toggleFeatured()
+                            },
+                        )
+                    }
+                }
             }
         }
     }
@@ -309,7 +339,7 @@ private fun NoWebcams() {
 
 /** Port of `WebcamCard`: cropped latest image, name, update time and provider. */
 @Composable
-private fun WebcamCard(webcam: Webcam, resort: Resort, state: ImageState, modifier: Modifier = Modifier) {
+private fun WebcamCard(webcam: Webcam, resort: Resort, state: ImageState, isFeatured: Boolean, modifier: Modifier = Modifier) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier) {
         Box(
             contentAlignment = Alignment.Center,
@@ -338,7 +368,15 @@ private fun WebcamCard(webcam: Webcam, resort: Resort, state: ImageState, modifi
         }
         Row(verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
-                Text(webcam.name, style = MaterialTheme.typography.titleMedium)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (isFeatured) {
+                        Icon(
+                            painterResource(R.drawable.ic_star), stringResource(R.string.shown_at_the_top),
+                            tint = FavoriteYellow, modifier = Modifier.size(18.dp),
+                        )
+                    }
+                    Text(webcam.name, style = MaterialTheme.typography.titleMedium)
+                }
                 state.snapshot?.let { FreshnessLabel(SnapshotFreshness.of(it), resort) }
             }
             Text(

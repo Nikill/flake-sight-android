@@ -49,6 +49,9 @@
 
     <string name="add_to_favourites">Ajouter aux favoris</string>
     <string name="remove_from_favourites">Retirer des favoris</string>
+    <string name="show_at_the_top">Mettre en haut de la fiche</string>
+    <string name="remove_from_the_top">Retirer de la fiche</string>
+    <string name="shown_at_the_top">Affichée en haut de la fiche</string>
     <string name="favourite">Favori</string>
     <string name="default_label">Par défaut</string>
     <string name="default_resort">Station par défaut</string>

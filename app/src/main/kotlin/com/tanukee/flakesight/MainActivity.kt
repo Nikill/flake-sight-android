@@ -214,13 +214,16 @@ fun ResortBrowser(
     }
 
     val favorites by favoritesStore.favorites.collectAsState()
-    // The widget follows the default resort: redraw it when that changes, not on every launch.
-    val defaultResortID = favorites.firstOrNull { it.isDefault }?.resortID
-    var widgetResortID by rememberSaveable { mutableStateOf(defaultResortID) }
     val appContext = LocalContext.current.applicationContext
-    LaunchedEffect(defaultResortID) {
-        if (defaultResortID != widgetResortID) {
-            widgetResortID = defaultResortID
+    val featuredStore = remember { featuredWebcamStore(appContext) }
+    val featuredWebcamIDs by featuredStore.all.collectAsState()
+    // The widget follows the default resort and its featured webcam: redraw it when they change, not on every launch.
+    val defaultResortID = favorites.firstOrNull { it.isDefault }?.resortID
+    val widgetSource = "$defaultResortID/${defaultResortID?.let(featuredWebcamIDs::get)}"
+    var shownWidgetSource by rememberSaveable { mutableStateOf(widgetSource) }
+    LaunchedEffect(widgetSource) {
+        if (widgetSource != shownWidgetSource) {
+            shownWidgetSource = widgetSource
             WebcamWidget().updateAll(appContext)
         }
     }
@@ -276,6 +279,13 @@ fun ResortBrowser(
             saveFailure = e.localizedMessage ?: e.toString()
         }
     }
+    val changeFeaturedWebcam: (Resort, String?) -> Unit = { resort, webcamID ->
+        try {
+            if (webcamID == null) featuredStore.clear(resort.id) else featuredStore.feature(webcamID, resort.id)
+        } catch (e: IOException) {
+            saveFailure = e.localizedMessage ?: e.toString()
+        }
+    }
     // On a wide window, closes the resort beside the list to show the map there.
     val showMap = {
         selectedResortID = null
@@ -325,6 +335,8 @@ fun ResortBrowser(
         onSelectWebcam = selectWebcam,
         snowDepth = snowDepthReport?.reading(resort),
         onOpenForecast = { isShowingForecast = true },
+        featuredWebcamID = featuredWebcamIDs[resort.id],
+        onFeatureWebcam = { changeFeaturedWebcam(resort, it) },
     )
 
     /** The webcam or the advanced weather, over its resort; Back returns to the resort. */
