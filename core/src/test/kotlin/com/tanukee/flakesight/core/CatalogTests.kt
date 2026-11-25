@@ -48,19 +48,17 @@ class CatalogTests {
         assertTrue(resorts.all { it.matches("  ") })
     }
 
+    /**
+     * The rules a resort must follow wherever it comes from (coordinates in the
+     * French mountains, a known département, the massif, altitudes, season, car
+     * park, webcam IDs and the webcam cap) live in [CatalogRules], which also
+     * vets a downloaded [CatalogUpdate].
+     */
     @Test
-    fun webcamsAreConsistent() {
+    fun everyResortFollowsTheCatalogRules() {
         for (resort in resorts) {
-            assertEquals(resort.webcams.size, resort.webcams.map { it.id }.toSet().size, "Duplicate webcam IDs in ${resort.id}")
-            for (webcam in resort.webcams) {
-                assertEquals(resort.id, webcam.resortID)
-                assertTrue(webcam.id.startsWith("${resort.id}."), webcam.id)
-                assertTrue(webcam.provider != WebcamProviderType.UNKNOWN, webcam.id)
-                assertTrue(!webcam.hasLiveStream, "No catalogued webcam exposes a public stream yet")
-                if (webcam.provider == WebcamProviderType.WEBCAM_HD) {
-                    assertTrue(webcam.snapshotURL != null && webcam.thumbnailURL != null, webcam.id)
-                }
-            }
+            val problems = CatalogRules.problems(resort)
+            assertTrue(problems.isEmpty(), problems.joinToString("; "))
         }
     }
 
@@ -70,68 +68,29 @@ class CatalogTests {
         assertEquals(resorts.size, resorts.map { it.id }.toSet().size, "Duplicate resort IDs")
         assertEquals("les-saisies", resorts.first().id, "The widget falls back to the first resort")
         assertTrue(resorts.first().webcams.isNotEmpty(), "The first resort must have a webcam for the widget")
-        for (resort in resorts) {
-            assertEquals("FR", resort.country)
-            assertTrue(
-                MOUNTAIN_RANGES.any { resort.latitude in it.first && resort.longitude in it.second },
-                "${resort.id} is outside the French Alps and Pyrenees",
-            )
-        }
-        for (resort in resorts.filter { it.id !in setOf("les-saisies", "les-7-laux") }) {
-            assertTrue(resort.webcams.size <= 4, "${resort.id} has too many webcams")
-        }
+        assertTrue(resorts.flatMap { it.webcams }.none { it.hasLiveStream }, "No catalogued webcam exposes a public stream yet")
+    }
+
+    /**
+     * In the Alps and the Pyrenees, only resorts too far from every massif go
+     * without one; the Jura, the Vosges and the Massif Central never have one
+     * (checked by [CatalogRules]).
+     */
+    @Test
+    fun onlyGreolieresMissesItsBulletinMassif() {
+        val withoutMassif = resorts.filter { it.avalancheMassif == null && it.region !in CatalogRules.regionsWithoutBulletin }
+        assertEquals(listOf("greolieres"), withoutMassif.map { it.id })
     }
 
     @Test
-    fun altitudesAreWithinTheMountainsAndOrdered() {
-        for (resort in resorts) {
-            resort.villageAltitude?.let { assertTrue(it in 300..4900, "${resort.id} village altitude") }
-            resort.summitAltitude?.let { assertTrue(it in 300..4900, "${resort.id} summit altitude") }
-            val village = resort.villageAltitude
-            val summit = resort.summitAltitude
-            if (village != null && summit != null) {
-                assertTrue(summit > village, "${resort.id} summit below village")
-            }
-        }
-        assertTrue(resorts.any { it.summitAltitude != null && it.villageAltitude != null }, "No resort has both altitudes")
-    }
-
-    @Test
-    fun avalancheMassifsAreAlpineOrPyrenean() {
-        val alps = 1..23
-        val pyrenees = 64..74
-        for (resort in resorts) {
-            val massif = resort.avalancheMassif ?: continue
-            assertTrue(massif in alps || massif in pyrenees, "${resort.id} massif $massif")
-            val inPyrenees = resort.latitude < 43.3
-            assertTrue(if (inPyrenees) massif in pyrenees else massif in alps, "${resort.id} massif $massif is in the other range")
-        }
-        assertEquals(listOf("greolieres"), resorts.filter { it.avalancheMassif == null }.map { it.id })
-    }
-
-    @Test
-    fun seasonsAreWithinTheWinter() {
-        for (resort in resorts) {
-            val season = resort.season ?: continue
-            val opening = season.opening
-            assertTrue(opening.monthValue >= 10 || opening.monthValue == 1, "${resort.id} opens in month ${opening.monthValue}")
-            season.closing?.let { closing ->
-                assertTrue(closing.monthValue in 3..6, "${resort.id} closes in month ${closing.monthValue}")
-                val seasonYear = if (opening.monthValue == 1) opening.year else opening.year + 1
-                assertEquals(seasonYear, closing.year, "${resort.id} closes in ${closing.year}")
-            }
-            assertTrue(season.sourceURL.startsWith("https://"), "${resort.id} season source is not https")
-        }
-    }
-
-    @Test
-    fun carParksAreNearTheirResort() {
-        for (resort in resorts) {
-            val parking = resort.parking ?: continue
-            val distance = resort.distanceFrom(parking.latitude, parking.longitude)
-            assertTrue(distance <= 3000, "${resort.id} car park is ${distance.toInt()} m from the resort centre")
-            assertTrue(parking.name?.isNotEmpty() ?: true, "${resort.id} car park has an empty name")
-        }
+    fun villageViewsAddToTheResortsOwnFour() {
+        // Grand Tourmalet: three "La Mongie - ..." views and one "Barèges -
+        // ...": two La Mongie views and Barèges count as villages, the third
+        // La Mongie view as the resort's own.
+        val tourmalet = assertNotNull(repository.resort("grand-tourmalet"))
+        assertEquals(1, CatalogRules.ownViews(tourmalet))
+        val saisies = assertNotNull(repository.resort("les-saisies"))
+        assertEquals(saisies.webcams.size, CatalogRules.ownViews(saisies))
     }
 
     @Test
@@ -165,13 +124,5 @@ class CatalogTests {
         val webcam = assertNotNull(ResortRepository.fromJson(json).resorts.first().webcams.first())
         assertEquals(WebcamProviderType.UNKNOWN, webcam.provider)
         assertEquals(setOf(WebcamCapability.UNKNOWN, WebcamCapability.STATIC_SNAPSHOT), webcam.capabilities)
-    }
-
-    private companion object {
-        /** The French Alps, Drôme's Vercors included, and the French Pyrenees. */
-        val MOUNTAIN_RANGES = listOf(
-            43.7..46.5 to 5.0..7.7,
-            42.3..43.2 to -1.8..3.2,
-        )
     }
 }
