@@ -68,6 +68,16 @@ import com.tanukee.flakesight.core.WebcamService
 import com.tanukee.flakesight.core.WebcamSnapshot
 import com.tanukee.flakesight.core.sortedByFreshness
 import com.tanukee.flakesight.core.featuring
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.heading
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenu
@@ -99,8 +109,12 @@ internal data class ImageState(
 }
 
 /**
- * A resort and its webcams, the most recent images first. Port of
- * `ResortDetailView`; favourites, season, snow and forecast come with their areas.
+ * A resort: one webcam's latest image at the top under a clear bar, with the
+ * resort's name over it; basic information and favourite controls, the
+ * weather card, the bulletin's danger level and snow depth as two tiles, then
+ * the other webcams. The top webcam is the one the user chose, otherwise the
+ * first of the cards' order (the catalogue's, stale images moved to the end).
+ * Port of `ResortDetailView`.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,71 +154,167 @@ fun ResortScreen(
         }
     }
 
-    // A large title that shrinks into the bar as the page scrolls, as iOS's large navigation title.
+    val webcams = orderedWebcams.featuring(featuredWebcamID)
+    val hero = webcams.firstOrNull()
+    val gridState = rememberLazyGridState()
+    // The bar stays clear over the image, and takes the page's colour and the name once it scrolls away.
+    val isHeroGone by remember { derivedStateOf { gridState.firstVisibleItemIndex > 0 } }
+    // Without a webcam, a large title that shrinks into the bar as the page scrolls, as iOS's large navigation title.
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val navigationIcon: @Composable () -> Unit = {
+        // No Back beside the list, where the resort is the pane's root.
+        if (onBack != null) {
+            IconButton(onClick = onBack) {
+                Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
+            }
+        }
+    }
+    val actions: @Composable RowScope.() -> Unit = {
+        IconButton(onClick = onToggleFavorite) {
+            if (favorite == null) {
+                Icon(painterResource(R.drawable.ic_star_border), stringResource(R.string.add_to_favourites))
+            } else {
+                Icon(painterResource(R.drawable.ic_star), stringResource(R.string.remove_from_favourites), tint = FavoriteYellow)
+            }
+        }
+    }
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = if (hero == null) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier,
         topBar = {
-            LargeTopAppBar(
+            if (hero != null) {
+                val onImage = !isHeroGone
+                TopAppBar(
+                    title = { if (!onImage) Text(resort.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    navigationIcon = navigationIcon,
+                    actions = actions,
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = if (onImage) Color.Transparent else MaterialTheme.colorScheme.surface,
+                        navigationIconContentColor = if (onImage) Color.White else MaterialTheme.colorScheme.onSurface,
+                        actionIconContentColor = if (onImage) Color.White else MaterialTheme.colorScheme.onSurface,
+                    ),
+                )
+            } else LargeTopAppBar(
                 title = { Text(resort.name, maxLines = 2, overflow = TextOverflow.Ellipsis) },
                 scrollBehavior = scrollBehavior,
-                navigationIcon = {
-                    // No Back beside the list, where the resort is the pane's root.
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.back))
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onToggleFavorite) {
-                        if (favorite == null) {
-                            Icon(painterResource(R.drawable.ic_star_border), stringResource(R.string.add_to_favourites))
-                        } else {
-                            Icon(painterResource(R.drawable.ic_star), stringResource(R.string.remove_from_favourites), tint = FavoriteYellow)
-                        }
-                    }
-                },
+                navigationIcon = navigationIcon,
+                actions = actions,
             )
         },
     ) { padding ->
-        // One column on a phone, more on a wide window.
+        // One column on a phone, more on a wide window. With a webcam at the top, the page starts under the bar.
         LazyVerticalGrid(
             columns = GridCells.Adaptive(320.dp),
-            contentPadding = PaddingValues(16.dp),
+            state = gridState,
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp, top = if (hero == null) 16.dp else 0.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
-            modifier = Modifier.padding(padding),
+            modifier = if (hero == null) Modifier.padding(padding) else Modifier.padding(bottom = padding.calculateBottomPadding()),
         ) {
+            if (hero != null) {
+                item(span = { GridItemSpan(maxLineSpan) }, key = "hero") {
+                    FeaturableWebcam(hero, featuredWebcamID, onFeatureWebcam, onSelectWebcam, Modifier.fullBleed(16.dp)) { modifier ->
+                        ResortHero(hero, resort, cards[hero.id] ?: ImageState(), hero.id == featuredWebcamID, modifier)
+                    }
+                }
+            }
             item(span = { GridItemSpan(maxLineSpan) }) { ResortHeader(resort, favorite, onSetDefault, snowDepth, onOpenForecast) }
             if (resort.webcams.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) { NoWebcams() }
             }
-            items(orderedWebcams.featuring(featuredWebcamID), key = { it.id }) { webcam ->
-                // A long press, or a TalkBack action, puts the webcam at the top or takes it back down.
-                val isFeatured = webcam.id == featuredWebcamID
-                var isShowingMenu by remember { mutableStateOf(false) }
-                val featureLabel = stringResource(if (isFeatured) R.string.remove_from_the_top else R.string.show_at_the_top)
-                val toggleFeatured = { onFeatureWebcam(if (isFeatured) null else webcam.id) }
-                Box(Modifier.animateItem()) {
-                    WebcamCard(
-                        webcam, resort, cards[webcam.id] ?: ImageState(), isFeatured,
-                        Modifier
-                            .combinedClickable(onLongClick = { isShowingMenu = true }) { onSelectWebcam(webcam) }
-                            .semantics { customActions = listOf(CustomAccessibilityAction(featureLabel) { toggleFeatured(); true }) },
-                    )
-                    DropdownMenu(expanded = isShowingMenu, onDismissRequest = { isShowingMenu = false }) {
-                        DropdownMenuItem(
-                            text = { Text(featureLabel) },
-                            leadingIcon = { Icon(painterResource(if (isFeatured) R.drawable.ic_star_border else R.drawable.ic_star), null) },
-                            onClick = {
-                                isShowingMenu = false
-                                toggleFeatured()
-                            },
-                        )
-                    }
+            items(webcams.drop(1), key = { it.id }) { webcam ->
+                FeaturableWebcam(webcam, featuredWebcamID, onFeatureWebcam, onSelectWebcam, Modifier.animateItem()) { modifier ->
+                    WebcamCard(webcam, resort, cards[webcam.id] ?: ImageState(), webcam.id == featuredWebcamID, modifier)
                 }
             }
+        }
+    }
+}
+
+/**
+ * A webcam that opens on a tap, and on a long press (or a TalkBack action)
+ * offers to go to the top of the screen or back down.
+ */
+@Composable
+private fun FeaturableWebcam(
+    webcam: Webcam,
+    featuredWebcamID: String?,
+    onFeatureWebcam: (String?) -> Unit,
+    onSelectWebcam: (Webcam) -> Unit,
+    modifier: Modifier,
+    content: @Composable (Modifier) -> Unit,
+) {
+    val isFeatured = webcam.id == featuredWebcamID
+    var isShowingMenu by remember { mutableStateOf(false) }
+    val featureLabel = stringResource(if (isFeatured) R.string.remove_from_the_top else R.string.show_at_the_top)
+    val toggleFeatured = { onFeatureWebcam(if (isFeatured) null else webcam.id) }
+    Box(modifier) {
+        content(
+            Modifier
+                .combinedClickable(onLongClick = { isShowingMenu = true }) { onSelectWebcam(webcam) }
+                .semantics { customActions = listOf(CustomAccessibilityAction(featureLabel) { toggleFeatured(); true }) },
+        )
+        DropdownMenu(expanded = isShowingMenu, onDismissRequest = { isShowingMenu = false }) {
+            DropdownMenuItem(
+                text = { Text(featureLabel) },
+                leadingIcon = { Icon(painterResource(if (isFeatured) R.drawable.ic_star_border else R.drawable.ic_star), null) },
+                onClick = {
+                    isShowingMenu = false
+                    toggleFeatured()
+                },
+            )
+        }
+    }
+}
+
+/** Lays the element out wider than its cell by [inset] on each side, across the grid's content padding. */
+private fun Modifier.fullBleed(inset: Dp) = layout { measurable, constraints ->
+    val extra = inset.roundToPx() * 2
+    val width = constraints.maxWidth + extra
+    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+    layout(constraints.maxWidth, placeable.height) { placeable.place(-extra / 2, 0) }
+}
+
+/**
+ * The top of the resort screen: one webcam's latest image across the width,
+ * under the bar, fading into the page, with the webcam's name and capture time
+ * and the resort's name over it. Port of `ResortHero`.
+ */
+@Composable
+private fun ResortHero(webcam: Webcam, resort: Resort, state: ImageState, isFeatured: Boolean, modifier: Modifier) {
+    val page = MaterialTheme.colorScheme.background
+    Box(modifier.fillMaxWidth().height(300.dp).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.BottomStart) {
+        state.image?.let {
+            Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
+        }
+        // Dark at the top for the bar, the page's own colour at the bottom so the image melts into it.
+        Box(
+            Modifier.matchParentSize().background(
+                Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.45f), 0.3f to Color.Transparent, 0.5f to Color.Transparent, 1f to page),
+            ),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f))
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
+            ) {
+                if (isFeatured) {
+                    Icon(painterResource(R.drawable.ic_star), stringResource(R.string.shown_at_the_top), tint = FavoriteYellow, modifier = Modifier.size(14.dp))
+                }
+                Text(webcam.name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                state.snapshot?.let { FreshnessLabel(SnapshotFreshness.of(it), resort) }
+            }
+            Text(
+                resort.name,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.semantics { heading() },
+            )
         }
     }
 }
@@ -291,13 +401,13 @@ private fun ResortHeader(
                 TextButton(onClick = onSetDefault) { Text(stringResource(R.string.set_as_default)) }
             }
         }
-        if (snowDepth != null) {
-            SnowyMountainCard(snowDepth, onOpenForecast)
-            Spacer(Modifier.height(4.dp))
-            AvalancheRiskBadge(snowDepth, onOpenForecast)
-            Spacer(Modifier.height(8.dp))
-        }
+        Spacer(Modifier.height(4.dp))
         ForecastStrip(resort, showModelSnowDepth = snowDepth == null, onOpenAdvanced = onOpenForecast)
+        // Only resorts inside a bulletin massif have these: the Jura, the Vosges and the Massif Central do not.
+        if (snowDepth != null) {
+            Spacer(Modifier.height(8.dp))
+            ResortConditionTiles(snowDepth, onOpenForecast)
+        }
     }
 }
 

@@ -245,7 +245,7 @@ private fun StripContent(
     }
 }
 
-private val LEVEL_COLUMN_WIDTH = 76.dp
+private val LEVEL_COLUMN_WIDTH = 52.dp
 
 /**
  * A day's snow as a small bar whose top is sharp when the weather models
@@ -380,12 +380,13 @@ private fun LevelRow(level: LevelForecast, locale: Locale) {
     val hasSnow = level.days.any { it.snowfallCentimetres != null || it.snowfallRange != null }
     val scale = SnowGaugeScale(level.days)
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            levelSymbol(level.level) + (level.level.altitude?.let { " " + metres(it, locale) } ?: ""),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(LEVEL_COLUMN_WIDTH),
-        )
+        // The mark over the altitude, so "3 300 m" fits the narrower column inside the card.
+        Column(Modifier.width(LEVEL_COLUMN_WIDTH)) {
+            Text(levelSymbol(level.level), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            level.level.altitude?.let {
+                Text(metres(it, locale), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            }
+        }
         level.days.forEach { day ->
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                 Text(conditionSymbol(day.condition), fontSize = 22.sp)

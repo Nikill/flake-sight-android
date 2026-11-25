@@ -97,7 +97,8 @@ private fun SlotColumn(slot: ForecastSlot, resort: Resort, locale: Locale, shows
             )
             Text(
                 if (slot.isCurrent) stringResource(R.string.now) else DateTimeFormatter.ofPattern("HH:mm", locale).format(local),
-                fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+                // "Maintenant" shrinks a little to fit its column.
+                fontSize = if (slot.isCurrent) 9.sp else 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
             )
         }
         slot.spots.forEach { spot ->

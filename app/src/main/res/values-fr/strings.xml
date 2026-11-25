@@ -61,6 +61,8 @@
     <string name="ok">OK</string>
 
     <string name="weather">Météo</string>
+    <string name="north">Nord</string>
+    <string name="south">Sud</string>
     <string name="opens_advanced_weather">Ouvre la météo avancée</string>
     <string name="forecast_days">Jours</string>
     <string name="forecast_hours">Heures</string>

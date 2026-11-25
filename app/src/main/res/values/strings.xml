@@ -78,6 +78,9 @@
 
     <!-- Forecast strip -->
     <string name="weather">Weather</string>
+    <!-- Under the snowy mountain drawing: its left and right flanks. -->
+    <string name="north">North</string>
+    <string name="south">South</string>
     <!-- TalkBack hint on the weather card's title and days grid. -->
     <string name="opens_advanced_weather">Opens the advanced weather</string>
     <!-- The switch above the forecast: by day, or by four-hour slot. -->
