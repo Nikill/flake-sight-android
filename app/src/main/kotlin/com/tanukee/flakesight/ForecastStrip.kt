@@ -428,7 +428,7 @@ internal fun centimetres(value: Int, locale: Locale): String =
     MeasureFormat.getInstance(locale, MeasureFormat.FormatWidth.SHORT).format(Measure(value, MeasureUnit.CENTIMETER))
 
 /** "-4°", whole degrees. */
-private fun degrees(value: Int) = "$value°"
+internal fun degrees(value: Int) = "$value°"
 
 /** The resort's levels and the forecast days from today, drawn greyed out before the first answer. */
 private fun placeholder(resort: Resort): ResortForecast {

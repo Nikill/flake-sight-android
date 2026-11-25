@@ -37,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -60,6 +59,7 @@ import com.tanukee.flakesight.core.ModelSnowfall
 import com.tanukee.flakesight.core.SnowfallRange
 import com.tanukee.flakesight.core.withRanges
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -206,8 +206,8 @@ private val CHART_HEIGHT = 260.dp
 
 /**
  * The coming days across the mountain: the summit and the village at their
- * altitude over a mountain outline, what falls at each every day, and the
- * freezing level between them as a dashed line. With the massif's bulletin, a
+ * altitude, what falls at each every day with the day's highest temperature,
+ * and the freezing level between them as a dashed line. With the massif's bulletin, a
  * first column gives the snow on the ground at each level (north over south),
  * the snow line runs across, and the bulletin's rain-snow limit follows the
  * days it covers. Port of `MountainProfileView`.
@@ -237,20 +237,6 @@ private fun MountainProfileChart(profile: MountainProfile, bulletin: SnowDepthRe
 
             Canvas(Modifier.fillMaxSize()) {
                 val left = AXIS_WIDTH.toPx()
-                val bottom = plotHeight.toPx()
-                fun at(fractionX: Float, fractionY: Float) = Offset(left + (size.width - left) * fractionX, bottom * fractionY)
-
-                // A plain mountain outline whose highest point is the summit.
-                val peak = (y(profile.altitudes.first().toDouble()).toPx() / bottom).coerceAtLeast(0f)
-                val low = peak + (1 - peak) * 0.45f
-                val outline = Path().apply {
-                    moveTo(left, bottom)
-                    listOf(0f to low + 0.15f, 0.22f to low, 0.34f to low + 0.1f, 0.6f to peak, 0.74f to low - 0.05f, 0.86f to low + 0.08f, 1f to low)
-                        .forEach { (fx, fy) -> at(fx, fy).let { lineTo(it.x, it.y) } }
-                    lineTo(size.width, bottom)
-                    close()
-                }
-                drawPath(outline, Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.16f), lineColor.copy(alpha = 0.04f)), startY = 0f, endY = bottom))
 
                 for (altitude in profile.altitudes) {
                     val ly = y(altitude.toDouble()).toPx()
@@ -367,6 +353,10 @@ private fun SpotBadge(spot: MountainProfile.Spot, locale: Locale, modifier: Modi
         if (spot.precipitation != MountainProfile.Precipitation.RAIN && range != null) {
             Text(rangeLabel(range, locale), fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
         }
+        // The day's highest temperature at this level.
+        spot.forecast.maxTemperatureDegrees?.let {
+            Text(degrees(it), fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        }
     }
 }
 
@@ -404,25 +394,26 @@ private fun Legend(snowLine: Int?, hasRainSnowLimit: Boolean, locale: Locale) {
         )
     }
     val style = MaterialTheme.typography.labelMedium
-    Row(
+    // Wraps between entries, never inside one.
+    FlowRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clearAndSetSemantics {},
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("❄️ " + stringResource(R.string.legend_snow), style = style, color = SnowBlue)
-        Text("💧 " + stringResource(R.string.legend_rain), style = style, color = Rain)
+        Text("❄️ " + stringResource(R.string.legend_snow), style = style, color = SnowBlue, modifier = Modifier.clearAndSetSemantics {})
+        Text("💧 " + stringResource(R.string.legend_rain), style = style, color = Rain, modifier = Modifier.clearAndSetSemantics {})
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             dash(FreezingLevel, 4f, 3f)
-            Text(stringResource(R.string.legend_freezing_level), style = style)
+            Text(stringResource(R.string.legend_freezing_level), style = style, modifier = Modifier.clearAndSetSemantics {})
+            FreezingLevelInfoButton()
         }
         if (hasRainSnowLimit) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.clearAndSetSemantics {}) {
                 dash(Rain, 1f, 3f)
                 Text(stringResource(R.string.rain_snow), style = style)
             }
         }
         if (snowLine != null) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.clearAndSetSemantics {}) {
                 dash(SnowBlue, 2f, 3f)
                 Text(stringResource(R.string.snow_from, metres(snowLine, locale)), style = style)
             }
@@ -443,7 +434,10 @@ private fun daySummary(day: MountainProfile.Day, locale: Locale): String {
             )
             MountainProfile.Precipitation.RAIN -> listOf(stringResource(R.string.rain_spoken))
             MountainProfile.Precipitation.NONE -> listOf(conditionLabel(spot.forecast.condition))
-        } + listOfNotNull(spot.forecast.snowfallRange?.let { spokenRange(it, locale) })
+        } + listOfNotNull(
+            spot.forecast.snowfallRange?.let { spokenRange(it, locale) },
+            spot.forecast.maxTemperatureDegrees?.let { stringResource(R.string.max_temperature, degrees(it)) },
+        )
         stringResource(R.string.day_summary, levelName(spot.level, locale), what.joinToString(", "))
     } + listOfNotNull(day.roundedFreezingLevel?.let { stringResource(R.string.freezing_level_at, metres(it, locale)) })
     return stringResource(R.string.day_summary, weekday, sentences.joinToString(". ")) + "."
@@ -460,7 +454,10 @@ private fun WeatherModelsTable(forecast: ResortForecast, models: ModelSnowfall?)
     val locale = LocalConfiguration.current.locales[0]
     var levelIndex by rememberSaveable { mutableIntStateOf(0) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(R.string.weather_models), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.weather_models), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            WeatherModelsInfoButton()
+        }
         Text(stringResource(R.string.models_footnote), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (forecast.levels.size > 1) {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
