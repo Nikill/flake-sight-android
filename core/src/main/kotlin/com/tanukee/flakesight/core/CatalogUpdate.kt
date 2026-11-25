@@ -49,7 +49,7 @@ data class CatalogUpdate(
          * The iOS marketing version of the commit `ResortCatalog.json` was last
          * copied from. Updated with the catalogue at each sync (see IOS_SYNC.md).
          */
-        const val BUNDLED_CATALOG_VERSION = "1.2"
+        const val BUNDLED_CATALOG_VERSION = "1.4"
 
         val NONE = CatalogUpdate(appliesBefore = "0", resorts = emptyList())
 

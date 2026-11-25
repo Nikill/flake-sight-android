@@ -6,12 +6,12 @@ The iOS app ([Nikill/ski-patrol](https://github.com/Nikill/ski-patrol)) is the r
 
 | Field | Value |
 |---|---|
-| iOS commit last synced | `e5618e699c65f1f6391f2f711201acb04f29c59d` (main, "Merge pull request #69 from Nikill/dev") |
-| Synced on | 2026-11-24 |
+| iOS commit last synced | `b3226ae` (dev, "Merge pull request #83 from Nikill/feature/catalog-updates"), version 1.4 |
+| Synced on | 2026-11-25 |
 
 Each sync reads the iOS commits after this one, ports what applies to Android, then updates this table in the same pull request.
 
-Ported ahead of `main`: catalogue updates (decision D20, `dev` commits `307e88d` and `3aaefca`), at the developer's request. The bundled catalogue is still the one of the commit above.
+This sync followed `dev` ahead of `main`, at the developer's request: 1.3 (merged into `main`) and 1.4 (not yet). The next sync reads `dev` again, or `main` once it has caught up.
 
 ## Rules
 

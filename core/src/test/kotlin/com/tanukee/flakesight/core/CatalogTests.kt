@@ -36,7 +36,7 @@ class CatalogTests {
         "sept laux, les-7-laux", "7 LAUX, les-7-laux", "pipay, les-7-laux",
         "bisanne, les-saisies", "boetet, les-saisies", "saisies, les-saisies",
         "aiguille du midi, chamonix", "val d'isere, val-d-isere", "2 alpes, les-deux-alpes",
-        "merlette, orcieres",
+        "merlette, orcieres", "vaujany, alpe-d-huez", "combloux, megeve", "doucy, valmorel", "hohneck, la-bresse-hohneck",
     )
     fun searchMatchesNamesRegionsAndWebcams(query: String, expectedId: String) {
         val matches = resorts.filter { it.matches(query) }
